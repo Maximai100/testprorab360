@@ -1,5 +1,7 @@
 {
   "name": "Copy of Copy of Смета за 5 минут",
   "description": "Быстрое создание смет для мастеров по ремонту.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
