@@ -973,6 +973,33 @@ body.dark-theme .bottom-nav {
     cursor: default !important;
 }
 
+/* Notes styles */
+.note-item {
+    padding: 0;
+    border: none;
+}
+.note-item .list-item-info {
+    background-color: var(--bg-color);
+    padding: 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+.note-content {
+    margin: 0;
+    white-space: pre-wrap; /* Preserves line breaks */
+    font-size: 16px;
+}
+.note-date {
+    font-size: 12px !important;
+    color: var(--hint-color) !important;
+    text-align: right;
+    margin-top: 8px;
+}
+.note-textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
 
 /* Hide number input spinners */
 input[type=number]::-webkit-inner-spin-button, 

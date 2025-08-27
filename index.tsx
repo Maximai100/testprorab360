@@ -189,6 +189,13 @@ interface WorkStage {
     endDate: string;
 }
 
+interface Note {
+    id: number;
+    projectId: number;
+    text: string;
+    lastModified: number;
+}
+
 const statusMap: Record<EstimateStatus, { text: string; color: string; }> = {
     draft: { text: 'Черновик', color: '#808080' },
     sent: { text: 'Отправлена', color: '#007BFF' },
@@ -748,6 +755,46 @@ const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, onSave,
     );
 };
 
+interface NoteModalProps {
+    note: Partial<Note> | null;
+    onClose: () => void;
+    onSave: (text: string) => void;
+    showAlert: (message: string) => void;
+}
+const NoteModal: React.FC<NoteModalProps> = ({ note, onClose, onSave, showAlert }) => {
+    const [text, setText] = useState(note?.text || '');
+    
+    const handleSave = () => {
+        if (!text.trim()) {
+            showAlert('Текст заметки не может быть пустым.');
+            return;
+        }
+        onSave(text.trim());
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>{note?.id ? 'Редактировать заметку' : 'Новая заметка'}</h2>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                </div>
+                <div className="modal-body">
+                    <textarea 
+                        value={text} 
+                        onChange={(e) => setText(e.target.value)} 
+                        placeholder="Введите текст заметки..."
+                        className="note-textarea"
+                        rows={8}
+                    />
+                </div>
+                <div className="modal-footer">
+                    <button onClick={handleSave} className="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 
 // --- END OF MODAL COMPONENTS ---
@@ -868,6 +915,7 @@ const ProjectDetailView: React.FC<{
     photoReports: PhotoReport[];
     documents: Document[];
     workStages: WorkStage[];
+    notes: Note[];
     formatCurrency: (value: number) => string;
     statusMap: typeof statusMap;
     setActiveView: React.Dispatch<React.SetStateAction<any>>;
@@ -884,11 +932,13 @@ const ProjectDetailView: React.FC<{
     onDeleteDocument: (id: number) => void;
     onOpenWorkStageModal: (stage: Partial<WorkStage> | null) => void;
     onDeleteWorkStage: (id: number) => void;
+    onOpenNoteModal: (note: Partial<Note> | null) => void;
+    onDeleteNote: (id: number) => void;
 }> = ({
-    activeProject, estimates, financeEntries, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
+    activeProject, estimates, financeEntries, photoReports, documents, workStages, notes, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote
 }) => {
     // Hooks are now at the top level of this component, which is correct.
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
@@ -896,6 +946,7 @@ const ProjectDetailView: React.FC<{
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
+    const projectNotes = useMemo(() => notes.filter(n => n.projectId === activeProject.id), [notes, activeProject.id]);
     
     const calculateEstimateTotal = useCallback((estimate: Estimate) => {
         const subtotal = estimate.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
@@ -1042,6 +1093,27 @@ const ProjectDetailView: React.FC<{
                         <button onClick={onOpenDocumentModal} className="btn btn-secondary">+ Загрузить документ</button>
                     </div>
                 </details>
+                <details className="card project-section">
+                    <summary>Заметки ({projectNotes.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}}>+</button></summary>
+                    <div className="project-section-body">
+                        {projectNotes.length > 0 ? (
+                            <div className="project-items-list">
+                                {projectNotes.map(note => (
+                                    <div key={note.id} className="list-item note-item">
+                                        <div className="list-item-info" onClick={() => onOpenNoteModal(note)}>
+                                            <p className="note-content">{note.text}</p>
+                                            <span className="note-date">Изменено: {new Date(note.lastModified).toLocaleDateString('ru-RU')}</span>
+                                        </div>
+                                        <div className="list-item-actions">
+                                            <button onClick={() => onDeleteNote(note.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="no-results-message">Заметок пока нет.</p>}
+                        <button onClick={() => onOpenNoteModal(null)} className="btn btn-secondary">+ Добавить заметку</button>
+                    </div>
+                </details>
             </main>
         </>
     );
@@ -1061,6 +1133,7 @@ const App: React.FC = () => {
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
     const [documents, setDocuments] = useState<Document[]>([]);
     const [workStages, setWorkStages] = useState<WorkStage[]>([]);
+    const [notes, setNotes] = useState<Note[]>([]);
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
     
@@ -1093,6 +1166,8 @@ const App: React.FC = () => {
     const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
     const [isWorkStageModalOpen, setIsWorkStageModalOpen] = useState(false);
     const [editingWorkStage, setEditingWorkStage] = useState<Partial<WorkStage> | null>(null);
+    const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+    const [editingNote, setEditingNote] = useState<Partial<Note> | null>(null);
     const [viewingPhoto, setViewingPhoto] = useState<PhotoReport | null>(null);
     const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
     const [isDirty, setIsDirty] = useState(false);
@@ -1266,6 +1341,9 @@ const App: React.FC = () => {
 
         const savedWorkStages = localStorage.getItem('workStages');
         if (savedWorkStages) { try { setWorkStages(JSON.parse(savedWorkStages)); } catch (e) { console.error("Failed to parse work stages", e); } }
+
+        const savedNotes = localStorage.getItem('projectNotes');
+        if (savedNotes) { try { setNotes(JSON.parse(savedNotes)); } catch (e) { console.error("Failed to parse notes", e); } }
 
     }, []);
     
@@ -1667,6 +1745,10 @@ const App: React.FC = () => {
                 setWorkStages(newWorkStages);
                 localStorage.setItem('workStages', JSON.stringify(newWorkStages));
 
+                const newNotes = notes.filter(n => n.projectId !== id);
+                setNotes(newNotes);
+                localStorage.setItem('projectNotes', JSON.stringify(newNotes));
+
                 setActiveView('projects'); 
                 setActiveProjectId(null);
             }
@@ -1788,6 +1870,36 @@ const App: React.FC = () => {
         });
     };
 
+    // --- Note Handlers ---
+    const handleOpenNoteModal = (note: Partial<Note> | null) => {
+        setEditingNote(note);
+        setIsNoteModalOpen(true);
+    };
+
+    const handleSaveNote = (text: string) => {
+        let updatedNotes;
+        if (editingNote?.id) {
+            updatedNotes = notes.map(n => n.id === editingNote.id ? { ...n, text, lastModified: Date.now() } : n);
+        } else {
+            const newNote: Note = { text, id: Date.now(), projectId: activeProjectId!, lastModified: Date.now() };
+            updatedNotes = [newNote, ...notes];
+        }
+        setNotes(updatedNotes);
+        localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
+        setIsNoteModalOpen(false);
+        setEditingNote(null);
+    };
+
+    const handleDeleteNote = (id: number) => {
+        safeShowConfirm('Удалить эту заметку?', (ok) => {
+            if(ok) {
+                const updatedNotes = notes.filter(n => n.id !== id);
+                setNotes(updatedNotes);
+                localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
+            }
+        });
+    };
+
 
     const activeProject = useMemo(() => projects.find(p => p.id === activeProjectId), [projects, activeProjectId]);
 
@@ -1839,7 +1951,7 @@ const App: React.FC = () => {
                 return null;
             }
             return <ProjectDetailView {...{
-                activeProject, estimates, financeEntries, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView,
+                activeProject, estimates, financeEntries, photoReports, documents, workStages, notes, formatCurrency, statusMap, setActiveView,
                 setActiveProjectId, handleOpenProjectModal, handleDeleteProject,
                 handleLoadEstimate, handleAddNewEstimateForProject,
                 onOpenFinanceModal: () => setIsFinanceModalOpen(true),
@@ -1849,7 +1961,9 @@ const App: React.FC = () => {
                 onOpenDocumentModal: () => setIsDocumentModalOpen(true),
                 onDeleteDocument: handleDeleteDocument,
                 onOpenWorkStageModal: handleOpenWorkStageModal,
-                onDeleteWorkStage: handleDeleteWorkStage
+                onDeleteWorkStage: handleDeleteWorkStage,
+                onOpenNoteModal: handleOpenNoteModal,
+                onDeleteNote: handleDeleteNote,
             }} />;
         }
         // Default to 'estimate'
@@ -1938,6 +2052,12 @@ const App: React.FC = () => {
                     stage={editingWorkStage}
                     onClose={() => {setIsWorkStageModalOpen(false); setEditingWorkStage(null);}}
                     onSave={handleSaveWorkStage}
+                    showAlert={safeShowAlert}
+                />}
+                {isNoteModalOpen && <NoteModal
+                    note={editingNote}
+                    onClose={() => {setIsNoteModalOpen(false); setEditingNote(null);}}
+                    onSave={handleSaveNote}
                     showAlert={safeShowAlert}
                 />}
 
