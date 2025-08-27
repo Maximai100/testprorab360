@@ -63,7 +63,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .estimate-header, .projects-list-header, .project-detail-header {
@@ -109,7 +109,7 @@ header h1 {
     border: none;
     cursor: pointer;
     font-size: 24px;
-    padding: 8px;
+    padding: 6px;
     color: var(--hint-color);
     line-height: 1;
 }
@@ -418,7 +418,7 @@ body.dark-theme .btn-ai {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 .summary-row label {
     font-size: 16px;
@@ -429,7 +429,7 @@ body.dark-theme .btn-ai {
 .input-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex-grow: 1;
 }
 
@@ -442,7 +442,7 @@ body.dark-theme .btn-ai {
 .toggle-group button {
     background-color: var(--bg-color);
     border: none;
-    padding: 10px 14px;
+    padding: 10px 12px;
     cursor: pointer;
     color: var(--hint-color);
     font-weight: 600;
@@ -586,7 +586,7 @@ body.dark-theme .btn-ai {
     flex-grow: 1;
 }
 
-.modal-search-input {
+.estimates-modal-list .modal-search-input {
     margin-bottom: 12px;
 }
 
@@ -667,8 +667,15 @@ body.dark-theme .btn-ai {
 .library-list { display: flex; flex-direction: column; gap: 10px; }
 .list-item.editing { border-color: var(--primary-color); background-color: color-mix(in srgb, var(--primary-color) 10%, transparent); }
 
-.library-filters { display: flex; gap: 10px; margin-bottom: 12px; }
-.library-filters select { max-width: 150px; }
+.library-filters {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.library-filters select {
+    max-width: 150px;
+}
 
 .category-group h4 {
     margin: 16px 0 8px 0;
