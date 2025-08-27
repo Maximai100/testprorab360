@@ -31,6 +31,13 @@ body.dark-theme {
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* --- FIX FOR HORIZONTAL SCROLLING --- */
+html, body {
+    position: relative;
+    width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
+}
 
 body {
     margin: 0;
@@ -38,7 +45,6 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     overscroll-behavior-y: none;
-    overflow-x: hidden; /* Fix: Prevents horizontal scrolling/floating */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.2s ease, color 0.2s ease;
