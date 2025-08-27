@@ -181,6 +181,14 @@ interface Document {
     date: string;
 }
 
+interface WorkStage {
+    id: number;
+    projectId: number;
+    name: string;
+    startDate: string;
+    endDate: string;
+}
+
 const statusMap: Record<EstimateStatus, { text: string; color: string; }> = {
     draft: { text: 'Черновик', color: '#808080' },
     sent: { text: 'Отправлена', color: '#007BFF' },
@@ -690,6 +698,57 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClose, onSa
     );
 };
 
+interface WorkStageModalProps {
+    stage: Partial<WorkStage> | null;
+    onClose: () => void;
+    onSave: (stage: Omit<WorkStage, 'id' | 'projectId'>) => void;
+    showAlert: (message: string) => void;
+}
+const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, onSave, showAlert }) => {
+    const [name, setName] = useState(stage?.name || '');
+    const [startDate, setStartDate] = useState(stage?.startDate || new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(stage?.endDate || new Date().toISOString().split('T')[0]);
+
+    const handleSave = () => {
+        if (!name.trim()) {
+            showAlert('Введите название этапа.');
+            return;
+        }
+        if (!startDate || !endDate) {
+            showAlert('Укажите даты начала и окончания.');
+            return;
+        }
+        if (new Date(startDate) > new Date(endDate)) {
+            showAlert('Дата начала не может быть позже даты окончания.');
+            return;
+        }
+        onSave({ name: name.trim(), startDate, endDate });
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>{stage?.id ? 'Редактировать этап' : 'Новый этап работ'}</h2>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                </div>
+                <div className="modal-body">
+                    <label>Название этапа</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Например, 'Черновые работы'" />
+                    <label>Дата начала</label>
+                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <label>Дата окончания</label>
+                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </div>
+                <div className="modal-footer">
+                    <button onClick={handleSave} className="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 
 // --- END OF MODAL COMPONENTS ---
 
@@ -808,6 +867,7 @@ const ProjectDetailView: React.FC<{
     financeEntries: FinanceEntry[];
     photoReports: PhotoReport[];
     documents: Document[];
+    workStages: WorkStage[];
     formatCurrency: (value: number) => string;
     statusMap: typeof statusMap;
     setActiveView: React.Dispatch<React.SetStateAction<any>>;
@@ -822,16 +882,20 @@ const ProjectDetailView: React.FC<{
     onViewPhoto: (photo: PhotoReport) => void;
     onOpenDocumentModal: () => void;
     onDeleteDocument: (id: number) => void;
+    onOpenWorkStageModal: (stage: Partial<WorkStage> | null) => void;
+    onDeleteWorkStage: (id: number) => void;
 }> = ({
-    activeProject, estimates, financeEntries, photoReports, documents, formatCurrency, statusMap, setActiveView, setActiveProjectId,
+    activeProject, estimates, financeEntries, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
-    onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument
+    onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
+    onOpenWorkStageModal, onDeleteWorkStage
 }) => {
     // Hooks are now at the top level of this component, which is correct.
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
     const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
+    const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
     
     const calculateEstimateTotal = useCallback((estimate: Estimate) => {
         const subtotal = estimate.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
@@ -920,6 +984,27 @@ const ProjectDetailView: React.FC<{
                          <button onClick={onOpenFinanceModal} className="btn btn-secondary">+ Добавить транзакцию</button>
                     </div>
                 </details>
+                 <details className="card project-section">
+                    <summary>График работ ({projectWorkStages.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}>+</button></summary>
+                    <div className="project-section-body">
+                        {projectWorkStages.length > 0 ? (
+                            <div className="project-items-list">
+                                {projectWorkStages.map(stage => (
+                                    <div key={stage.id} className="list-item">
+                                        <div className="list-item-info" onClick={() => onOpenWorkStageModal(stage)}>
+                                            <strong>{stage.name}</strong>
+                                            <span>{new Date(stage.startDate).toLocaleDateString('ru-RU')} - {new Date(stage.endDate).toLocaleDateString('ru-RU')}</span>
+                                        </div>
+                                        <div className="list-item-actions">
+                                            <button onClick={() => onDeleteWorkStage(stage.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="no-results-message">Этапы работ не добавлены.</p>}
+                        <button onClick={() => onOpenWorkStageModal(null)} className="btn btn-secondary">+ Добавить этап</button>
+                    </div>
+                </details>
                 <details className="card project-section">
                     <summary>Фотоотчеты ({projectPhotos.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}}>+</button></summary>
                     <div className="project-section-body">
@@ -975,6 +1060,7 @@ const App: React.FC = () => {
     const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
     const [documents, setDocuments] = useState<Document[]>([]);
+    const [workStages, setWorkStages] = useState<WorkStage[]>([]);
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
     
@@ -1005,6 +1091,8 @@ const App: React.FC = () => {
     const [isPhotoReportModalOpen, setIsPhotoReportModalOpen] = useState(false);
     const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
     const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
+    const [isWorkStageModalOpen, setIsWorkStageModalOpen] = useState(false);
+    const [editingWorkStage, setEditingWorkStage] = useState<Partial<WorkStage> | null>(null);
     const [viewingPhoto, setViewingPhoto] = useState<PhotoReport | null>(null);
     const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
     const [isDirty, setIsDirty] = useState(false);
@@ -1175,6 +1263,9 @@ const App: React.FC = () => {
 
         const savedDocuments = localStorage.getItem('projectDocuments');
         if (savedDocuments) { try { setDocuments(JSON.parse(savedDocuments)); } catch (e) { console.error("Failed to parse documents", e); } }
+
+        const savedWorkStages = localStorage.getItem('workStages');
+        if (savedWorkStages) { try { setWorkStages(JSON.parse(savedWorkStages)); } catch (e) { console.error("Failed to parse work stages", e); } }
 
     }, []);
     
@@ -1572,6 +1663,10 @@ const App: React.FC = () => {
                 setDocuments(newDocuments);
                 localStorage.setItem('projectDocuments', JSON.stringify(newDocuments));
 
+                const newWorkStages = workStages.filter(ws => ws.projectId !== id);
+                setWorkStages(newWorkStages);
+                localStorage.setItem('workStages', JSON.stringify(newWorkStages));
+
                 setActiveView('projects'); 
                 setActiveProjectId(null);
             }
@@ -1663,6 +1758,36 @@ const App: React.FC = () => {
         });
     };
 
+    // --- Work Stage Handlers ---
+    const handleOpenWorkStageModal = (stage: Partial<WorkStage> | null) => {
+        setEditingWorkStage(stage);
+        setIsWorkStageModalOpen(true);
+    };
+
+    const handleSaveWorkStage = (stageData: Omit<WorkStage, 'id' | 'projectId'>) => {
+        let updatedStages;
+        if (editingWorkStage?.id) {
+            updatedStages = workStages.map(ws => ws.id === editingWorkStage.id ? { ...ws, ...stageData } : ws);
+        } else {
+            const newStage: WorkStage = { ...stageData, id: Date.now(), projectId: activeProjectId! };
+            updatedStages = [newStage, ...workStages];
+        }
+        setWorkStages(updatedStages);
+        localStorage.setItem('workStages', JSON.stringify(updatedStages));
+        setIsWorkStageModalOpen(false);
+        setEditingWorkStage(null);
+    };
+
+    const handleDeleteWorkStage = (id: number) => {
+        safeShowConfirm('Удалить этот этап работ?', (ok) => {
+            if(ok) {
+                const updatedStages = workStages.filter(ws => ws.id !== id);
+                setWorkStages(updatedStages);
+                localStorage.setItem('workStages', JSON.stringify(updatedStages));
+            }
+        });
+    };
+
 
     const activeProject = useMemo(() => projects.find(p => p.id === activeProjectId), [projects, activeProjectId]);
 
@@ -1714,7 +1839,7 @@ const App: React.FC = () => {
                 return null;
             }
             return <ProjectDetailView {...{
-                activeProject, estimates, financeEntries, photoReports, documents, formatCurrency, statusMap, setActiveView,
+                activeProject, estimates, financeEntries, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView,
                 setActiveProjectId, handleOpenProjectModal, handleDeleteProject,
                 handleLoadEstimate, handleAddNewEstimateForProject,
                 onOpenFinanceModal: () => setIsFinanceModalOpen(true),
@@ -1722,7 +1847,9 @@ const App: React.FC = () => {
                 onOpenPhotoReportModal: () => setIsPhotoReportModalOpen(true),
                 onViewPhoto: (photo) => setViewingPhoto(photo),
                 onOpenDocumentModal: () => setIsDocumentModalOpen(true),
-                onDeleteDocument: handleDeleteDocument
+                onDeleteDocument: handleDeleteDocument,
+                onOpenWorkStageModal: handleOpenWorkStageModal,
+                onDeleteWorkStage: handleDeleteWorkStage
             }} />;
         }
         // Default to 'estimate'
@@ -1805,6 +1932,12 @@ const App: React.FC = () => {
                  {isDocumentModalOpen && <DocumentUploadModal
                     onClose={() => setIsDocumentModalOpen(false)}
                     onSave={handleSaveDocument}
+                    showAlert={safeShowAlert}
+                />}
+                {isWorkStageModalOpen && <WorkStageModal 
+                    stage={editingWorkStage}
+                    onClose={() => {setIsWorkStageModalOpen(false); setEditingWorkStage(null);}}
+                    onSave={handleSaveWorkStage}
                     showAlert={safeShowAlert}
                 />}
 
