@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { GoogleGenAI, Type } from "@google/genai";
 import { ROBOTO_FONT_BASE64 } from './font';
 
 // Fix: Add TypeScript definitions for the Telegram Web App API to resolve errors on `window.Telegram`.
@@ -104,6 +105,35 @@ const safeShowConfirm = (message: string, callback: (ok: boolean) => void) => {
     }
 };
 
+// --- ICON COMPONENTS ---
+// Fix: Allow Icon component to accept and spread additional HTML attributes (like style) to its root div.
+const Icon = ({ children, className = '', ...props }: { children: React.ReactNode, className?: string } & React.HTMLAttributes<HTMLDivElement>) => <div className={`icon-wrapper ${className}`} {...props}>{children}</div>;
+const IconPlus = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></Icon>;
+const IconClose = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></Icon>;
+const IconEdit = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></Icon>;
+const IconTrash = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></Icon>;
+const IconDocument = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></Icon>;
+const IconFolder = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></Icon>;
+const IconSettings = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></Icon>;
+const IconBook = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></Icon>;
+const IconClipboard = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></Icon>;
+const IconCart = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></Icon>;
+const IconDownload = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></Icon>;
+const IconPaperclip = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></Icon>;
+const IconDragHandle = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></Icon>;
+const IconProject = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></Icon>;
+// Fix: Allow IconChevronRight to accept props and pass them to the underlying Icon component.
+const IconChevronRight = (props: React.HTMLAttributes<HTMLDivElement>) => <Icon {...props}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></Icon>;
+const IconSparkles = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3L9.27 9.27L3 12l6.27 2.73L12 21l2.73-6.27L21 12l-6.27-2.73z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg></Icon>;
+const IconSun = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></Icon>;
+const IconMoon = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></Icon>;
+const IconContrast = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 18a6 6 0 0 0 0-12v12z"></path></svg></Icon>;
+const IconCreditCard = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></Icon>;
+const IconCalendar = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></Icon>;
+const IconMessageSquare = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></Icon>;
+const IconImage = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></Icon>;
+
+const Loader = () => <div className="loader"></div>;
 
 // --- DATA INTERFACES ---
 interface Item {
@@ -333,7 +363,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, onProfi
         <div className="modal-content card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
                 <h2>Профиль компании</h2>
-                <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
             </div>
             <div className="modal-body">
                 <label>Название компании</label>
@@ -384,7 +414,7 @@ const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose, estima
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Мои документы</h2>
-                    <button onClick={() => { onClose(); setEstimatesSearch(''); }} className="close-btn" aria-label="Закрыть">×</button>
+                    <button onClick={() => { onClose(); setEstimatesSearch(''); }} className="close-btn" aria-label="Закрыть"><IconClose/></button>
                 </div>
                 <div className="modal-tabs">
                     <button className={activeTab === 'estimates' ? 'active' : ''} onClick={() => setActiveTab('estimates')}>Сметы ({estimates.length})</button>
@@ -396,7 +426,7 @@ const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose, estima
                         {filteredEstimates.length === 0 ? <p className="no-results-message">{estimates.length > 0 ? 'Ничего не найдено.' : 'Сохраненных смет нет.'}</p> :
                             filteredEstimates.map(e => ( <div key={e.id} className={`list-item ${e.id === activeEstimateId ? 'active' : ''}`}>
                                 <div className="list-item-info"><strong>{e.number} - {e.clientInfo || `Без названия`}</strong><div><span className="estimate-date">{new Date(e.date).toLocaleDateString('ru-RU')}</span><span className="status-badge" style={{ backgroundColor: statusMap[e.status].color }}>{statusMap[e.status].text}</span></div></div>
-                                <div className="list-item-actions"><select value={e.status} onChange={(ev) => onStatusChange(e.id, ev.target.value as EstimateStatus)} onClick={ev => ev.stopPropagation()} className="status-select">{Object.entries(statusMap).map(([k, v]) => (<option key={k} value={k}>{v.text}</option>))}</select><button onClick={() => onSaveAsTemplate(e.id)} className="btn btn-secondary" title="Сохранить как шаблон">📋</button><button onClick={() => onLoadEstimate(e.id)} className="btn btn-secondary">Загрузить</button><button onClick={() => onDeleteEstimate(e.id)} className="btn btn-tertiary">Удалить</button></div>
+                                <div className="list-item-actions"><select value={e.status} onChange={(ev) => onStatusChange(e.id, ev.target.value as EstimateStatus)} onClick={ev => ev.stopPropagation()} className="status-select">{Object.entries(statusMap).map(([k, v]) => (<option key={k} value={k}>{v.text}</option>))}</select><button onClick={() => onSaveAsTemplate(e.id)} className="btn btn-secondary" title="Сохранить как шаблон"><IconClipboard/></button><button onClick={() => onLoadEstimate(e.id)} className="btn btn-secondary">Загрузить</button><button onClick={() => onDeleteEstimate(e.id)} className="btn btn-tertiary"><IconTrash/></button></div>
                             </div>))
                         }
                     </>)}
@@ -404,7 +434,7 @@ const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose, estima
                          {filteredTemplates.length === 0 ? <p className="no-results-message">{templates.length > 0 ? 'Ничего не найдено.' : 'Шаблонов нет.'}</p> :
                             filteredTemplates.map(t => ( <div key={t.lastModified} className="list-item">
                                 <div className="list-item-info"><strong>Шаблон от {new Date(t.lastModified).toLocaleDateString('ru-RU')}</strong><span>{t.items.length} поз., Итого: {formatCurrency(t.items.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span></div>
-                                <div className="list-item-actions"><button onClick={() => { onNewEstimate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary">Удалить</button></div>
+                                <div className="list-item-actions"><button onClick={() => { onNewEstimate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
                             </div>))
                         }
                     </>)}
@@ -476,9 +506,9 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ onClose, libraryItems, onLi
     return (
         <div className="modal-overlay" onClick={() => { onClose(); setLibrarySearch(''); }}>
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
-                <div className="modal-header"><h2>Справочник</h2><button onClick={onClose} className="close-btn">×</button></div>
+                <div className="modal-header"><h2>Справочник</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body library-modal-body">
-                    <div className="library-add-form-wrapper"><h3>{formItem.id ? 'Редактировать' : 'Добавить'}</h3><div className="library-add-form"><input type="text" placeholder="Наименование" value={formItem.name || ''} onChange={e => handleFormChange('name', e.target.value)} onFocus={onInputFocus} /><input type="number" placeholder="Цена" value={formItem.price || ''} onChange={e => handleFormChange('price', parseFloat(e.target.value) || 0)} onFocus={onInputFocus} /><input type="text" placeholder="Ед.изм." value={formItem.unit || ''} onChange={e => handleFormChange('unit', e.target.value)} onFocus={onInputFocus} /><input type="text" placeholder="Категория (необязательно)" value={formItem.category || ''} onChange={e => handleFormChange('category', e.target.value)} onFocus={onInputFocus} /></div><div className="library-form-actions"><button onClick={handleSaveOrUpdate} className="btn btn-primary">{formItem.id ? 'Сохранить' : 'Добавить'}</button>{formItem.id && <button onClick={handleCancelEdit} className="btn btn-secondary">Отмена</button>}</div></div><hr/><div className="library-list-wrapper"><h3>Список позиций</h3><div className="library-filters"><input type="search" placeholder="Поиск..." value={librarySearch} onChange={e => setLibrarySearch(e.target.value)} onFocus={onInputFocus} className="modal-search-input" /><select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} onFocus={onInputFocus}><option value="all">Все категории</option>{categories.slice(1).map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="library-list">{Object.keys(groupedItems).length === 0 ? <p className="no-results-message">Ничего не найдено.</p> : Object.entries(groupedItems).map(([category, items]) => (<div key={category} className="category-group"><h4>{category}</h4>{items.map(libItem => (<div key={libItem.id} className={`list-item ${formItem.id === libItem.id ? 'editing' : ''}`}><div className="list-item-info"><strong>{libItem.name}</strong><span>{formatCurrency(libItem.price)} / {libItem.unit || 'шт.'}</span></div><div className="list-item-actions"><button onClick={() => onAddItemToEstimate(libItem)} className="btn btn-primary" aria-label="Добавить">+</button><button onClick={() => handleStartEdit(libItem)} className="btn btn-secondary" aria-label="Редактировать">✎</button><button onClick={() => handleDeleteLibraryItem(libItem.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button></div></div>))}</div>))}</div></div></div>
+                    <div className="library-add-form-wrapper"><h3>{formItem.id ? 'Редактировать' : 'Добавить'}</h3><div className="library-add-form"><input type="text" placeholder="Наименование" value={formItem.name || ''} onChange={e => handleFormChange('name', e.target.value)} onFocus={onInputFocus} /><input type="number" placeholder="Цена" value={formItem.price || ''} onChange={e => handleFormChange('price', parseFloat(e.target.value) || 0)} onFocus={onInputFocus} /><input type="text" placeholder="Ед.изм." value={formItem.unit || ''} onChange={e => handleFormChange('unit', e.target.value)} onFocus={onInputFocus} /><input type="text" placeholder="Категория (необязательно)" value={formItem.category || ''} onChange={e => handleFormChange('category', e.target.value)} onFocus={onInputFocus} /></div><div className="library-form-actions"><button onClick={handleSaveOrUpdate} className="btn btn-primary">{formItem.id ? 'Сохранить' : 'Добавить'}</button>{formItem.id && <button onClick={handleCancelEdit} className="btn btn-secondary">Отмена</button>}</div></div><hr/><div className="library-list-wrapper"><h3>Список позиций</h3><div className="library-filters"><input type="search" placeholder="Поиск..." value={librarySearch} onChange={e => setLibrarySearch(e.target.value)} onFocus={onInputFocus} className="modal-search-input" /><select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} onFocus={onInputFocus}><option value="all">Все категории</option>{categories.slice(1).map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="library-list">{Object.keys(groupedItems).length === 0 ? <p className="no-results-message">Ничего не найдено.</p> : Object.entries(groupedItems).map(([category, items]) => (<div key={category} className="category-group"><h4>{category}</h4>{items.map(libItem => (<div key={libItem.id} className={`list-item ${formItem.id === libItem.id ? 'editing' : ''}`}><div className="list-item-info"><strong>{libItem.name}</strong><span>{formatCurrency(libItem.price)} / {libItem.unit || 'шт.'}</span></div><div className="list-item-actions"><button onClick={() => onAddItemToEstimate(libItem)} className="btn btn-primary" aria-label="Добавить"><IconPlus/></button><button onClick={() => handleStartEdit(libItem)} className="btn btn-secondary" aria-label="Редактировать"><IconEdit/></button><button onClick={() => handleDeleteLibraryItem(libItem.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button></div></div>))}</div>))}</div></div></div>
             </div>
         </div>
     );
@@ -496,7 +526,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClose, onP
         <div className="modal-content card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
                 <h2>{project?.id ? 'Редактировать проект' : 'Новый проект'}</h2>
-                <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
             </div>
             <div className="modal-body">
                 <label>Название проекта</label>
@@ -561,7 +591,7 @@ const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, onSave, 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
-                <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn">×</button></div>
+                <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
                     <select value={type} onChange={e => setType(e.target.value as any)} onFocus={onInputFocus}>
@@ -578,7 +608,7 @@ const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, onSave, 
                             {receiptImage ? (
                                 <div className="image-preview-container">
                                     <img src={receiptImage} alt="Чек" className="image-preview" />
-                                    <button onClick={() => setReceiptImage(null)} className="remove-image-btn">×</button>
+                                    <button onClick={() => setReceiptImage(null)} className="remove-image-btn"><IconClose/></button>
                                 </div>
                             ) : (
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
@@ -624,13 +654,13 @@ const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onSave, sh
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
-                <div className="modal-header"><h2>Добавить фото</h2><button onClick={onClose} className="close-btn">×</button></div>
+                <div className="modal-header"><h2>Добавить фото</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Фотография</label>
                      {image ? (
                         <div className="image-preview-container large-preview">
                             <img src={image} alt="Предпросмотр" className="image-preview" />
-                            <button onClick={() => setImage(null)} className="remove-image-btn">×</button>
+                            <button onClick={() => setImage(null)} className="remove-image-btn"><IconClose/></button>
                         </div>
                     ) : (
                         <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
@@ -656,8 +686,8 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({ photo, onClose, onD
                 <img src={photo.image} alt={photo.caption || 'Фото из отчета'} />
                 {photo.caption && <p className="photo-viewer-caption">{photo.caption}</p>}
                 <div className="photo-viewer-actions">
-                     <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
-                     <button onClick={() => onDelete(photo.id)} className="delete-photo-btn" aria-label="Удалить">🗑️</button>
+                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
+                     <button onClick={() => onDelete(photo.id)} className="delete-photo-btn" aria-label="Удалить"><IconTrash/></button>
                 </div>
             </div>
         </div>
@@ -687,7 +717,7 @@ const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ items, onClose, s
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
-                <div className="modal-header"><h2>Список покупок</h2><button onClick={onClose} className="close-btn">×</button></div>
+                <div className="modal-header"><h2>Список покупок</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body" ref={listRef}>
                     {materials.length > 0 ? (
                         <div className="shopping-list">
@@ -745,7 +775,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClose, onSa
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
-                <div className="modal-header"><h2>Загрузить документ</h2><button onClick={onClose} className="close-btn">×</button></div>
+                <div className="modal-header"><h2>Загрузить документ</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Выберите файл</label>
                     <input type="file" onChange={handleFileChange} />
@@ -796,7 +826,7 @@ const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, onSave,
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>{stage?.id ? 'Редактировать этап' : 'Новый этап работ'}</h2>
-                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
                 </div>
                 <div className="modal-body">
                     <label>Название этапа</label>
@@ -836,7 +866,7 @@ const NoteModal: React.FC<NoteModalProps> = ({ note, onClose, onSave, showAlert 
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>{note?.id ? 'Редактировать заметку' : 'Новая заметка'}</h2>
-                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
                 </div>
                 <div className="modal-body">
                     <textarea 
@@ -907,7 +937,7 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
             <div className="modal-content card" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Акт выполненных работ</h2>
-                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
                 </div>
                 <div className="modal-body">
                     <textarea 
@@ -924,6 +954,141 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
     );
 };
 
+interface AISuggestModalProps {
+    onClose: () => void;
+    onAddItems: (items: Omit<Item, 'id' | 'image' | 'type'>[]) => void;
+    showAlert: (message: string) => void;
+}
+
+const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddItems, showAlert }) => {
+    const [prompt, setPrompt] = useState('');
+    const [suggestions, setSuggestions] = useState<Omit<Item, 'id' | 'image' | 'type'>[]>([]);
+    const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    
+    const ai = useMemo(() => {
+        if (process.env.API_KEY) {
+            return new GoogleGenAI({ apiKey: process.env.API_KEY });
+        }
+        return null;
+    }, []);
+
+    const handleGenerate = async () => {
+        if (!prompt.trim()) {
+            showAlert('Введите описание работ.');
+            return;
+        }
+        if (!ai) {
+             showAlert('API-ключ для Gemini не настроен. Эта функция недоступна.');
+             return;
+        }
+
+        setIsGenerating(true);
+        setError(null);
+        setSuggestions([]);
+        setSelectedIndices(new Set());
+
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: `Ты - опытный прораб, составляющий смету на ремонтные работы в России. Проанализируй запрос клиента и верни список работ и материалов в формате JSON. Укажи реалистичные для РФ единицы измерения (м2, шт, м.п.) и примерные средние цены в рублях. Не добавляй никаких пояснений, только JSON. Запрос: "${prompt}"`,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                name: { type: Type.STRING, description: 'Название работы или материала' },
+                                quantity: { type: Type.NUMBER, description: 'Количество' },
+                                unit: { type: Type.STRING, description: 'Единица измерения (например, м2, шт, м.п.)' },
+                                price: { type: Type.NUMBER, description: 'Цена за единицу в рублях' },
+                            },
+                        },
+                    },
+                },
+            });
+
+            const parsedSuggestions = JSON.parse(response.text);
+            setSuggestions(parsedSuggestions);
+            setSelectedIndices(new Set(parsedSuggestions.map((_: any, index: number) => index)));
+        } catch (e) {
+            console.error(e);
+            setError('Не удалось получить ответ от AI. Попробуйте изменить запрос или повторите попытку позже.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
+    const handleToggleSelection = (index: number) => {
+        const newSelection = new Set(selectedIndices);
+        if (newSelection.has(index)) {
+            newSelection.delete(index);
+        } else {
+            newSelection.add(index);
+        }
+        setSelectedIndices(newSelection);
+    };
+    
+    const handleAddSelected = () => {
+        const itemsToAdd = suggestions.filter((_, index) => selectedIndices.has(index));
+        onAddItems(itemsToAdd);
+        onClose();
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>AI-помощник</h2>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
+                </div>
+                <div className="modal-body">
+                    <label>Опишите работы в свободной форме</label>
+                    <textarea 
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="Например: Поклеить обои в комнате 15 м2, положить ламинат и установить 2 розетки"
+                        rows={4}
+                        disabled={isGenerating}
+                    />
+                    <button onClick={handleGenerate} className="btn btn-primary" disabled={isGenerating}>
+                        {isGenerating ? 'Генерация...' : 'Сгенерировать'}
+                    </button>
+                    {isGenerating && <div className="ai-modal-status"><Loader/></div>}
+                    {error && <p className="ai-modal-status error-message">{error}</p>}
+                    {suggestions.length > 0 && (
+                        <div className="ai-suggestions-list">
+                            <h4>Предложенные позиции:</h4>
+                            {suggestions.map((item, index) => (
+                                <div key={index} className="ai-suggestion-item">
+                                    <input 
+                                        type="checkbox" 
+                                        id={`suggestion-${index}`}
+                                        checked={selectedIndices.has(index)}
+                                        onChange={() => handleToggleSelection(index)}
+                                    />
+                                    <label htmlFor={`suggestion-${index}`} className="suggestion-details">
+                                        <strong>{item.name}</strong>
+                                        <span>{item.quantity} {item.unit} × {item.price} ₽</span>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                {suggestions.length > 0 && (
+                    <div className="modal-footer">
+                         <button onClick={handleAddSelected} className="btn btn-primary">
+                            Добавить выбранное ({selectedIndices.size})
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 // --- END OF MODAL COMPONENTS ---
 
@@ -931,7 +1096,7 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
 
 const EstimateView: React.FC<any> = ({
     currentEstimateProjectId, handleBackToProject, clientInfo, setClientInfo, setIsDirty, 
-    handleThemeChange, themeIcon, themeMode, setIsLibraryOpen, setIsEstimatesListOpen, setIsSettingsOpen, 
+    handleThemeChange, themeIcon, themeMode, setIsLibraryOpen, setIsEstimatesListOpen, setIsSettingsOpen, setIsAISuggestModalOpen,
     estimateNumber, setEstimateNumber, estimateDate, setEstimateDate, handleInputFocus, items, 
     dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange, 
     handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem, 
@@ -940,13 +1105,13 @@ const EstimateView: React.FC<any> = ({
 }) => (
     <>
         <header className="estimate-header">
-            {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn">←</button>}
+            {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>}
             <h1 className={currentEstimateProjectId ? 'with-back-btn' : ''}>{clientInfo || 'Новая смета'}</h1>
             <div className="header-actions">
-                <button onClick={handleThemeChange} className="header-btn" aria-label={`Сменить тему: ${themeMode}`} title={`Текущая тема: ${themeMode}`}>{themeIcon}</button>
-                <button onClick={() => setIsLibraryOpen(true)} className="header-btn" aria-label="Справочник">📚</button>
-                <button onClick={() => setIsEstimatesListOpen(true)} className="header-btn" aria-label="Мои сметы">📂</button>
-                <button onClick={() => setIsSettingsOpen(true)} className="header-btn" aria-label="Настройки">⚙️</button>
+                <button onClick={handleThemeChange} className="header-btn" aria-label={`Сменить тему: ${themeMode}`} title={`Текущая тема: ${themeMode}`}>{themeIcon()}</button>
+                <button onClick={() => setIsLibraryOpen(true)} className="header-btn" aria-label="Справочник"><IconBook/></button>
+                <button onClick={() => setIsEstimatesListOpen(true)} className="header-btn" aria-label="Мои сметы"><IconFolder/></button>
+                <button onClick={() => setIsSettingsOpen(true)} className="header-btn" aria-label="Настройки"><IconSettings/></button>
             </div>
         </header>
         <main>
@@ -956,10 +1121,10 @@ const EstimateView: React.FC<any> = ({
                 {items.map((item: Item, index: number) => (
                     <div className="item-card" key={item.id} draggable onDragStart={() => dragItem.current = index} onDragEnter={() => dragOverItem.current = index} onDragEnd={handleDragSort} onDragOver={(e) => e.preventDefault()}>
                         <div className="item-header">
-                            <div className="drag-handle" aria-label="Переместить">⠿</div>
+                            <div className="drag-handle" aria-label="Переместить"><IconDragHandle/></div>
                             <span className="item-number">Позиция #{index + 1}</span>
                             <div className="item-header-actions">
-                                <button onClick={() => fileInputRefs.current[item.id]?.click()} className="attach-btn" aria-label="Прикрепить фото">📎</button>
+                                <button onClick={() => fileInputRefs.current[item.id]?.click()} className="attach-btn" aria-label="Прикрепить фото"><IconPaperclip/></button>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -967,14 +1132,14 @@ const EstimateView: React.FC<any> = ({
                                     ref={el => { fileInputRefs.current[item.id] = el; }}
                                     onChange={(e) => handleItemImageChange(item.id, e)}
                                 />
-                                <button onClick={() => handleRemoveItem(item.id)} className="remove-btn" aria-label="Удалить позицию">×</button>
+                                <button onClick={() => handleRemoveItem(item.id)} className="remove-btn" aria-label="Удалить позицию"><IconClose/></button>
                             </div>
                         </div>
                         <div className="item-inputs"><input type="text" placeholder="Наименование" value={item.name} onChange={(e) => handleItemChange(item.id, 'name', e.target.value)} onFocus={handleInputFocus} aria-label="Наименование" /><input type="number" placeholder="Кол-во" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Количество" min="0"/><input type="text" placeholder="Ед.изм." value={item.unit} onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)} onFocus={handleInputFocus} aria-label="Единица измерения" /><input type="number" placeholder="Цена" value={item.price || ''} onChange={(e) => handleItemChange(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Цена" min="0"/></div>
                         {item.image && (
                             <div className="image-preview-container">
                                 <img src={item.image} alt="Предпросмотр" className="image-preview" />
-                                <button onClick={() => handleRemoveItemImage(item.id)} className="remove-image-btn" aria-label="Удалить изображение">×</button>
+                                <button onClick={() => handleRemoveItemImage(item.id)} className="remove-image-btn" aria-label="Удалить изображение"><IconClose/></button>
                             </div>
                         )}
                         <div className="item-footer">
@@ -987,7 +1152,13 @@ const EstimateView: React.FC<any> = ({
                     </div>
                 ))}
             </div>
-            <div className="add-items-container"><button onClick={handleAddItem} className="btn btn-secondary">+ Добавить позицию</button><button onClick={() => setIsLibraryOpen(true)} className="btn btn-secondary">📚 + Из справочника</button></div>
+            <div className="add-items-container">
+                <button onClick={handleAddItem} className="btn btn-secondary"><IconPlus/> Добавить позицию</button>
+                <button onClick={() => setIsLibraryOpen(true)} className="btn btn-secondary"><IconBook/> Из справочника</button>
+            </div>
+            <div className="add-items-container">
+                 <button onClick={() => setIsAISuggestModalOpen(true)} className="btn btn-secondary btn-ai"><IconSparkles/> AI-помощник</button>
+            </div>
             <div className="summary-details card"><div className="summary-row"><label htmlFor="discount">Скидка</label><div className="input-group"><input id="discount" type="number" value={discount || ''} onChange={(e) => { setDiscount(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/><div className="toggle-group"><button onClick={() => { setDiscountType('percent'); setIsDirty(true); }} className={discountType === 'percent' ? 'active' : ''}>%</button><button onClick={() => { setDiscountType('fixed'); setIsDirty(true); }} className={discountType === 'fixed' ? 'active' : ''}>РУБ</button></div></div></div><div className="summary-row"><label htmlFor="tax">Налог (%)</label><div className="input-group"><input id="tax" type="number" value={tax || ''} onChange={(e) => { setTax(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/></div></div></div>
             <div className="total-container card"><div className="total-breakdown"><div className="total-row"><span>Подытог</span><span>{formatCurrency(calculation.subtotal)}</span></div>{calculation.discountAmount > 0 && (<div className="total-row"><span>Скидка ({discountType === 'percent' ? `${discount}%` : formatCurrency(discount)})</span><span>-{formatCurrency(calculation.discountAmount)}</span></div>)}{calculation.taxAmount > 0 && (<div className="total-row"><span>Налог ({tax}%)</span><span>+{formatCurrency(calculation.taxAmount)}</span></div>)}<div className="total-row grand-total"><span>Итого:</span><span>{formatCurrency(calculation.grandTotal)}</span></div></div></div>
             <div className="actions-footer">
@@ -997,7 +1168,7 @@ const EstimateView: React.FC<any> = ({
                 <button onClick={handleExportPDF} className="btn btn-secondary" disabled={isPdfLoading}>
                     {isPdfLoading ? 'Создание...' : 'Экспорт в PDF'}
                 </button>
-                <button onClick={() => setIsShoppingListOpen(true)} className="btn btn-secondary shopping-list-btn">🛒 Список покупок</button>
+                <button onClick={() => setIsShoppingListOpen(true)} className="btn btn-secondary shopping-list-btn"><IconCart/> Список покупок</button>
                 <button onClick={handleShare} className="btn btn-primary share-btn">Поделиться</button>
             </div>
         </main>
@@ -1012,7 +1183,7 @@ const ProjectsListView: React.FC<any> = ({
         <header className="projects-list-header">
             <h1>Проекты</h1>
             <div className="header-actions">
-                <button onClick={() => handleOpenProjectModal()} className="header-btn" aria-label="Новый проект">➕</button>
+                <button onClick={() => handleOpenProjectModal()} className="header-btn" aria-label="Новый проект"><IconPlus/></button>
             </div>
         </header>
         <main>
@@ -1097,96 +1268,109 @@ const ProjectDetailView: React.FC<{
     return (
         <>
             <header className="project-detail-header">
-                <button onClick={() => {setActiveView('projects'); setActiveProjectId(null);}} className="back-btn">←</button>
+                <button onClick={() => {setActiveView('projects'); setActiveProjectId(null);}} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>
                 <h1>{activeProject.name}</h1>
                 <div className="header-actions">
-                    <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать">✏️</button>
-                    <button onClick={() => handleDeleteProject(activeProject.id)} className="header-btn" aria-label="Удалить">🗑️</button>
-                    {activeProject.status === 'completed' && <button onClick={() => onOpenActModal(estimateTotal)} className="header-btn" aria-label="Сгенерировать акт">📄</button>}
+                    <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать"><IconEdit/></button>
+                    <button onClick={() => handleDeleteProject(activeProject.id)} className="header-btn" aria-label="Удалить"><IconTrash/></button>
+                    {activeProject.status === 'completed' && <button onClick={() => onOpenActModal(estimateTotal)} className="header-btn" aria-label="Сгенерировать акт"><IconDocument/></button>}
                 </div>
             </header>
             <main className="project-detail-main">
-                <details className="card project-section" open>
-                    <summary>Финансовый дашборд</summary>
-                    <div className="dashboard-grid">
-                        <div className="dashboard-item">
-                            <span className="dashboard-value">{formatCurrency(estimateTotal)}</span>
-                            <span className="dashboard-label">Сумма смет</span>
-                        </div>
-                        <div className="dashboard-item">
-                            <span className="dashboard-value expense-value">{formatCurrency(totalExpenses)}</span>
-                            <span className="dashboard-label">Расходы</span>
-                        </div>
-                        <div className="dashboard-item">
-                            <span className="dashboard-value payment-value">{formatCurrency(totalPayments)}</span>
-                            <span className="dashboard-label">Оплачено</span>
-                        </div>
+                <div className="card project-section">
+                    <div className="project-section-header"><h3>Финансовый дашборд</h3></div>
+                    <div className="project-section-body">
+                         <div className="dashboard-grid">
                             <div className="dashboard-item">
-                            <span className="dashboard-value profit-value">{formatCurrency(profit)}</span>
-                            <span className="dashboard-label">Прибыль</span>
+                                <span className="dashboard-value">{formatCurrency(estimateTotal)}</span>
+                                <span className="dashboard-label">Сумма смет</span>
+                            </div>
+                            <div className="dashboard-item">
+                                <span className="dashboard-value expense-value">{formatCurrency(totalExpenses)}</span>
+                                <span className="dashboard-label">Расходы</span>
+                            </div>
+                            <div className="dashboard-item">
+                                <span className="dashboard-value payment-value">{formatCurrency(totalPayments)}</span>
+                                <span className="dashboard-label">Оплачено</span>
+                            </div>
+                                <div className="dashboard-item">
+                                <span className="dashboard-value profit-value">{formatCurrency(profit)}</span>
+                                <span className="dashboard-label">Прибыль</span>
+                            </div>
                         </div>
                     </div>
-                </details>
-                <details className="card project-section">
-                    <summary>Сметы ({projectEstimates.length})</summary>
-                        <div className="project-section-body">
+                </div>
+                <div className="card project-section">
+                     <div className="project-section-header">
+                        <h3>Сметы ({projectEstimates.length})</h3>
+                        <button className="add-in-header-btn" onClick={handleAddNewEstimateForProject}><IconPlus/></button>
+                    </div>
+                    <div className="project-section-body">
                         <div className="project-items-list">
                             {projectEstimates.length > 0 ? projectEstimates.map(est => (
                                 <div key={est.id} className="list-item" onClick={() => handleLoadEstimate(est.id)}>
+                                    <IconDocument />
                                     <div className="list-item-info">
                                         <strong>{est.number} - {est.clientInfo || 'Без названия'}</strong>
                                         <span>{formatCurrency(calculateEstimateTotal(est))} <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color }}>{statusMap[est.status].text}</span></span>
                                     </div>
-                                    <span className="list-item-arrow">›</span>
+                                    <span className="list-item-arrow"><IconChevronRight/></span>
                                 </div>
                             )) : <p className="no-results-message">Смет для этого проекта нет.</p>}
                         </div>
-                        <button onClick={handleAddNewEstimateForProject} className="btn btn-secondary">+ Добавить смету</button>
-                        </div>
-                </details>
-                <details className="card project-section">
-                    <summary>Финансы ({projectFinances.length}) <button className="add-in-summary-btn" onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }}>+</button></summary>
+                    </div>
+                </div>
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Финансы ({projectFinances.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }}><IconPlus/></button>
+                    </div>
                     <div className="project-section-body">
                         {projectFinances.length > 0 ? (
                             <div className="project-items-list">
                                 {projectFinances.map(f => (
                                     <div key={f.id} className="list-item finance-item">
-                                        {f.receiptImage && <img src={f.receiptImage} alt="чек" className="finance-receipt-thumb"/>}
+                                        {f.receiptImage ? <img src={f.receiptImage} alt="чек" className="finance-receipt-thumb"/> : <IconCreditCard />}
                                         <div className="list-item-info">
                                             <strong>{f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}</strong>
                                             <span className={f.type === 'expense' ? 'expense-value' : 'payment-value'}>{formatCurrency(f.amount)}</span>
                                         </div>
-                                        <button onClick={() => onDeleteFinanceEntry(f.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                        <button onClick={() => onDeleteFinanceEntry(f.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
                                     </div>
                                 ))}
                             </div>
                         ) : <p className="no-results-message">Транзакций пока нет.</p>}
-                         <button onClick={onOpenFinanceModal} className="btn btn-secondary">+ Добавить транзакцию</button>
                     </div>
-                </details>
-                 <details className="card project-section">
-                    <summary>График работ ({projectWorkStages.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}>+</button></summary>
+                </div>
+                 <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>График работ ({projectWorkStages.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}><IconPlus/></button>
+                    </div>
                     <div className="project-section-body">
                         {projectWorkStages.length > 0 ? (
                             <div className="project-items-list">
                                 {projectWorkStages.map(stage => (
                                     <div key={stage.id} className="list-item">
+                                        <IconCalendar />
                                         <div className="list-item-info" onClick={() => onOpenWorkStageModal(stage)}>
                                             <strong>{stage.name}</strong>
                                             <span>{new Date(stage.startDate).toLocaleDateString('ru-RU')} - {new Date(stage.endDate).toLocaleDateString('ru-RU')}</span>
                                         </div>
                                         <div className="list-item-actions">
-                                            <button onClick={() => onDeleteWorkStage(stage.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                            <button onClick={() => onDeleteWorkStage(stage.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : <p className="no-results-message">Этапы работ не добавлены.</p>}
-                        <button onClick={() => onOpenWorkStageModal(null)} className="btn btn-secondary">+ Добавить этап</button>
                     </div>
-                </details>
-                <details className="card project-section">
-                    <summary>Фотоотчеты ({projectPhotos.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}}>+</button></summary>
+                </div>
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Фотоотчеты ({projectPhotos.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}}><IconPlus/></button>
+                    </div>
                     <div className="project-section-body">
                         {projectPhotos.length > 0 ? (
                             <div className="photo-grid">
@@ -1197,52 +1381,57 @@ const ProjectDetailView: React.FC<{
                                 ))}
                             </div>
                         ) : <p className="no-results-message">Фотографий пока нет.</p>}
-                         <button onClick={onOpenPhotoReportModal} className="btn btn-secondary">+ Добавить фото</button>
                     </div>
-                </details>
-                <details className="card project-section">
-                    <summary>Документы ({projectDocuments.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenDocumentModal();}}>+</button></summary>
+                </div>
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Документы ({projectDocuments.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenDocumentModal();}}><IconPlus/></button>
+                    </div>
                     <div className="project-section-body">
                         {projectDocuments.length > 0 ? (
                              <div className="project-items-list">
                                 {projectDocuments.map(doc => (
                                     <div key={doc.id} className="list-item document-item">
+                                        <IconPaperclip />
                                         <div className="list-item-info">
                                             <strong>{doc.name}</strong>
                                             <span>{new Date(doc.date).toLocaleDateString('ru-RU')}</span>
                                         </div>
                                         <div className="list-item-actions">
-                                            <a href={doc.dataUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать">📥</a>
-                                            <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                            <a href={doc.dataUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
+                                            <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : <p className="no-results-message">Документов пока нет.</p>}
-                        <button onClick={onOpenDocumentModal} className="btn btn-secondary">+ Загрузить документ</button>
                     </div>
-                </details>
-                <details className="card project-section">
-                    <summary>Заметки ({projectNotes.length}) <button className="add-in-summary-btn" onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}}>+</button></summary>
+                </div>
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Заметки ({projectNotes.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}}><IconPlus/></button>
+                    </div>
                     <div className="project-section-body">
                         {projectNotes.length > 0 ? (
                             <div className="project-items-list">
                                 {projectNotes.map(note => (
                                     <div key={note.id} className="list-item note-item">
+                                        <IconMessageSquare />
                                         <div className="list-item-info" onClick={() => onOpenNoteModal(note)}>
                                             <p className="note-content">{note.text}</p>
                                             <span className="note-date">Изменено: {new Date(note.lastModified).toLocaleDateString('ru-RU')}</span>
                                         </div>
                                         <div className="list-item-actions">
-                                            <button onClick={() => onDeleteNote(note.id)} className="btn btn-tertiary" aria-label="Удалить">✕</button>
+                                            <button onClick={() => onDeleteNote(note.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : <p className="no-results-message">Заметок пока нет.</p>}
-                        <button onClick={() => onOpenNoteModal(null)} className="btn btn-secondary">+ Добавить заметку</button>
                     </div>
-                </details>
+                </div>
             </main>
         </>
     );
@@ -1252,7 +1441,7 @@ const ProjectDetailView: React.FC<{
 
 const App: React.FC = () => {
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail'>('estimate');
+    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail'>('projects');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -1299,6 +1488,7 @@ const App: React.FC = () => {
     const [editingNote, setEditingNote] = useState<Partial<Note> | null>(null);
     const [viewingPhoto, setViewingPhoto] = useState<PhotoReport | null>(null);
     const [isActModalOpen, setIsActModalOpen] = useState(false);
+    const [isAISuggestModalOpen, setIsAISuggestModalOpen] = useState(false);
     const [actModalTotal, setActModalTotal] = useState(0);
     const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
     const [isDirty, setIsDirty] = useState(false);
@@ -1447,7 +1637,12 @@ const App: React.FC = () => {
         }
         
         setEstimates(initialEstimates);
-        populateForm(activeEstimate, initialEstimates);
+        // On first load, if no project is associated with the active estimate, don't populate. Let user start from projects view.
+        if (activeEstimate && activeEstimate.projectId) {
+            populateForm(activeEstimate, initialEstimates);
+        } else {
+             populateForm(null, initialEstimates);
+        }
         
         const savedProfile = localStorage.getItem('companyProfile');
         if (savedProfile) { try { setCompanyProfile(JSON.parse(savedProfile)); } catch (e) { console.error("Failed to parse profile", e); }}
@@ -1486,6 +1681,17 @@ const App: React.FC = () => {
 
     const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'material' }]); setIsDirty(true); };
     const handleAddFromLibrary = (libItem: LibraryItem) => { setItems(prev => [...prev, { id: Date.now(), name: libItem.name, quantity: 1, price: libItem.price, unit: libItem.unit, image: null, type: 'material' }]); setIsLibraryOpen(false); setIsDirty(true); };
+    const handleAddItemsFromAI = (newItems: Omit<Item, 'id' | 'image' | 'type'>[]) => {
+        const itemsToAdd: Item[] = newItems.map(item => ({
+            ...item,
+            id: Date.now() + Math.random(),
+            image: null,
+            type: 'material' // Default type, user can change it
+        }));
+        setItems(prev => [...prev, ...itemsToAdd]);
+        setIsDirty(true);
+    };
+
     const handleItemChange = (id: number, field: keyof Item, value: string | number) => { setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item)); setIsDirty(true); };
     const handleRemoveItem = (id: number) => { setItems(prev => prev.filter(item => item.id !== id)); setIsDirty(true); };
     
@@ -1556,7 +1762,7 @@ const App: React.FC = () => {
             setActiveEstimateId(currentId);
             localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: currentId }));
             setIsDirty(false); // Reset dirty flag after successful save
-            window.Telegram?.WebApp.HapticFeedback.notificationOccurred('success');
+            tg?.HapticFeedback.notificationOccurred('success');
         } catch (error) {
             console.error("Save failed:", error);
             safeShowAlert("Не удалось сохранить смету.");
@@ -1577,7 +1783,7 @@ const App: React.FC = () => {
     
     const handleExportPDF = useCallback(async () => {
         setIsPdfLoading(true);
-        window.Telegram?.WebApp.HapticFeedback.notificationOccurred('warning');
+        tg?.HapticFeedback.notificationOccurred('warning');
         try {
             await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay for scripts
             
@@ -1720,7 +1926,7 @@ const App: React.FC = () => {
             const validItems = getValidItems();
             if (validItems.length === 0) {
                 safeShowAlert("Добавьте хотя бы одну позицию, чтобы поделиться сметой.");
-                window.Telegram?.WebApp.HapticFeedback.notificationOccurred('error');
+                tg?.HapticFeedback.notificationOccurred('error');
                 return;
             }
             const header = `*Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}*\nКлиент: ${clientInfo || 'Не указан'}\n\n`;
@@ -1739,7 +1945,7 @@ const App: React.FC = () => {
     }, [getValidItems, estimateNumber, estimateDate, clientInfo, formatCurrency, calculation, tax]);
     
     const handleProfileChange = (field: keyof CompanyProfile, value: string) => setCompanyProfile(prev => ({ ...prev, [field]: value }));
-    const handleSaveProfile = () => { localStorage.setItem('companyProfile', JSON.stringify(companyProfile)); setIsSettingsOpen(false); };
+    const handleSaveProfile = () => { localStorage.setItem('companyProfile', JSON.stringify(companyProfile)); setIsSettingsOpen(false); tg?.HapticFeedback.notificationOccurred('success'); };
     
     const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -1779,6 +1985,7 @@ const App: React.FC = () => {
     const handleDeleteEstimate = (id: number) => {
         safeShowConfirm("Вы уверены, что хотите удалить эту смету?", (ok) => {
             if (ok) {
+                tg?.HapticFeedback.notificationOccurred('warning');
                 const newEstimates = estimates.filter(e => e.id !== id);
                 setEstimates(newEstimates);
                 let newActiveId = activeEstimateId;
@@ -1810,6 +2017,7 @@ const App: React.FC = () => {
     const handleDeleteTemplate = (timestamp: number) => {
         safeShowConfirm('Вы уверены, что хотите удалить этот шаблон?', (ok) => {
             if (ok) {
+                tg?.HapticFeedback.notificationOccurred('warning');
                 const newTemplates = templates.filter(t => t.lastModified !== timestamp);
                 setTemplates(newTemplates);
                 localStorage.setItem('estimateTemplates', JSON.stringify(newTemplates));
@@ -1847,11 +2055,13 @@ const App: React.FC = () => {
         localStorage.setItem('projects', JSON.stringify(updatedProjects));
         setIsProjectModalOpen(false);
         setEditingProject(null);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
     
     const handleDeleteProject = (id: number) => {
         safeShowConfirm("Вы уверены, что хотите удалить этот проект и все связанные с ним данные?", (ok) => {
             if (ok) {
+                tg?.HapticFeedback.notificationOccurred('warning');
                 const newProjects = projects.filter(p => p.id !== id);
                 setProjects(newProjects);
                 localStorage.setItem('projects', JSON.stringify(newProjects));
@@ -1922,12 +2132,18 @@ const App: React.FC = () => {
         setFinanceEntries(updatedEntries);
         localStorage.setItem('financeEntries', JSON.stringify(updatedEntries));
         setIsFinanceModalOpen(false);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeleteFinanceEntry = (id: number) => {
-        const updatedEntries = financeEntries.filter(f => f.id !== id);
-        setFinanceEntries(updatedEntries);
-        localStorage.setItem('financeEntries', JSON.stringify(updatedEntries));
+        safeShowConfirm('Вы уверены, что хотите удалить эту транзакцию?', (ok) => {
+            if (ok) {
+                const updatedEntries = financeEntries.filter(f => f.id !== id);
+                setFinanceEntries(updatedEntries);
+                localStorage.setItem('financeEntries', JSON.stringify(updatedEntries));
+                tg?.HapticFeedback.notificationOccurred('warning');
+            }
+        });
     };
     
     // --- Photo Report Handlers ---
@@ -1937,13 +2153,19 @@ const App: React.FC = () => {
         setPhotoReports(updatedPhotos);
         localStorage.setItem('photoReports', JSON.stringify(updatedPhotos));
         setIsPhotoReportModalOpen(false);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeletePhotoReport = (id: number) => {
-        const updatedPhotos = photoReports.filter(p => p.id !== id);
-        setPhotoReports(updatedPhotos);
-        localStorage.setItem('photoReports', JSON.stringify(updatedPhotos));
-        setViewingPhoto(null); // Close the viewer
+        safeShowConfirm('Удалить это фото?', (ok) => {
+            if (ok) {
+                const updatedPhotos = photoReports.filter(p => p.id !== id);
+                setPhotoReports(updatedPhotos);
+                localStorage.setItem('photoReports', JSON.stringify(updatedPhotos));
+                setViewingPhoto(null); // Close the viewer
+                tg?.HapticFeedback.notificationOccurred('warning');
+            }
+        });
     };
     
     // --- Document Handlers ---
@@ -1959,6 +2181,7 @@ const App: React.FC = () => {
         setDocuments(updatedDocs);
         localStorage.setItem('projectDocuments', JSON.stringify(updatedDocs));
         setIsDocumentModalOpen(false);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeleteDocument = (id: number) => {
@@ -1967,6 +2190,7 @@ const App: React.FC = () => {
                 const updatedDocs = documents.filter(d => d.id !== id);
                 setDocuments(updatedDocs);
                 localStorage.setItem('projectDocuments', JSON.stringify(updatedDocs));
+                tg?.HapticFeedback.notificationOccurred('warning');
             }
         });
     };
@@ -1989,6 +2213,7 @@ const App: React.FC = () => {
         localStorage.setItem('workStages', JSON.stringify(updatedStages));
         setIsWorkStageModalOpen(false);
         setEditingWorkStage(null);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeleteWorkStage = (id: number) => {
@@ -1997,6 +2222,7 @@ const App: React.FC = () => {
                 const updatedStages = workStages.filter(ws => ws.id !== id);
                 setWorkStages(updatedStages);
                 localStorage.setItem('workStages', JSON.stringify(updatedStages));
+                tg?.HapticFeedback.notificationOccurred('warning');
             }
         });
     };
@@ -2019,6 +2245,7 @@ const App: React.FC = () => {
         localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
         setIsNoteModalOpen(false);
         setEditingNote(null);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeleteNote = (id: number) => {
@@ -2027,6 +2254,7 @@ const App: React.FC = () => {
                 const updatedNotes = notes.filter(n => n.id !== id);
                 setNotes(updatedNotes);
                 localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
+                tg?.HapticFeedback.notificationOccurred('warning');
             }
         });
     };
@@ -2051,20 +2279,20 @@ const App: React.FC = () => {
 
     // --- RENDER LOGIC ---
     
-    const themeIcon = useMemo(() => {
-        if (themeMode === 'light') return '☀️';
-        if (themeMode === 'dark') return '🌙';
-        return '🌓';
+    const themeIcon = useCallback(() => {
+        if (themeMode === 'light') return <IconSun />;
+        if (themeMode === 'dark') return <IconMoon />;
+        return <IconContrast />;
     }, [themeMode]);
 
     const BottomNav = () => (
         <nav className="bottom-nav">
             <button onClick={() => setActiveView('estimate')} className={activeView === 'estimate' ? 'active' : ''}>
-                <span className="icon">📝</span>
+                <span className="icon"><IconDocument/></span>
                 <span>Смета</span>
             </button>
             <button onClick={() => setActiveView('projects')} className={activeView.startsWith('project') ? 'active' : ''}>
-                <span className="icon">🏗️</span>
+                <span className="icon"><IconProject/></span>
                 <span>Проекты</span>
             </button>
         </nav>
@@ -2106,7 +2334,7 @@ const App: React.FC = () => {
         // Default to 'estimate'
         return <EstimateView {...{
             currentEstimateProjectId, handleBackToProject, clientInfo, setClientInfo, setIsDirty,
-            handleThemeChange, themeIcon, themeMode, setIsLibraryOpen, setIsEstimatesListOpen, setIsSettingsOpen,
+            handleThemeChange, themeIcon, themeMode, setIsLibraryOpen, setIsEstimatesListOpen, setIsSettingsOpen, setIsAISuggestModalOpen,
             estimateNumber, setEstimateNumber, estimateDate, setEstimateDate, handleInputFocus, items,
             dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange,
             handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem,
@@ -2202,6 +2430,11 @@ const App: React.FC = () => {
                     project={activeProject}
                     profile={companyProfile}
                     totalAmount={actModalTotal}
+                    showAlert={safeShowAlert}
+                />}
+                {isAISuggestModalOpen && <AISuggestModal
+                    onClose={() => setIsAISuggestModalOpen(false)}
+                    onAddItems={handleAddItemsFromAI}
                     showAlert={safeShowAlert}
                 />}
 
