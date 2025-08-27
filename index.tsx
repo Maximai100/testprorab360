@@ -966,10 +966,11 @@ const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddItems, sh
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const API_KEY = "AIzaSyBiG8q4q8_0wjXsTWILzByFdrY2pMJ0vek";
     
     const ai = useMemo(() => {
-        if (process.env.API_KEY) {
-            return new GoogleGenAI({ apiKey: process.env.API_KEY });
+        if (API_KEY) {
+            return new GoogleGenAI({ apiKey: API_KEY });
         }
         return null;
     }, []);
