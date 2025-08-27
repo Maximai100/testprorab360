@@ -259,6 +259,65 @@ const readFileAsDataURL = (file: File): Promise<string> => {
     });
 };
 
+// --- NUMBER TO WORDS UTILITY ---
+const numberToWordsRu = (number: number): string => {
+    const toWords = (n: number): string => {
+        const units = ['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+        const teens = ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+        const tens = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+        const hundreds = ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+
+        if (n === 0) return 'ноль';
+        
+        let words = [];
+        if (n >= 100) {
+            words.push(hundreds[Math.floor(n / 100)]);
+            n %= 100;
+        }
+        if (n >= 20) {
+            words.push(tens[Math.floor(n / 10)]);
+            n %= 10;
+        }
+        if (n >= 10) {
+            words.push(teens[n - 10]);
+            n = 0;
+        }
+        if (n > 0) {
+            words.push(units[n]);
+        }
+        return words.filter(Boolean).join(' ');
+    };
+
+    const morph = (value: number, forms: [string, string, string]): string => {
+        value = Math.abs(value) % 100;
+        const num = value % 10;
+        if (value > 10 && value < 20) return forms[2];
+        if (num > 1 && num < 5) return forms[1];
+        if (num === 1) return forms[0];
+        return forms[2];
+    };
+
+    const integerPart = Math.trunc(number);
+    const fractionalPart = Math.round((number - integerPart) * 100);
+
+    const rubWords = toWords(integerPart).replace(' один', ' одна').replace(' два', ' две');
+    const rubleForms: [string, string, string] = ['рубль', 'рубля', 'рублей'];
+    const kopekForms: [string, string, string] = ['копейка', 'копейки', 'копеек'];
+
+    let result = `${rubWords} ${morph(integerPart, rubleForms)}`;
+    result = result.charAt(0).toUpperCase() + result.slice(1);
+    
+    if (fractionalPart > 0) {
+        const kopWords = toWords(fractionalPart).replace(' один', ' одна').replace(' два', ' две');
+        result += ` ${fractionalPart.toString().padStart(2, '0')} ${morph(fractionalPart, kopekForms)}`;
+    } else {
+        result += ' 00 копеек';
+    }
+
+    return result;
+};
+
+
 // --- START OF MODAL COMPONENTS ---
 interface SettingsModalProps {
     profile: CompanyProfile;
@@ -796,6 +855,75 @@ const NoteModal: React.FC<NoteModalProps> = ({ note, onClose, onSave, showAlert 
     );
 };
 
+interface ActGenerationModalProps {
+    onClose: () => void;
+    project: Project;
+    profile: CompanyProfile;
+    totalAmount: number;
+    showAlert: (message: string) => void;
+}
+const ActGenerationModal: React.FC<ActGenerationModalProps> = ({ onClose, project, profile, totalAmount, showAlert }) => {
+    const [copyButtonText, setCopyButtonText] = useState('Копировать');
+    
+    const actText = useMemo(() => {
+        const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const totalInWords = numberToWordsRu(totalAmount);
+        const formattedTotal = new Intl.NumberFormat('ru-RU', { style: 'decimal', minimumFractionDigits: 2 }).format(totalAmount);
+
+        return `АКТ ВЫПОЛНЕННЫХ РАБОТ
+
+г. __________                                      "${today.split('.')[0]}" ${new Date().toLocaleString('ru-RU', { month: 'long' })} ${new Date().getFullYear()} г.
+
+Исполнитель: ${profile.name || '____________________'}
+${profile.details ? `Реквизиты: ${profile.details}` : ''}
+
+Заказчик: ${project.client || '____________________'}
+Объект: ${project.address || '____________________'}
+
+1. Исполнитель выполнил, а Заказчик принял работы по объекту, расположенному по адресу: ${project.address}.
+2. Качество работ соответствует требованиям. Заказчик претензий по объему, качеству и срокам выполнения работ не имеет.
+3. Общая стоимость выполненных работ составляет ${formattedTotal} руб. (${totalInWords}).
+4. Настоящий акт составлен в двух экземплярах, имеющих одинаковую юридическую силу, по одному для каждой из сторон.
+
+ПОДПИСИ СТОРОН:
+
+Исполнитель: ________________ / ${profile.name || ''} /
+
+Заказчик: ________________ / ${project.client || ''} /
+`;
+    }, [project, profile, totalAmount]);
+    
+    const handleCopy = () => {
+        navigator.clipboard.writeText(actText).then(() => {
+            setCopyButtonText('Скопировано ✓');
+            setTimeout(() => setCopyButtonText('Копировать'), 2000);
+        }).catch(() => {
+            showAlert('Не удалось скопировать.');
+        });
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Акт выполненных работ</h2>
+                    <button onClick={onClose} className="close-btn" aria-label="Закрыть">×</button>
+                </div>
+                <div className="modal-body">
+                    <textarea 
+                        className="act-textarea"
+                        value={actText} 
+                        readOnly 
+                    />
+                </div>
+                <div className="modal-footer">
+                    <button onClick={handleCopy} className="btn btn-primary">{copyButtonText}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 // --- END OF MODAL COMPONENTS ---
 
@@ -934,11 +1062,12 @@ const ProjectDetailView: React.FC<{
     onDeleteWorkStage: (id: number) => void;
     onOpenNoteModal: (note: Partial<Note> | null) => void;
     onDeleteNote: (id: number) => void;
+    onOpenActModal: (total: number) => void;
 }> = ({
     activeProject, estimates, financeEntries, photoReports, documents, workStages, notes, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote, onOpenActModal
 }) => {
     // Hooks are now at the top level of this component, which is correct.
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
@@ -973,7 +1102,7 @@ const ProjectDetailView: React.FC<{
                 <div className="header-actions">
                     <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать">✏️</button>
                     <button onClick={() => handleDeleteProject(activeProject.id)} className="header-btn" aria-label="Удалить">🗑️</button>
-                    {activeProject.status === 'completed' && <button className="header-btn" aria-label="Сгенерировать акт">📄</button>}
+                    {activeProject.status === 'completed' && <button onClick={() => onOpenActModal(estimateTotal)} className="header-btn" aria-label="Сгенерировать акт">📄</button>}
                 </div>
             </header>
             <main className="project-detail-main">
@@ -1169,6 +1298,8 @@ const App: React.FC = () => {
     const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
     const [editingNote, setEditingNote] = useState<Partial<Note> | null>(null);
     const [viewingPhoto, setViewingPhoto] = useState<PhotoReport | null>(null);
+    const [isActModalOpen, setIsActModalOpen] = useState(false);
+    const [actModalTotal, setActModalTotal] = useState(0);
     const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
     const [isDirty, setIsDirty] = useState(false);
     const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -1900,6 +2031,11 @@ const App: React.FC = () => {
         });
     };
 
+    const handleOpenActModal = (total: number) => {
+        setActModalTotal(total);
+        setIsActModalOpen(true);
+    };
+
 
     const activeProject = useMemo(() => projects.find(p => p.id === activeProjectId), [projects, activeProjectId]);
 
@@ -1964,6 +2100,7 @@ const App: React.FC = () => {
                 onDeleteWorkStage: handleDeleteWorkStage,
                 onOpenNoteModal: handleOpenNoteModal,
                 onDeleteNote: handleDeleteNote,
+                onOpenActModal: handleOpenActModal,
             }} />;
         }
         // Default to 'estimate'
@@ -2058,6 +2195,13 @@ const App: React.FC = () => {
                     note={editingNote}
                     onClose={() => {setIsNoteModalOpen(false); setEditingNote(null);}}
                     onSave={handleSaveNote}
+                    showAlert={safeShowAlert}
+                />}
+                {isActModalOpen && activeProject && <ActGenerationModal
+                    onClose={() => setIsActModalOpen(false)}
+                    project={activeProject}
+                    profile={companyProfile}
+                    totalAmount={actModalTotal}
                     showAlert={safeShowAlert}
                 />}
 
