@@ -77,6 +77,7 @@ header {
     margin: -16px -16px 16px -16px; /* Adjust for container padding */
     width: calc(100% + 32px); /* Adjust for container padding */
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-sizing: border-box;
 }
 
 body.dark-theme .estimate-header, 
@@ -438,6 +439,7 @@ body.dark-theme .btn-ai {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
+    flex-shrink: 0;
 }
 .toggle-group button {
     background-color: var(--bg-color);
@@ -669,12 +671,9 @@ body.dark-theme .btn-ai {
 
 .library-filters {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-bottom: 12px;
-}
-.library-filters select {
-    max-width: 150px;
 }
 
 .category-group h4 {
