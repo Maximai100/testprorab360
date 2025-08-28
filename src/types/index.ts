@@ -116,6 +116,18 @@ export interface Note {
     lastModified: number;
 }
 
+export interface InventoryItem {
+    id: number;
+    name: string;
+    location: string; // "На базе" or projectId
+}
+
+export interface InventoryNote {
+    id: number;
+    text: string;
+    date: string;
+}
+
 export interface SettingsModalProps {
     profile: CompanyProfile;
     onClose: () => void;
@@ -309,4 +321,21 @@ export interface ProjectDetailViewProps {
     onOpenNoteModal: (note: Partial<Note> | null) => void;
     onDeleteNote: (id: number) => void;
     onOpenActModal: (total: number) => void;
+}
+
+export interface InventoryViewProps {
+    inventoryItems: InventoryItem[];
+    inventoryNotes: InventoryNote[];
+    projects: Project[];
+    onAddItem: (item: Omit<InventoryItem, 'id'>) => void;
+    onUpdateItem: (item: InventoryItem) => void;
+    onDeleteItem: (id: number) => void;
+    onAddNote: (note: Omit<InventoryNote, 'id' | 'date'>) => void;
+    onDeleteNote: (id: number) => void;
+    onOpenAddToolModal: () => void;
+}
+
+export interface AddToolModalProps {
+    onClose: () => void;
+    onSave: (item: Omit<InventoryItem, 'id'>) => void;
 }

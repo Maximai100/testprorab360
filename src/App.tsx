@@ -4,10 +4,10 @@ import { GoogleGenAI } from '@google/genai';
 import { ROBOTO_FONT_BASE64 } from './font';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
-    PhotoReport, Document, WorkStage, Note, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
+    PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
     NewProjectModalProps, FinanceEntryModalProps, PhotoReportModalProps, PhotoViewerModalProps, ShoppingListModalProps, 
     DocumentUploadModalProps, WorkStageModalProps, NoteModalProps, ActGenerationModalProps, AISuggestModalProps, 
-    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps 
+    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps
 } from './types';
 import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu } from './utils';
 import { statusMap } from './constants';
@@ -26,13 +26,15 @@ import { WorkStageModal } from './components/modals/WorkStageModal';
 import { NoteModal } from './components/modals/NoteModal';
 import { ActGenerationModal } from './components/modals/ActGenerationModal';
 import { AISuggestModal } from './components/modals/AISuggestModal';
+import { AddToolModal } from './components/modals/AddToolModal';
 import { EstimateView } from './components/views/EstimateView';
 import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
+import { InventoryView } from './components/views/InventoryView';
 
 const App: React.FC = () => {
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail'>('projects');
+    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail' | 'inventory'>('projects');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -45,6 +47,8 @@ const App: React.FC = () => {
     const [notes, setNotes] = useState<Note[]>([]);
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
+    const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+    const [inventoryNotes, setInventoryNotes] = useState<InventoryNote[]>([]);
     
     // --- Current Estimate State ---
     const [activeEstimateId, setActiveEstimateId] = useState<number | null>(null);
@@ -80,6 +84,7 @@ const App: React.FC = () => {
     const [viewingPhoto, setViewingPhoto] = useState<PhotoReport | null>(null);
     const [isActModalOpen, setIsActModalOpen] = useState(false);
     const [isAISuggestModalOpen, setIsAISuggestModalOpen] = useState(false);
+    const [isAddToolModalOpen, setIsAddToolModalOpen] = useState(false);
     const [actModalTotal, setActModalTotal] = useState(0);
     const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
     const [isDirty, setIsDirty] = useState(false);
@@ -263,6 +268,12 @@ const App: React.FC = () => {
 
         const savedNotes = localStorage.getItem('projectNotes');
         if (savedNotes) { try { setNotes(JSON.parse(savedNotes)); } catch (e) { console.error("Failed to parse notes", e); } }
+
+        const savedInventoryItems = localStorage.getItem('inventoryItems');
+        if (savedInventoryItems) { try { setInventoryItems(JSON.parse(savedInventoryItems)); } catch (e) { console.error("Failed to parse inventory items", e); } }
+
+        const savedInventoryNotes = localStorage.getItem('inventoryNotes');
+        if (savedInventoryNotes) { try { setInventoryNotes(JSON.parse(savedInventoryNotes)); } catch (e) { console.error("Failed to parse inventory notes", e); } }
 
     }, []);
     
@@ -839,6 +850,39 @@ const App: React.FC = () => {
         localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
     };
 
+    // --- Inventory Management ---
+    const handleAddInventoryItem = (item: Omit<InventoryItem, 'id'>) => {
+        const newItem: InventoryItem = { ...item, id: Date.now() };
+        const updatedItems = [newItem, ...inventoryItems];
+        setInventoryItems(updatedItems);
+        localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+    };
+
+    const handleUpdateInventoryItem = (item: InventoryItem) => {
+        const updatedItems = inventoryItems.map(i => i.id === item.id ? item : i);
+        setInventoryItems(updatedItems);
+        localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+    };
+
+    const handleDeleteInventoryItem = (id: number) => {
+        const updatedItems = inventoryItems.filter(i => i.id !== id);
+        setInventoryItems(updatedItems);
+        localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+    };
+
+    const handleAddInventoryNote = (note: Omit<InventoryNote, 'id' | 'date'>) => {
+        const newNote: InventoryNote = { ...note, id: Date.now(), date: new Date().toISOString() };
+        const updatedNotes = [newNote, ...inventoryNotes];
+        setInventoryNotes(updatedNotes);
+        localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
+    };
+
+    const handleDeleteInventoryNote = (id: number) => {
+        const updatedNotes = inventoryNotes.filter(n => n.id !== id);
+        setInventoryNotes(updatedNotes);
+        localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
+    };
+
     const handleBackup = () => {
         const backupData = {
             estimates,
@@ -969,6 +1013,18 @@ const App: React.FC = () => {
                     onDeleteNote={handleDeleteNote}
                     onOpenActModal={handleOpenActModal}
                 />;
+            case 'inventory':
+                return <InventoryView
+                    inventoryItems={inventoryItems}
+                    inventoryNotes={inventoryNotes}
+                    projects={projects}
+                    onAddItem={handleAddInventoryItem}
+                    onUpdateItem={handleUpdateInventoryItem}
+                    onDeleteItem={handleDeleteInventoryItem}
+                    onAddNote={handleAddInventoryNote}
+                    onDeleteNote={handleDeleteInventoryNote}
+                    onOpenAddToolModal={() => setIsAddToolModalOpen(true)}
+                />;
             case 'estimate':
             default:
                 return <EstimateView 
@@ -1033,6 +1089,10 @@ const App: React.FC = () => {
                     <IconDocument/>
                     <span>Смета</span>
                 </button>
+                <button onClick={() => setActiveView('inventory')} className={activeView === 'inventory' ? 'active' : ''}>
+                    <IconClipboard/>
+                    <span>Инвентарь</span>
+                </button>
                 <button onClick={() => setIsLibraryOpen(true)}>
                     <IconBook/>
                     <span>Справочник</span>
@@ -1056,6 +1116,7 @@ const App: React.FC = () => {
             {isNoteModalOpen && <NoteModal note={editingNote} onClose={() => setIsNoteModalOpen(false)} onSave={handleSaveNote} showAlert={safeShowAlert} />}
             {isActModalOpen && activeProject && <ActGenerationModal onClose={() => setIsActModalOpen(false)} project={activeProject} profile={companyProfile} totalAmount={actModalTotal} showAlert={safeShowAlert} />}
             {isAISuggestModalOpen && <AISuggestModal onClose={() => setIsAISuggestModalOpen(false)} onAddItems={handleAddItemsFromAI} showAlert={safeShowAlert} />}
+            {isAddToolModalOpen && <AddToolModal onClose={() => setIsAddToolModalOpen(false)} onSave={handleAddInventoryItem} />}
         </div>
     );
 };
