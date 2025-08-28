@@ -45,6 +45,7 @@ const App: React.FC = () => {
     const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
     const [documents, setDocuments] = useState<Document[]>([]);
+    const [globalDocuments, setGlobalDocuments] = useState<Document[]>([]);
     const [workStages, setWorkStages] = useState<WorkStage[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
@@ -80,6 +81,7 @@ const App: React.FC = () => {
     const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
     const [isPhotoReportModalOpen, setIsPhotoReportModalOpen] = useState(false);
     const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+    const [isGlobalDocumentModalOpen, setIsGlobalDocumentModalOpen] = useState(false);
     const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
     const [isWorkStageModalOpen, setIsWorkStageModalOpen] = useState(false);
     const [editingWorkStage, setEditingWorkStage] = useState<Partial<WorkStage> | null>(null);
@@ -266,6 +268,9 @@ const App: React.FC = () => {
 
         const savedDocuments = localStorage.getItem('projectDocuments');
         if (savedDocuments) { try { setDocuments(JSON.parse(savedDocuments)); } catch (e) { console.error("Failed to parse documents", e); } }
+
+        const savedGlobalDocuments = localStorage.getItem('globalDocuments');
+        if (savedGlobalDocuments) { try { setGlobalDocuments(JSON.parse(savedGlobalDocuments)); } catch (e) { console.error("Failed to parse global documents", e); } }
 
         const savedWorkStages = localStorage.getItem('workStages');
         if (savedWorkStages) { try { setWorkStages(JSON.parse(savedWorkStages)); } catch (e) { console.error("Failed to parse work stages", e); } }
@@ -812,6 +817,20 @@ const App: React.FC = () => {
         localStorage.setItem('projectDocuments', JSON.stringify(updatedDocs));
     };
 
+    const handleSaveGlobalDocument = (name: string, dataUrl: string) => {
+        const newDoc: Document = { id: Date.now(), name, dataUrl, date: new Date().toISOString() };
+        const updatedDocs = [newDoc, ...globalDocuments];
+        setGlobalDocuments(updatedDocs);
+        localStorage.setItem('globalDocuments', JSON.stringify(updatedDocs));
+        setIsGlobalDocumentModalOpen(false);
+    };
+
+    const handleDeleteGlobalDocument = (id: number) => {
+        const updatedDocs = globalDocuments.filter(d => d.id !== id);
+        setGlobalDocuments(updatedDocs);
+        localStorage.setItem('globalDocuments', JSON.stringify(updatedDocs));
+    };
+
     // --- Work Stage Management ---
     const handleOpenWorkStageModal = (stage: Partial<WorkStage> | null) => {
         setEditingWorkStage(stage);
@@ -1013,15 +1032,13 @@ const App: React.FC = () => {
                 return <WorkspaceView 
                     tasks={tasks}
                     scratchpad={scratchpad}
-                    documents={documents}
-                    projects={projects}
+                    globalDocuments={globalDocuments}
                     onAddTask={handleAddTask}
                     onToggleTask={handleToggleTask}
                     onDeleteTask={handleDeleteTask}
                     onScratchpadChange={handleScratchpadChange}
-                    setActiveView={setActiveView}
-                    onOpenProjectModal={handleOpenProjectModal}
-                    handleAddNewEstimateForProject={handleAddNewEstimateForProject}
+                    onOpenGlobalDocumentModal={() => setIsGlobalDocumentModalOpen(true)}
+                    onDeleteGlobalDocument={handleDeleteGlobalDocument}
                 />;
             case 'projects':
                 return <ProjectsListView 
@@ -1188,6 +1205,7 @@ const App: React.FC = () => {
             {viewingPhoto && <PhotoViewerModal photo={viewingPhoto} onClose={() => setViewingPhoto(null)} onDelete={handleDeletePhoto} />}
             {isShoppingListOpen && <ShoppingListModal items={items} onClose={() => setIsShoppingListOpen(false)} showAlert={safeShowAlert} />}
             {isDocumentModalOpen && <DocumentUploadModal onClose={() => setIsDocumentModalOpen(false)} onSave={handleSaveDocument} showAlert={safeShowAlert} />}
+            {isGlobalDocumentModalOpen && <DocumentUploadModal onClose={() => setIsGlobalDocumentModalOpen(false)} onSave={handleSaveGlobalDocument} showAlert={safeShowAlert} />}
             {isWorkStageModalOpen && <WorkStageModal stage={editingWorkStage} onClose={() => setIsWorkStageModalOpen(false)} onSave={handleSaveWorkStage} showAlert={safeShowAlert} />}
             {isNoteModalOpen && <NoteModal note={editingNote} onClose={() => setIsNoteModalOpen(false)} onSave={handleSaveNote} showAlert={safeShowAlert} />}
             {isActModalOpen && activeProject && <ActGenerationModal onClose={() => setIsActModalOpen(false)} project={activeProject} profile={companyProfile} totalAmount={actModalTotal} showAlert={safeShowAlert} />}

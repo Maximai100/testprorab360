@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { WorkspaceViewProps } from '../../types';
-import { IconPlus, IconTrash, IconDocument, IconChevronRight } from '../common/Icon';
+import { IconPlus, IconTrash, IconDocument, IconDownload } from '../common/Icon';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     tasks,
     scratchpad,
-    documents,
-    projects,
+    globalDocuments,
     onAddTask,
     onToggleTask,
     onDeleteTask,
     onScratchpadChange,
-    setActiveView,
-    onOpenProjectModal,
-    handleAddNewEstimateForProject
+    onOpenGlobalDocumentModal,
+    onDeleteGlobalDocument,
 }) => {
     const [newTaskText, setNewTaskText] = useState('');
 
@@ -23,8 +21,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
             setNewTaskText('');
         }
     };
-    
-    const recentDocuments = [...documents].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
     return (
         <>
@@ -32,14 +28,28 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <h1>Рабочий стол</h1>
             </header>
             <main className="workspace-container">
-                {/* Quick Actions */}
-                <div className="card quick-actions">
-                    <button onClick={() => onOpenProjectModal()} className="btn btn-primary">+ Новый проект</button>
-                    <button onClick={() => {
-                        handleAddNewEstimateForProject();
-                        setActiveView('estimate');
-                    }} className="btn btn-secondary">+ Новая смета</button>
-                    <button onClick={() => setActiveView('projects')} className="btn btn-secondary">Все проекты <IconChevronRight /></button>
+                {/* My Documents */}
+                <div className="card">
+                    <div className="card-header">
+                        <h2>Мои документы</h2>
+                        <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary">+ Добавить</button>
+                    </div>
+                    <ul className="document-list">
+                        {globalDocuments.map(doc => (
+                            <li key={doc.id} className="document-list-item">
+                                <IconDocument />
+                                <div className="doc-info">
+                                    <span>{doc.name}</span>
+                                    <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
+                                </div>
+                                <div className="doc-actions">
+                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать"><IconDownload /></a>
+                                    <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
+                                </div>
+                            </li>
+                        ))}
+                        {globalDocuments.length === 0 && <p className="empty-list-message">Нет документов.</p>}
+                    </ul>
                 </div>
 
                 {/* Tasks */}
@@ -59,7 +69,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         {tasks.map(task => (
                             <li key={task.id} className={task.completed ? 'completed' : ''}>
                                 <span onClick={() => onToggleTask(task.id)}>{task.text}</span>
-                                <button onClick={() => onDeleteTask(task.id)}><IconTrash/></button>
+                                <button onClick={() => onDeleteTask(task.id)}><IconTrash /></button>
                             </li>
                         ))}
                          {tasks.length === 0 && <p className="empty-list-message">Задач пока нет.</p>}
@@ -75,28 +85,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         placeholder="Место для быстрых заметок..."
                         rows={6}
                     />
-                </div>
-                
-                {/* Recent Documents */}
-                <div className="card">
-                    <h2>Последние документы</h2>
-                    <ul className="document-list">
-                        {recentDocuments.map(doc => {
-                            const project = projects.find(p => p.id === doc.projectId);
-                            return (
-                                <li key={doc.id}>
-                                    <a href={doc.dataUrl} download={doc.name}>
-                                        <IconDocument />
-                                        <div className="doc-info">
-                                            <span>{doc.name}</span>
-                                            <small>Проект: {project?.name || 'Неизвестно'}</small>
-                                        </div>
-                                    </a>
-                                </li>
-                            );
-                        })}
-                        {recentDocuments.length === 0 && <p className="empty-list-message">Документов пока нет.</p>}
-                    </ul>
                 </div>
             </main>
         </>

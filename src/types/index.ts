@@ -95,7 +95,7 @@ export interface PhotoReport {
 
 export interface Document {
     id: number;
-    projectId: number;
+    projectId?: number | null;
     name: string;
     dataUrl: string;
     date: string;
@@ -355,13 +355,11 @@ export interface Task {
 export interface WorkspaceViewProps {
     tasks: Task[];
     scratchpad: string;
-    documents: Document[];
-    projects: Project[];
+    globalDocuments: Document[];
     onAddTask: (text: string) => void;
     onToggleTask: (id: number) => void;
     onDeleteTask: (id: number) => void;
     onScratchpadChange: (text: string) => void;
-    setActiveView: (view: any) => void;
-    onOpenProjectModal: (project?: Partial<Project> | null) => void;
-    handleAddNewEstimateForProject: () => void;
+    onOpenGlobalDocumentModal: () => void;
+    onDeleteGlobalDocument: (id: number) => void;
 }
