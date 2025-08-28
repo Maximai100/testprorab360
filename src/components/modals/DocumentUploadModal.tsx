@@ -30,7 +30,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className="modal-header"><h2>Загрузить документ</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Выберите файл</label>

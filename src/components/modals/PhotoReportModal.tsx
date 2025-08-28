@@ -29,7 +29,7 @@ export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onS
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className="modal-header"><h2>Добавить фото</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Фотография</label>

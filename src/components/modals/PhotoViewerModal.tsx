@@ -5,7 +5,7 @@ import { IconClose, IconTrash } from '../common/Icon';
 export const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({ photo, onClose, onDelete }) => {
     return (
         <div className="modal-overlay photo-viewer-overlay" onClick={onClose}>
-            <div className="photo-viewer-content" onClick={e => e.stopPropagation()}>
+            <div className="photo-viewer-content" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <img src={photo.image} alt={photo.caption || 'Фото из отчета'} />
                 {photo.caption && <p className="photo-viewer-caption">{photo.caption}</p>}
                 <div className="photo-viewer-actions">

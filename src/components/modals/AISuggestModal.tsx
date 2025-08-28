@@ -79,7 +79,7 @@ export const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddIt
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className="modal-header">
                     <h2>AI-помощник</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>

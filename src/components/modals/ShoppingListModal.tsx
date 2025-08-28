@@ -19,7 +19,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ items, onC
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className="modal-header"><h2>Список покупок</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body" ref={listRef}>
                     {materials.length > 0 ? (

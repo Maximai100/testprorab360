@@ -1143,8 +1143,22 @@ const App: React.FC = () => {
         }
     };
 
+    const isAnyModalOpen = useMemo(() => (
+        isSettingsOpen || isEstimatesListOpen || isLibraryOpen || isProjectModalOpen ||
+        isFinanceModalOpen || isPhotoReportModalOpen || isDocumentModalOpen ||
+        isGlobalDocumentModalOpen || isShoppingListOpen || isWorkStageModalOpen ||
+        isNoteModalOpen || isActModalOpen || isAISuggestModalOpen || isAddToolModalOpen ||
+        viewingPhoto !== null
+    ), [
+        isSettingsOpen, isEstimatesListOpen, isLibraryOpen, isProjectModalOpen,
+        isFinanceModalOpen, isPhotoReportModalOpen, isDocumentModalOpen,
+        isGlobalDocumentModalOpen, isShoppingListOpen, isWorkStageModalOpen,
+        isNoteModalOpen, isActModalOpen, isAISuggestModalOpen, isAddToolModalOpen,
+        viewingPhoto
+    ]);
+
     return (
-        <div className="app-container">
+        <div className="app-container" aria-hidden={isAnyModalOpen}>
             <header className="app-header">
                 <div className="app-header-left">
                     <img src="/logo.png" alt="Логотип" className="app-logo" />

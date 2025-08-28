@@ -25,7 +25,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className="modal-header">
                     <h2>{stage?.id ? 'Редактировать этап' : 'Новый этап работ'}</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>
