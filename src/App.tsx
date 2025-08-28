@@ -7,11 +7,11 @@ import {
     PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
     NewProjectModalProps, FinanceEntryModalProps, PhotoReportModalProps, PhotoViewerModalProps, ShoppingListModalProps, 
     DocumentUploadModalProps, WorkStageModalProps, NoteModalProps, ActGenerationModalProps, AISuggestModalProps, 
-    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps
+    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps
 } from './types';
 import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu } from './utils';
 import { statusMap } from './constants';
-import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage } from './components/common/Icon';
+import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { EstimatesListModal } from './components/modals/EstimatesListModal';
@@ -31,10 +31,11 @@ import { EstimateView } from './components/views/EstimateView';
 import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
 import { InventoryView } from './components/views/InventoryView';
+import { ReportsView } from './components/views/ReportsView';
 
 const App: React.FC = () => {
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail' | 'inventory'>('projects');
+    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports'>('projects');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -1027,6 +1028,12 @@ const App: React.FC = () => {
                     onDeleteNote={handleDeleteInventoryNote}
                     onOpenAddToolModal={() => setIsAddToolModalOpen(true)}
                 />;
+            case 'reports':
+                return <ReportsView
+                    projects={projects}
+                    estimates={estimates}
+                    financeEntries={financeEntries}
+                />;
             case 'estimate':
             default:
                 return <EstimateView 
@@ -1094,6 +1101,10 @@ const App: React.FC = () => {
                 <button onClick={() => setActiveView('inventory')} className={activeView === 'inventory' ? 'active' : ''}>
                     <IconClipboard/>
                     <span>Инвентарь</span>
+                </button>
+                <button onClick={() => setActiveView('reports')} className={activeView === 'reports' ? 'active' : ''}>
+                    <IconTrendingUp/>
+                    <span>Отчеты</span>
                 </button>
                 <button onClick={() => setIsLibraryOpen(true)}>
                     <IconBook/>
