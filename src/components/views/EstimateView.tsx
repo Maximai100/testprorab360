@@ -57,7 +57,15 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                                 <button onClick={() => handleRemoveItem(item.id)} className="remove-btn" aria-label="Удалить позицию"><IconClose/></button>
                             </div>
                         </div>
-                        <div className="item-inputs"><input type="text" placeholder="Наименование" value={item.name} onChange={(e) => handleItemChange(item.id, 'name', e.target.value)} onFocus={handleInputFocus} aria-label="Наименование" /><input type="number" placeholder="Кол-во" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Количество" min="0"/><input type="text" placeholder="Ед.изм." value={item.unit} onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)} onFocus={handleInputFocus} aria-label="Единица измерения" /><input type="number" placeholder="Цена" value={item.price || ''} onChange={(e) => handleItemChange(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Цена" min="0"/></div>
+                        <div className="item-inputs">
+                            <input type="text" placeholder="Наименование" value={item.name} onChange={(e) => handleItemChange(item.id, 'name', e.target.value)} onFocus={handleInputFocus} aria-label="Наименование" className="item-name-input" />
+                            <div className="item-details-grid">
+                                <input type="number" placeholder="Кол-во" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Количество" min="0"/>
+                                <input type="text" placeholder="Ед.изм." value={item.unit} onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)} onFocus={handleInputFocus} aria-label="Единица измерения" />
+                                <input type="number" placeholder="Цена" value={item.price || ''} onChange={(e) => handleItemChange(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))} onFocus={handleInputFocus} aria-label="Цена" min="0"/>
+                                <div className="item-row-total">{formatCurrency(item.quantity * item.price)}</div>
+                            </div>
+                        </div>
                         {item.image && (
                             <div className="image-preview-container">
                                 <img src={item.image} alt="Предпросмотр" className="image-preview" />
@@ -69,7 +77,6 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                                 <button onClick={() => handleItemChange(item.id, 'type', 'work')} className={item.type === 'work' ? 'active' : ''}>Работа</button>
                                 <button onClick={() => handleItemChange(item.id, 'type', 'material')} className={item.type === 'material' ? 'active' : ''}>Материал</button>
                             </div>
-                            <div className="item-total">Сумма: {formatCurrency(item.quantity * item.price)}</div>
                         </div>
                     </div>
                 ))}
@@ -82,7 +89,29 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                  <button onClick={() => setIsAISuggestModalOpen(true)} className="btn btn-secondary btn-ai"><IconSparkles/> AI-помощник</button>
             </div>
             <div className="summary-details card"><div className="summary-row"><label htmlFor="discount">Скидка</label><div className="input-group"><input id="discount" type="number" value={discount || ''} onChange={(e) => { setDiscount(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/><div className="toggle-group"><button onClick={() => { setDiscountType('percent'); setIsDirty(true); }} className={discountType === 'percent' ? 'active' : ''}>%</button><button onClick={() => { setDiscountType('fixed'); setIsDirty(true); }} className={discountType === 'fixed' ? 'active' : ''}>РУБ</button></div></div></div><div className="summary-row"><label htmlFor="tax">Налог (%)</label><div className="input-group"><input id="tax" type="number" value={tax || ''} onChange={(e) => { setTax(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/></div></div></div>
-            <div className="total-container card"><div className="total-breakdown"><div className="total-row"><span>Подытог</span><span>{formatCurrency(calculation.subtotal)}</span></div>{calculation.discountAmount > 0 && (<div className="total-row"><span>Скидка ({discountType === 'percent' ? `${discount}%` : formatCurrency(discount)})</span><span>-{formatCurrency(calculation.discountAmount)}</span></div>)}{calculation.taxAmount > 0 && (<div className="total-row"><span>Налог ({tax}%)</span><span>+{formatCurrency(calculation.taxAmount)}</span></div>)}<div className="total-row grand-total"><span>Итого:</span><span>{formatCurrency(calculation.grandTotal)}</span></div></div></div>
+            <div className="total-container card">
+                <div className="total-breakdown">
+                    <div className="total-row"><span>Материалы</span><span>{formatCurrency(calculation.materialsTotal)}</span></div>
+                    <div className="total-row"><span>Работа</span><span>{formatCurrency(calculation.workTotal)}</span></div>
+                    <div className="total-row"><span>Подытог</span><span>{formatCurrency(calculation.subtotal)}</span></div>
+                    {calculation.discountAmount > 0 && (
+                        <div className="total-row">
+                            <span>Скидка ({discountType === 'percent' ? `${discount}%` : formatCurrency(discount)})</span>
+                            <span>-{formatCurrency(calculation.discountAmount)}</span>
+                        </div>
+                    )}
+                    {calculation.taxAmount > 0 && (
+                        <div className="total-row">
+                            <span>Налог ({tax}%)</span>
+                            <span>+{formatCurrency(calculation.taxAmount)}</span>
+                        </div>
+                    )}
+                    <div className="total-row grand-total">
+                        <span>Итого:</span>
+                        <span>{formatCurrency(calculation.grandTotal)}</span>
+                    </div>
+                </div>
+            </div>
             <div className="actions-footer">
                 <button onClick={handleSave} className="btn btn-secondary save-btn" disabled={!isDirty || isSaving}>
                     {isSaving ? <Loader /> : (isDirty ? 'Сохранить' : 'Сохранено ✓')}

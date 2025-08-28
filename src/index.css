@@ -247,16 +247,25 @@ body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .item-inputs {
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1.5fr;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
-.item-inputs input:first-child {
-    text-align: left;
+.item-name-input {
+    width: 100%;
 }
-.item-inputs input {
-    text-align: center;
+
+.item-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.item-row-total {
+    text-align: right;
+    font-weight: 500;
 }
 
 .image-preview-container {
@@ -1174,14 +1183,7 @@ input[type=number] { -moz-appearance: textfield; }
     .actions-footer { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 480px) {
-    .item-inputs { grid-template-columns: 1fr 1fr; grid-template-areas: "name name" "quantity unit" "price price"; }
-    .item-inputs input:nth-child(1) { grid-area: name; }
-    .item-inputs input:nth-child(2) { grid-area: quantity; }
-    .item-inputs input:nth-child(3) { grid-area: unit; }
-    .item-inputs input:nth-child(4) { grid-area: price; }
-    .library-add-form { grid-template-columns: 1fr; }
-}
+
 
 @media (max-width: 400px) {
     .summary-row { flex-direction: column; align-items: flex-start; gap: 8px; }

@@ -330,11 +330,13 @@ const App: React.FC = () => {
 
     const calculation = useMemo(() => {
         const subtotal = items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
+        const materialsTotal = items.filter(i => i.type === 'material').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
+        const workTotal = items.filter(i => i.type === 'work').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
         const discountAmount = discountType === 'percent' ? subtotal * (Number(discount) / 100) : Number(discount);
         const totalAfterDiscount = subtotal - discountAmount;
         const taxAmount = totalAfterDiscount * (Number(tax) / 100);
         const grandTotal = totalAfterDiscount + taxAmount;
-        return { subtotal, discountAmount, taxAmount, grandTotal };
+        return { subtotal, materialsTotal, workTotal, discountAmount, taxAmount, grandTotal };
     }, [items, discount, discountType, tax]);
 
     const formatCurrency = useCallback((value: number) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(value), []);
