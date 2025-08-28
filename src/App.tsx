@@ -4,14 +4,14 @@ import { GoogleGenAI } from '@google/genai';
 import { ROBOTO_FONT_BASE64 } from './font';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
-    PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
+    PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
     NewProjectModalProps, FinanceEntryModalProps, PhotoReportModalProps, PhotoViewerModalProps, ShoppingListModalProps, 
     DocumentUploadModalProps, WorkStageModalProps, NoteModalProps, ActGenerationModalProps, AISuggestModalProps, 
-    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps
+    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps, WorkspaceViewProps
 } from './types';
 import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu } from './utils';
 import { statusMap } from './constants';
-import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp } from './components/common/Icon';
+import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { EstimatesListModal } from './components/modals/EstimatesListModal';
@@ -32,10 +32,11 @@ import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
 import { InventoryView } from './components/views/InventoryView';
 import { ReportsView } from './components/views/ReportsView';
+import { WorkspaceView } from './components/views/WorkspaceView';
 
 const App: React.FC = () => {
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports'>('projects');
+    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports'>('workspace');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -50,6 +51,8 @@ const App: React.FC = () => {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [inventoryNotes, setInventoryNotes] = useState<InventoryNote[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [scratchpad, setScratchpad] = useState('');
     
     // --- Current Estimate State ---
     const [activeEstimateId, setActiveEstimateId] = useState<number | null>(null);
@@ -253,7 +256,7 @@ const App: React.FC = () => {
         if (savedTemplates) { try { setTemplates(JSON.parse(savedTemplates)); } catch (e) { console.error("Failed to parse templates", e); }}
         
         const savedProjects = localStorage.getItem('projects');
-        if (savedProjects) { try { setProjects(JSON.parse(savedProjects)); } catch (e) { console.error("Failed to parse projects", e); } }
+        if (savedProjects) { try { setProjects(JSON.parse(savedProjects)); } catch (e) { console.error("Failed to parse projects", e); } } 
         
         const savedFinances = localStorage.getItem('financeEntries');
         if (savedFinances) { try { setFinanceEntries(JSON.parse(savedFinances)); } catch (e) { console.error("Failed to parse finances", e); } }
@@ -275,6 +278,12 @@ const App: React.FC = () => {
 
         const savedInventoryNotes = localStorage.getItem('inventoryNotes');
         if (savedInventoryNotes) { try { setInventoryNotes(JSON.parse(savedInventoryNotes)); } catch (e) { console.error("Failed to parse inventory notes", e); } }
+
+        const savedTasks = localStorage.getItem('tasks');
+        if (savedTasks) { try { setTasks(JSON.parse(savedTasks)); } catch (e) { console.error("Failed to parse tasks", e); } }
+
+        const savedScratchpad = localStorage.getItem('scratchpad');
+        if (savedScratchpad) { setScratchpad(savedScratchpad); }
 
     }, []);
     
@@ -886,6 +895,31 @@ const App: React.FC = () => {
         localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
     };
 
+    // --- Workspace Handlers ---
+    const handleAddTask = (text: string) => {
+        const newTask: Task = { id: Date.now(), text, completed: false };
+        const updatedTasks = [newTask, ...tasks];
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
+
+    const handleToggleTask = (id: number) => {
+        const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
+
+    const handleDeleteTask = (id: number) => {
+        const updatedTasks = tasks.filter(t => t.id !== id);
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
+
+    const handleScratchpadChange = (text: string) => {
+        setScratchpad(text);
+        localStorage.setItem('scratchpad', text);
+    };
+
     const handleBackup = () => {
         const backupData = {
             estimates,
@@ -898,6 +932,8 @@ const App: React.FC = () => {
             notes,
             libraryItems,
             companyProfile,
+            tasks,
+            scratchpad,
         };
 
         const json = JSON.stringify(backupData, null, 2);
@@ -932,6 +968,8 @@ const App: React.FC = () => {
                 setNotes(restoredData.notes || []);
                 setLibraryItems(restoredData.libraryItems || []);
                 setCompanyProfile(restoredData.companyProfile || { name: '', details: '', logo: null });
+                setTasks(restoredData.tasks || []);
+                setScratchpad(restoredData.scratchpad || '');
 
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: restoredData.estimates || [], activeEstimateId: null }));
                 localStorage.setItem('estimateTemplates', JSON.stringify(restoredData.templates || []));
@@ -943,6 +981,8 @@ const App: React.FC = () => {
                 localStorage.setItem('projectNotes', JSON.stringify(restoredData.notes || []));
                 localStorage.setItem('itemLibrary', JSON.stringify(restoredData.libraryItems || []));
                 localStorage.setItem('companyProfile', JSON.stringify(restoredData.companyProfile || { name: '', details: '', logo: null }));
+                localStorage.setItem('tasks', JSON.stringify(restoredData.tasks || []));
+                localStorage.setItem('scratchpad', restoredData.scratchpad || '');
 
                 safeShowAlert('Данные успешно восстановлены!');
             } catch (error) {
@@ -969,6 +1009,20 @@ const App: React.FC = () => {
 
     const renderView = () => {
         switch (activeView) {
+            case 'workspace':
+                return <WorkspaceView 
+                    tasks={tasks}
+                    scratchpad={scratchpad}
+                    documents={documents}
+                    projects={projects}
+                    onAddTask={handleAddTask}
+                    onToggleTask={handleToggleTask}
+                    onDeleteTask={handleDeleteTask}
+                    onScratchpadChange={handleScratchpadChange}
+                    setActiveView={setActiveView}
+                    onOpenProjectModal={handleOpenProjectModal}
+                    handleAddNewEstimateForProject={handleAddNewEstimateForProject}
+                />;
             case 'projects':
                 return <ProjectsListView 
                     handleOpenProjectModal={handleOpenProjectModal}
@@ -1090,6 +1144,10 @@ const App: React.FC = () => {
             {renderView()}
             
             <nav className="bottom-nav">
+                <button onClick={() => setActiveView('workspace')} className={activeView === 'workspace' ? 'active' : ''}>
+                    <IconHome/>
+                    <span>Главная</span>
+                </button>
                 <button onClick={() => setActiveView('projects')} className={activeView.startsWith('project') ? 'active' : ''}>
                     <IconProject/>
                     <span>Проекты</span>

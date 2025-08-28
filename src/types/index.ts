@@ -339,3 +339,29 @@ export interface AddToolModalProps {
     onClose: () => void;
     onSave: (item: Omit<InventoryItem, 'id'>) => void;
 }
+
+export interface ReportsViewProps {
+    projects: Project[];
+    estimates: Estimate[];
+    financeEntries: FinanceEntry[];
+}
+
+export interface Task {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
+export interface WorkspaceViewProps {
+    tasks: Task[];
+    scratchpad: string;
+    documents: Document[];
+    projects: Project[];
+    onAddTask: (text: string) => void;
+    onToggleTask: (id: number) => void;
+    onDeleteTask: (id: number) => void;
+    onScratchpadChange: (text: string) => void;
+    setActiveView: (view: any) => void;
+    onOpenProjectModal: (project?: Partial<Project> | null) => void;
+    handleAddNewEstimateForProject: () => void;
+}
