@@ -1088,8 +1088,9 @@ const App: React.FC = () => {
                 />;
             case 'scratchpad':
                 return <ScratchpadView
-                    scratchpad={scratchpad}
-                    onScratchpadChange={handleScratchpadChange}
+                    content={scratchpad}
+                    onSave={handleScratchpadChange}
+                    onBack={() => setActiveView('workspace')}
                 />;
             case 'estimate':
             default:
