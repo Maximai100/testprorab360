@@ -60,7 +60,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                                 <button onClick={() => onDeleteTask(task.id)}><IconTrash /></button>
                             </li>
                         ))}
-                         {tasks.length === 0 && <p className="empty-list-message">Задач пока нет.</p>}
+                         {tasks.length === 0 && <p className="empty-list-message">У вас пока нет задач. Добавьте свою первую задачу выше!</p>}
                     </ul>
                 </div>
 
@@ -100,7 +100,12 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                                 </div>
                             </li>
                         ))}
-                        {globalDocuments.length === 0 && <p className="empty-list-message">Нет документов.</p>}
+                        {globalDocuments.length === 0 && (
+                            <div className="empty-list-message-with-button">
+                                <p className="empty-list-message">У вас пока нет документов. Загрузите важные файлы, чтобы они всегда были под рукой!</p>
+                                <button onClick={onOpenGlobalDocumentModal} className="btn btn-primary">+ Загрузить документ</button>
+                            </div>
+                        )}
                     </ul>
                 </div>
             </main>
