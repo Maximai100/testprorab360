@@ -92,7 +92,7 @@ const App: React.FC = () => {
     const [isAISuggestModalOpen, setIsAISuggestModalOpen] = useState(false);
     const [isAddToolModalOpen, setIsAddToolModalOpen] = useState(false);
     const [actModalTotal, setActModalTotal] = useState(0);
-    const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
+    const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
     const [isDirty, setIsDirty] = useState(false);
     const [isPdfLoading, setIsPdfLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -105,42 +105,24 @@ const App: React.FC = () => {
     // Theme Management
     useEffect(() => {
         const savedTheme = localStorage.getItem('themeMode') as ThemeMode | null;
-        if (savedTheme) {
-            setThemeMode(savedTheme);
+        // Set default to dark if nothing is saved
+        const initialTheme = savedTheme || 'dark';
+        setThemeMode(initialTheme);
+        if (initialTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
         }
-
-        const applyTheme = () => {
-            const currentMode = (localStorage.getItem('themeMode') as ThemeMode | null) || 'auto';
-            if (currentMode === 'dark' || (currentMode === 'auto' && window.Telegram?.WebApp.colorScheme === 'dark')) {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
-        };
-
-        applyTheme(); // Apply on initial load
-        window.Telegram?.WebApp.onEvent('themeChanged', applyTheme); // Listen for TG theme changes
-
-        return () => {
-            window.Telegram?.WebApp.offEvent('themeChanged', applyTheme);
-        };
     }, []);
 
     const handleThemeChange = () => {
-        const newTheme: ThemeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
+        const newTheme: ThemeMode = themeMode === 'light' ? 'dark' : 'light';
         setThemeMode(newTheme);
         localStorage.setItem('themeMode', newTheme);
-
         if (newTheme === 'dark') {
             document.body.classList.add('dark-theme');
-        } else if (newTheme === 'light') {
+        } else {
             document.body.classList.remove('dark-theme');
-        } else { // auto
-            if (window.Telegram?.WebApp.colorScheme === 'dark') {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
         }
     };
     
@@ -1019,11 +1001,7 @@ const App: React.FC = () => {
     };
 
     const themeIcon = useCallback(() => {
-        switch (themeMode) {
-            case 'light': return <IconSun />;
-            case 'dark': return <IconMoon />;
-            default: return <IconContrast />;
-        }
+        return themeMode === 'light' ? <IconSun /> : <IconMoon />;
     }, [themeMode]);
 
     const renderView = () => {

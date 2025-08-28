@@ -28,30 +28,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <h1>Рабочий стол</h1>
             </header>
             <main className="workspace-container">
-                {/* My Documents */}
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Мои документы</h2>
-                        <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary">+ Добавить</button>
-                    </div>
-                    <ul className="document-list">
-                        {globalDocuments.map(doc => (
-                            <li key={doc.id} className="document-list-item">
-                                <IconDocument />
-                                <div className="doc-info">
-                                    <span>{doc.name}</span>
-                                    <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
-                                </div>
-                                <div className="doc-actions">
-                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать"><IconDownload /></a>
-                                    <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
-                                </div>
-                            </li>
-                        ))}
-                        {globalDocuments.length === 0 && <p className="empty-list-message">Нет документов.</p>}
-                    </ul>
-                </div>
-
                 {/* Tasks */}
                 <div className="card">
                     <h2>Мои задачи</h2>
@@ -85,6 +61,30 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         placeholder="Место для быстрых заметок..."
                         rows={6}
                     />
+                </div>
+
+                {/* My Documents */}
+                <div className="card">
+                    <div className="card-header">
+                        <h2>Мои документы</h2>
+                        <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary">+ Добавить</button>
+                    </div>
+                    <ul className="document-list">
+                        {globalDocuments.map(doc => (
+                            <li key={doc.id} className="document-list-item">
+                                <IconDocument />
+                                <div className="doc-info">
+                                    <span>{doc.name}</span>
+                                    <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
+                                </div>
+                                <div className="doc-actions">
+                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать"><IconDownload /></a>
+                                    <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
+                                </div>
+                            </li>
+                        ))}
+                        {globalDocuments.length === 0 && <p className="empty-list-message">Нет документов.</p>}
+                    </ul>
                 </div>
             </main>
         </>
