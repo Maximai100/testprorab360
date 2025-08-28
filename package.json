@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint \"{src,apps,libs}\\\\.{{ts,tsx}}\",
-    "format": "prettier --write \"{src,apps,libs}\\\\.{{ts,tsx,js,jsx,json,css,md}\\""
+    "lint": "eslint \"{src,apps,libs}\\.{{ts,tsx}}\",
+    "format": "prettier --write \"{src,apps,libs}\\.{{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
     "@google/genai": "latest",
