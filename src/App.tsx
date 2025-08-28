@@ -155,7 +155,7 @@ const App: React.FC = () => {
             }
         } else {
             // New estimate state
-            setItems([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'material' }]);
+            setItems([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]);
             setClientInfo('');
             setEstimateNumber(generateNewEstimateNumber(currentEstimates));
             setEstimateDate(new Date().toISOString().split('T')[0]);
@@ -282,14 +282,14 @@ const App: React.FC = () => {
         }, 300); // Delay to allow keyboard to appear
     };
 
-    const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'material' }]); setIsDirty(true); };
-    const handleAddFromLibrary = (libItem: LibraryItem) => { setItems(prev => [...prev, { id: Date.now(), name: libItem.name, quantity: 1, price: libItem.price, unit: libItem.unit, image: null, type: 'material' }]); setIsLibraryOpen(false); setIsDirty(true); };
+    const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
+    const handleAddFromLibrary = (libItem: LibraryItem) => { setItems(prev => [...prev, { id: Date.now(), name: libItem.name, quantity: 1, price: libItem.price, unit: libItem.unit, image: null, type: 'work' }]); setIsLibraryOpen(false); setIsDirty(true); };
     const handleAddItemsFromAI = (newItems: Omit<Item, 'id' | 'image' | 'type'>[]) => {
         const itemsToAdd: Item[] = newItems.map(item => ({
             ...item,
             id: Date.now() + Math.random(),
             image: null,
-            type: 'material' // Default type, user can change it
+            type: 'work' // Default type, user can change it
         }));
         setItems(prev => [...prev, ...itemsToAdd]);
         setIsDirty(true);
