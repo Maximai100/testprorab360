@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WorkspaceViewProps } from '../../types';
-import { IconPlus, IconTrash, IconFile, IconChevronRight } from '../common/Icon';
+import { IconPlus, IconTrash, IconDocument, IconChevronRight } from '../common/Icon';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     tasks,
@@ -86,7 +86,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                             return (
                                 <li key={doc.id}>
                                     <a href={doc.dataUrl} download={doc.name}>
-                                        <IconFile />
+                                        <IconDocument />
                                         <div className="doc-info">
                                             <span>{doc.name}</span>
                                             <small>Проект: {project?.name || 'Неизвестно'}</small>
