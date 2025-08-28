@@ -1198,6 +1198,7 @@ input[type=number] { -moz-appearance: textfield; }
     margin: 0 auto;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 10px 16px;
     background-color: color-mix(in srgb, var(--bg-color) 90%, transparent);
     backdrop-filter: blur(10px);
@@ -1206,6 +1207,35 @@ input[type=number] { -moz-appearance: textfield; }
     gap: 10px;
     z-index: 500;
     height: 64px; /* Fixed height */
+}
+
+.app-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.app-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.app-header-right .header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 6px;
+    color: var(--hint-color);
+    line-height: 1;
+}
+
+.app-header-right .header-btn .icon-wrapper {
+    width: 24px;
+    height: 24px;
 }
 
 .app-logo {

@@ -17,10 +17,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
             {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>}
             <h1 className={currentEstimateProjectId ? 'with-back-btn' : ''}>{clientInfo || 'Новая смета'}</h1>
             <div className="header-actions">
-                <button onClick={handleThemeChange} className="header-btn" aria-label={`Сменить тему: ${themeMode}`} title={`Текущая тема: ${themeMode}`}>{themeIcon()}</button>
-                <button onClick={() => setIsLibraryOpen(true)} className="header-btn" aria-label="Справочник"><IconBook/></button>
-                <button onClick={() => setIsEstimatesListOpen(true)} className="header-btn" aria-label="Мои сметы"><IconFolder/></button>
-                <button onClick={() => setIsSettingsOpen(true)} className="header-btn" aria-label="Настройки"><IconSettings/></button>
+                <button onClick={() => setIsAISuggestModalOpen(true)} className="header-btn" aria-label="AI-помощник"><IconSparkles/></button>
             </div>
         </header>
         <main>

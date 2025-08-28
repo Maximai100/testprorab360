@@ -1142,8 +1142,16 @@ const App: React.FC = () => {
     return (
         <div className="app-container">
             <header className="app-header">
-                <img src="/logo.png" alt="Логотип" className="app-logo" />
-                <h1>Смета за 5 минут</h1>
+                <div className="app-header-left">
+                    <img src="/logo.png" alt="Логотип" className="app-logo" />
+                    <h1>Смета за 5 минут</h1>
+                </div>
+                <div className="app-header-right">
+                    <button onClick={handleThemeChange} className="header-btn" title={`Тема: ${themeMode}`}>{themeIcon()}</button>
+                    <button onClick={() => setIsLibraryOpen(true)} className="header-btn"><IconBook/></button>
+                    <button onClick={() => setIsEstimatesListOpen(true)} className="header-btn"><IconFolder/></button>
+                    <button onClick={() => setIsSettingsOpen(true)} className="header-btn"><IconSettings/></button>
+                </div>
             </header>
             {renderView()}
             
@@ -1168,14 +1176,7 @@ const App: React.FC = () => {
                     <IconTrendingUp/>
                     <span>Отчеты</span>
                 </button>
-                <button onClick={() => setIsLibraryOpen(true)}>
-                    <IconBook/>
-                    <span>Справочник</span>
-                </button>
-                <button onClick={() => setIsSettingsOpen(true)}>
-                    <IconSettings/>
-                    <span>Профиль</span>
-                </button>
+                
             </nav>
 
             {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} profile={companyProfile} onProfileChange={handleProfileChange} onLogoChange={handleLogoChange} onRemoveLogo={removeLogo} onSave={handleSaveProfile} onBackup={handleBackup} onRestore={handleRestore} onInputFocus={handleInputFocus} />}
