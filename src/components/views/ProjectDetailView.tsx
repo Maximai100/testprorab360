@@ -83,7 +83,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                     <span className="list-item-arrow"><IconChevronRight/></span>
                                 </div>
-                            )) : <p className="no-results-message">Смет для этого проекта нет.</p>}
+                            )) : (
+                                <div className="empty-list-message-with-button">
+                                    <p className="no-results-message">Смет для этого проекта пока нет. Создайте первую смету, чтобы начать работу!</p>
+                                    <button onClick={handleAddNewEstimateForProject} className="btn btn-primary">+ Добавить смету</button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -106,7 +111,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="no-results-message">Транзакций пока нет.</p>}
+                        ) : (
+                            <div className="empty-list-message-with-button">
+                                <p className="no-results-message">Транзакций пока нет. Добавьте расходы или оплаты, чтобы отслеживать финансы проекта.</p>
+                                <button onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }} className="btn btn-primary">+ Добавить транзакцию</button>
+                            </div>
+                        )}
                     </div>
                 </div>
                  <div className="card project-section">
@@ -130,7 +140,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="no-results-message">Этапы работ не добавлены.</p>}
+                        ) : (
+                            <div className="empty-list-message-with-button">
+                                <p className="no-results-message">Этапы работ не добавлены. Создайте график, чтобы отслеживать прогресс.</p>
+                                <button onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}} className="btn btn-primary">+ Добавить этап</button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="card project-section">
@@ -147,7 +162,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="no-results-message">Фотографий пока нет.</p>}
+                        ) : (
+                            <div className="empty-list-message-with-button">
+                                <p className="no-results-message">Фотографий пока нет. Добавьте фотоотчеты, чтобы зафиксировать прогресс.</p>
+                                <button onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}} className="btn btn-primary">+ Добавить фото</button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="card project-section">
@@ -172,7 +192,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="no-results-message">Документов пока нет.</p>}
+                        ) : (
+                            <div className="empty-list-message-with-button">
+                                <p className="no-results-message">Документов пока нет. Загрузите важные документы, связанные с проектом.</p>
+                                <button onClick={(e) => {e.preventDefault(); onOpenDocumentModal();}} className="btn btn-primary">+ Загрузить документ</button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="card project-section">
@@ -196,7 +221,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     </div>
                                 ))}
                             </div>
-                        ) : <p className="no-results-message">Заметок пока нет.</p>}
+                        ) : (
+                            <div className="empty-list-message-with-button">
+                                <p className="no-results-message">Заметок пока нет. Добавьте важные мысли и напоминания по проекту.</p>
+                                <button onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}} className="btn btn-primary">+ Добавить заметку</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>
