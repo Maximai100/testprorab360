@@ -39,7 +39,7 @@ export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onS
                             <button onClick={() => setImage(null)} className="remove-image-btn"><IconClose/></button>
                         </div>
                     ) : (
-                        <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
+                        <input type="file" accept="image/*" onChange={handleImageChange} />
                     )}
                     <label>Подпись</label>
                     <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="Например, 'Укладка плитки в ванной'" rows={3} />
