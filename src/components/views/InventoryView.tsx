@@ -36,7 +36,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     </div>
                     <div className="project-section-body">
                         <div className="project-items-list">
-                            {inventoryItems.map(item => (
+                            {inventoryItems.length > 0 ? inventoryItems.map(item => (
                                 <div key={item.id} className="list-item">
                                     <div className="list-item-info">
                                         <strong>{item.name}</strong>
@@ -51,7 +51,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                                         <button onClick={() => onDeleteItem(item.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash /></button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="empty-list-message-with-button">
+                                    <p className="no-results-message">Инструментов пока нет. Добавьте свой первый инструмент, чтобы начать отслеживать его местоположение.</p>
+                                    <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -61,7 +66,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     </div>
                     <div className="project-section-body">
                         <div className="note-list">
-                            {inventoryNotes.map(note => (
+                            {inventoryNotes.length > 0 ? inventoryNotes.map(note => (
                                 <div key={note.id} className="list-item note-item">
                                     <div className="list-item-info">
                                         <p className="note-content">{note.text}</p>
@@ -71,7 +76,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                                         <button onClick={() => onDeleteNote(note.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash /></button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="no-results-message">Заметок по инвентарю пока нет. Добавьте заметку, чтобы не забыть важную информацию.</p>
+                            )}
                         </div>
                         <div className="add-note-form">
                             <textarea 
