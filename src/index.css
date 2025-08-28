@@ -1280,6 +1280,8 @@ input[type=number] { -moz-appearance: textfield; }
 .card-header .btn {
     padding: 6px 12px;
     font-size: 14px;
+    width: auto;
+    flex-grow: 0;
 }
 
 .document-list {
@@ -1354,6 +1356,34 @@ input[type=number] { -moz-appearance: textfield; }
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.task-input-container textarea {
+    flex-grow: 1;
+    min-height: 44px;
+    line-height: 1.4;
+    padding: 10px;
+}
+
+.task-input-container .add-task-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-input-container .add-task-btn .icon-wrapper {
+    width: 24px;
+    height: 24px;
 }
 
 .task-list {
@@ -1380,6 +1410,7 @@ input[type=number] { -moz-appearance: textfield; }
 .task-list li span {
     flex-grow: 1;
     cursor: pointer;
+    word-break: break-word;
 }
 
 .task-list li button {
@@ -1388,6 +1419,7 @@ input[type=number] { -moz-appearance: textfield; }
     color: var(--hint-color);
     cursor: pointer;
     padding: 4px;
+    flex-shrink: 0;
 }
 
 .task-list li button:hover {
@@ -1397,6 +1429,44 @@ input[type=number] { -moz-appearance: textfield; }
 .task-list li button .icon-wrapper {
     width: 20px;
     height: 20px;
+}
+
+.empty-list-message {
+    text-align: center;
+    color: var(--hint-color);
+    padding: 16px 0;
+}
+
+.scratchpad-card {
+    position: relative;
+}
+
+.scratchpad-card .expand-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--hint-color);
+    cursor: pointer;
+    padding: 6px;
+}
+
+.scratchpad-card .expand-btn .icon-wrapper {
+    width: 20px;
+    height: 20px;
+}
+
+.scratchpad-modal .modal-content {
+    height: 80vh;
+}
+
+.scratchpad-modal textarea {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 /* Bottom Navigation Bar */

@@ -362,4 +362,5 @@ export interface WorkspaceViewProps {
     onScratchpadChange: (text: string) => void;
     onOpenGlobalDocumentModal: () => void;
     onDeleteGlobalDocument: (id: number) => void;
+    onOpenScratchpadModal: () => void;
 }

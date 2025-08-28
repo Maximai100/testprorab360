@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WorkspaceViewProps } from '../../types';
-import { IconPlus, IconTrash, IconDocument, IconDownload } from '../common/Icon';
+import { IconPlus, IconTrash, IconDocument, IconDownload, IconExternalLink } from '../common/Icon';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     tasks,
@@ -12,6 +12,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     onScratchpadChange,
     onOpenGlobalDocumentModal,
     onDeleteGlobalDocument,
+    onOpenScratchpadModal,
 }) => {
     const [newTaskText, setNewTaskText] = useState('');
 
@@ -32,14 +33,25 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <div className="card">
                     <h2>Мои задачи</h2>
                     <div className="task-input-container">
-                        <input 
-                            type="text" 
+                        <textarea 
                             value={newTaskText} 
                             onChange={(e) => setNewTaskText(e.target.value)} 
                             placeholder="Добавить новую задачу..." 
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleAddTask();
+                                }
+                            }}
+                            rows={1}
+                            style={{ overflowY: 'hidden', resize: 'none' }}
+                            onInput={(e) => {
+                                const target = e.target as HTMLTextAreaElement;
+                                target.style.height = 'auto';
+                                target.style.height = `${target.scrollHeight}px`;
+                            }}
                         />
-                        <button onClick={handleAddTask}><IconPlus/></button>
+                        <button onClick={handleAddTask} className="add-task-btn"><IconPlus/></button>
                     </div>
                     <ul className="task-list">
                         {tasks.map(task => (
@@ -53,8 +65,13 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 </div>
 
                 {/* Scratchpad */}
-                <div className="card">
-                    <h2>Блокнот</h2>
+                <div className="card scratchpad-card">
+                    <div className="card-header">
+                        <h2>Блокнот</h2>
+                        <button onClick={onOpenScratchpadModal} className="expand-btn" aria-label="Развернуть блокнот">
+                            <IconExternalLink />
+                        </button>
+                    </div>
                     <textarea 
                         value={scratchpad} 
                         onChange={(e) => onScratchpadChange(e.target.value)} 
@@ -67,7 +84,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <div className="card">
                     <div className="card-header">
                         <h2>Мои документы</h2>
-                        <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary">+ Добавить</button>
+                        <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary add-document-btn">+ Добавить</button>
                     </div>
                     <ul className="document-list">
                         {globalDocuments.map(doc => (
@@ -78,7 +95,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                                     <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
                                 </div>
                                 <div className="doc-actions">
-                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать"><IconDownload /></a>
+                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать" target="_blank" rel="noopener noreferrer"><IconDownload /></a>
                                     <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
                                 </div>
                             </li>

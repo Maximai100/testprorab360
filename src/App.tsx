@@ -33,6 +33,7 @@ import { ProjectDetailView } from './components/views/ProjectDetailView';
 import { InventoryView } from './components/views/InventoryView';
 import { ReportsView } from './components/views/ReportsView';
 import { WorkspaceView } from './components/views/WorkspaceView';
+import { ScratchpadModal } from './components/modals/ScratchpadModal';
 
 const App: React.FC = () => {
     // --- App Navigation State ---
@@ -91,6 +92,7 @@ const App: React.FC = () => {
     const [isActModalOpen, setIsActModalOpen] = useState(false);
     const [isAISuggestModalOpen, setIsAISuggestModalOpen] = useState(false);
     const [isAddToolModalOpen, setIsAddToolModalOpen] = useState(false);
+    const [isScratchpadModalOpen, setIsScratchpadModalOpen] = useState(false);
     const [actModalTotal, setActModalTotal] = useState(0);
     const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
     const [isDirty, setIsDirty] = useState(false);
