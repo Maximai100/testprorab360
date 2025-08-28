@@ -41,14 +41,14 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                 <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
-                    <select value={type} onChange={e => setType(e.target.value as any)} onFocus={onInputFocus}>
+                    <select value={type} onChange={e => setType(e.target.value as any)}>
                         <option value="expense">Расход</option>
                         <option value="payment">Оплата от клиента</option>
                     </select>
                     <label>Сумма (РУБ)</label>
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" onFocus={onInputFocus} />
+                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" />
                     <label>Описание</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Например, 'Краска' или 'Аванс'" onFocus={onInputFocus} rows={3} />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Например, 'Краска' или 'Аванс'" rows={3} />
                     {type === 'expense' && (
                         <>
                             <label>Фото чека (необязательно)</label>

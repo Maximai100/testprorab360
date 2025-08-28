@@ -52,7 +52,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.2s ease, color 0.2s ease;
-    padding-bottom: 80px; /* Space for bottom nav */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
 }
 
 .app-container {
@@ -659,7 +659,7 @@ body.dark-theme .btn-ai {
 .list-item-info { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow: hidden; }
 .list-item-info strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .list-item-info span { font-size: 14px; color: var(--hint-color); }
-.list-item-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+.list-item-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .list-item-actions .btn { padding: 8px 12px; font-size: 14px; width: auto; }
 .list-item-actions .btn .icon-wrapper { width: 16px; height: 16px; }
 .list-item-actions .btn-tertiary { padding: 8px; min-width: 36px; border: none; }
