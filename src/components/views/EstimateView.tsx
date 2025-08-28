@@ -17,7 +17,6 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
             {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>}
             <h1 className={currentEstimateProjectId ? 'with-back-btn' : ''}>{clientInfo || 'Новая смета'}</h1>
             <div className="header-actions">
-                <button onClick={() => setIsAISuggestModalOpen(true)} className="header-btn" aria-label="AI-помощник"><IconSparkles/></button>
             </div>
         </header>
         <main>
@@ -82,9 +81,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                 <button onClick={handleAddItem} className="btn btn-secondary"><IconPlus/> Добавить позицию</button>
                 <button onClick={() => setIsLibraryOpen(true)} className="btn btn-secondary"><IconBook/> Из справочника</button>
             </div>
-            <div className="add-items-container">
-                 <button onClick={() => setIsAISuggestModalOpen(true)} className="btn btn-secondary btn-ai"><IconSparkles/> AI-помощник</button>
-            </div>
+            
             <div className="summary-details card"><div className="summary-row"><label htmlFor="discount">Скидка</label><div className="input-group"><input id="discount" type="number" value={discount || ''} onChange={(e) => { setDiscount(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/><div className="toggle-group"><button onClick={() => { setDiscountType('percent'); setIsDirty(true); }} className={discountType === 'percent' ? 'active' : ''}>%</button><button onClick={() => { setDiscountType('fixed'); setIsDirty(true); }} className={discountType === 'fixed' ? 'active' : ''}>РУБ</button></div></div></div><div className="summary-row"><label htmlFor="tax">Налог (%)</label><div className="input-group"><input id="tax" type="number" value={tax || ''} onChange={(e) => { setTax(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/></div></div></div>
             <div className="total-container card">
                 <div className="total-breakdown">
