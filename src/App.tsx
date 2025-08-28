@@ -1086,6 +1086,11 @@ const App: React.FC = () => {
                     estimates={estimates}
                     financeEntries={financeEntries}
                 />;
+            case 'scratchpad':
+                return <ScratchpadView
+                    scratchpad={scratchpad}
+                    onScratchpadChange={handleScratchpadChange}
+                />;
             case 'estimate':
             default:
                 return <EstimateView 
