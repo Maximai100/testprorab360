@@ -1019,6 +1019,7 @@ const App: React.FC = () => {
                     onScratchpadChange={handleScratchpadChange}
                     onOpenGlobalDocumentModal={() => setIsGlobalDocumentModalOpen(true)}
                     onDeleteGlobalDocument={handleDeleteGlobalDocument}
+                    onOpenScratchpad={() => setActiveView('scratchpad')}
                 />;
             case 'projects':
                 return <ProjectsListView 
