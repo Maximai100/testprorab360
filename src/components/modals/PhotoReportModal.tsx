@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PhotoReportModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 import { resizeImage } from '../../utils';
@@ -6,6 +6,19 @@ import { resizeImage } from '../../utils';
 export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onSave, showAlert }) => {
     const [image, setImage] = useState<string | null>(null);
     const [caption, setCaption] = useState('');
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -29,7 +42,7 @@ export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onS
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header"><h2>Добавить фото</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Фотография</label>

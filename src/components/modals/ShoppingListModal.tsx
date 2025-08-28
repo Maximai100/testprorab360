@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { ShoppingListModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
@@ -6,6 +6,19 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ items, onC
     const [copyButtonText, setCopyButtonText] = useState('Копировать список');
     const materials = useMemo(() => items.filter(item => item.type === 'material' && item.name.trim() && item.quantity > 0), [items]);
     const listRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
 
     const handleCopy = () => {
         const textToCopy = materials.map(item => `${item.name} - ${item.quantity} ${item.unit || 'шт.'}`).join('\n');
@@ -19,7 +32,8 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ items, onC
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
+
                 <div className="modal-header"><h2>Список покупок</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body" ref={listRef}>
                     {materials.length > 0 ? (

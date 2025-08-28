@@ -1,10 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ActGenerationModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 import { numberToWordsRu } from '../../utils';
 
 export const ActGenerationModal: React.FC<ActGenerationModalProps> = ({ onClose, project, profile, totalAmount, showAlert }) => {
     const [copyButtonText, setCopyButtonText] = useState('Копировать');
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
     
     const actText = useMemo(() => {
         const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -45,7 +58,7 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header">
                     <h2>Акт выполненных работ</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>

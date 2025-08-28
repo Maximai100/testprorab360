@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Project, NewProjectModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
-export const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClose, onProjectChange, onSave, onInputFocus }) => (
-    <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+export const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClose, onProjectChange, onSave, onInputFocus }) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
             <div className="modal-header">
                 <h2>{project?.id ? 'Редактировать проект' : 'Новый проект'}</h2>
                 <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>

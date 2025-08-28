@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { AISuggestModalProps, Item } from '../../types';
 import { IconClose } from '../common/Icon';
@@ -11,6 +11,19 @@ export const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddIt
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const API_KEY = process.env.GEMINI_API_KEY;
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
     
     const ai = useMemo(() => {
         if (API_KEY) {
@@ -79,7 +92,7 @@ export const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddIt
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header">
                     <h2>AI-помощник</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>

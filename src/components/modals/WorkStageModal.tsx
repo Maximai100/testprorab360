@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { WorkStageModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
@@ -6,6 +6,19 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
     const [name, setName] = useState(stage?.name || '');
     const [startDate, setStartDate] = useState(stage?.startDate || new Date().toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(stage?.endDate || new Date().toISOString().split('T')[0]);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -25,7 +38,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header">
                     <h2>{stage?.id ? 'Редактировать этап' : 'Новый этап работ'}</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button>

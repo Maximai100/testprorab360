@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FinanceEntryModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 import { resizeImage } from '../../utils';
@@ -8,6 +8,19 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            if (firstElement) {
+                firstElement.focus();
+            }
+        }
+    }, []);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -37,7 +50,7 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
