@@ -195,6 +195,11 @@ body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0.8;
 }
 
+.item-card.dragging {
+    opacity: 0.5;
+    background-color: var(--primary-color);
+}
+
 .drag-handle {
     color: var(--hint-color);
     padding-right: 12px;
