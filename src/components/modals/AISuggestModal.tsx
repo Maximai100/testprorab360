@@ -35,7 +35,7 @@ export const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddIt
         setSelectedIndices(new Set());
 
         try {
-            const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
             const fullPrompt = `Ты - опытный прораб, составляющий смету на ремонтные работы в России. Проанализируй запрос клиента и верни список работ и материалов в формате JSON. Укажи реалистичные для РФ единицы измерения (м2, шт, м.п.) и примерные средние цены в рублях. Не добавляй никаких пояснений, только JSON. Запрос: "${prompt}"`;
             
             const result = await model.generateContent(fullPrompt);
