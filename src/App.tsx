@@ -1161,7 +1161,7 @@ const App: React.FC = () => {
             <header className="app-header">
                 <div className="app-header-left">
                     <img src="/logo.png" alt="Логотип" className="app-logo" />
-                    <h1>Смета за 5 минут</h1>
+                    <h1>Прораб</h1>
                 </div>
                 <div className="app-header-right">
                     <button onClick={handleThemeChange} className="header-btn" title={`Тема: ${themeMode}`}>{themeIcon()}</button>
