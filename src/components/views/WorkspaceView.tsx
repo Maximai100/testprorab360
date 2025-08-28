@@ -12,7 +12,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     onScratchpadChange,
     onOpenGlobalDocumentModal,
     onDeleteGlobalDocument,
-    onOpenScratchpadModal,
+    onOpenScratchpad,
 }) => {
     const [newTaskText, setNewTaskText] = useState('');
 
@@ -95,7 +95,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                                     <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
                                 </div>
                                 <div className="doc-actions">
-                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать" target="_blank" rel="noopener noreferrer"><IconDownload /></a>
+                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload /></a>
                                     <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
                                 </div>
                             </li>

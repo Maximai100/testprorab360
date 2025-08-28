@@ -46,9 +46,9 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                         <option value="payment">Оплата от клиента</option>
                     </select>
                     <label>Сумма (РУБ)</label>
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" />
+                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" onFocus={onInputFocus} />
                     <label>Описание</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Например, 'Краска' или 'Аванс'" rows={3} />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Например, 'Краска' или 'Аванс'" rows={3} onFocus={onInputFocus} />
                     {type === 'expense' && (
                         <>
                             <label>Фото чека (необязательно)</label>
