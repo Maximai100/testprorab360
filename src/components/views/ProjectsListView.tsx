@@ -28,7 +28,12 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
                         <small>{project.client}</small>
                         <small>{project.address}</small>
                     </div>
-                )) : <p className="no-results-message">{projects.length > 0 ? 'Ничего не найдено.' : 'Проектов нет. Нажмите "+", чтобы создать.'}</p>}
+                )) : (
+                    <div className="empty-list-message-with-button">
+                        <p className="no-results-message">{projects.length > 0 ? 'По вашему запросу ничего не найдено.' : 'У вас пока нет проектов. Начните свой первый проект прямо сейчас!'}</p>
+                        <button onClick={() => handleOpenProjectModal()} className="btn btn-primary">+ Создать новый проект</button>
+                    </div>
+                )}
             </div>
         </main>
     </>
