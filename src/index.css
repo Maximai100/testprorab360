@@ -672,7 +672,7 @@ body.dark-theme .btn-ai {
     box-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 30%, transparent);
 }
 .list-item-info { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow: hidden; }
-.list-item-info strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-item-info strong { white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word; }
 .list-item-info span { font-size: 14px; color: var(--hint-color); }
 .list-item-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .list-item-actions .btn { padding: 8px 12px; font-size: 14px; width: auto; }
