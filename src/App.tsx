@@ -1141,6 +1141,10 @@ const App: React.FC = () => {
 
     return (
         <div className="app-container">
+            <header className="app-header">
+                <img src="/logo.png" alt="Логотип" className="app-logo" />
+                <h1>Смета за 5 минут</h1>
+            </header>
             {renderView()}
             
             <nav className="bottom-nav">
