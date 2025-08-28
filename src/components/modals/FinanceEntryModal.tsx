@@ -8,6 +8,7 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const [amountError, setAmountError] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -34,9 +35,19 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
         }
     };
 
+    const validateAmount = (value: string) => {
+        if (!value || parseFloat(value) <= 0) {
+            setAmountError('Введите корректную сумму.');
+            return false;
+        }
+        setAmountError(null);
+        return true;
+    };
+
     const handleSave = () => {
-        if (!amount || parseFloat(amount) <= 0) {
-            showAlert('Введите корректную сумму.');
+        const isAmountValid = validateAmount(amount);
+
+        if (!isAmountValid) {
             return;
         }
         onSave({
@@ -51,7 +62,7 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
-                <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
+                <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
                     <select value={type} onChange={e => setType(e.target.value as any)}>
@@ -59,7 +70,16 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                         <option value="payment">Оплата от клиента</option>
                     </select>
                     <label>Сумма (РУБ)</label>
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" onFocus={onInputFocus} />
+                    <input 
+                        type="number" 
+                        value={amount} 
+                        onChange={e => { setAmount(e.target.value); setAmountError(null); }} 
+                        onBlur={e => validateAmount(e.target.value)} 
+                        placeholder="0" 
+                        onFocus={onInputFocus} 
+                        className={amountError ? 'input-error' : ''} 
+                    />
+                    {amountError && <p className="error-message">{amountError}</p>}
                     <label>Описание</label>
                     <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Например, 'Краска' или 'Аванс'" rows={3} onFocus={onInputFocus} />
                     {type === 'expense' && (

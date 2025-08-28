@@ -144,6 +144,17 @@ input, select {
     height: 44px; /* Standard height for inputs */
 }
 
+input.input-error, textarea.input-error {
+    border-color: var(--danger-color) !important;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: -8px;
+    margin-bottom: 4px;
+}
+
 textarea {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
