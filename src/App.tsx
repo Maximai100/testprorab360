@@ -1137,8 +1137,8 @@ const App: React.FC = () => {
                     isPdfLoading={isPdfLoading}
                     isSaving={isSaving}
                     handleExportPDF={handleExportPDF}
-                    setIsShoppingListOpen={setIsShoppingListOpen}
                     handleShare={handleShare}
+                    handleNewEstimate={handleNewEstimate}
                 />;
         }
     };

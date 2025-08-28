@@ -1,6 +1,6 @@
 import React from 'react';
 import { EstimateViewProps } from '../../types';
-import { IconBook, IconChevronRight, IconClose, IconDragHandle, IconFolder, IconPaperclip, IconPlus, IconSettings, IconSparkles, IconCart, Icon } from '../common/Icon';
+import { IconBook, IconChevronRight, IconClose, IconDragHandle, IconFolder, IconPaperclip, IconSettings, IconSparkles, IconCart, Icon, IconPlus } from '../common/Icon';
 import { Loader } from '../common/Loader';
 
 export const EstimateView: React.FC<EstimateViewProps> = ({
@@ -10,7 +10,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
     dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange, 
     handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem, 
     discount, setDiscount, discountType, setDiscountType, tax, setTax, calculation, 
-    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, setIsShoppingListOpen, handleShare 
+    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, handleShare, handleNewEstimate 
 }) => (
     <>
         <header className="estimate-header">
@@ -113,7 +113,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                 <button onClick={handleExportPDF} className="btn btn-secondary" disabled={isPdfLoading}>
                     {isPdfLoading ? <Loader /> : 'Экспорт в PDF'}
                 </button>
-                <button onClick={() => setIsShoppingListOpen(true)} className="btn btn-secondary shopping-list-btn"><IconCart/> Список покупок</button>
+                <button onClick={handleNewEstimate} className="btn btn-secondary"><IconPlus/> Новая смета</button>
                 <button onClick={handleShare} className="btn btn-primary share-btn">Поделиться</button>
             </div>
         </main>
