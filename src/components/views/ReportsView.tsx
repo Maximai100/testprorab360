@@ -73,17 +73,29 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ projects, estimates, f
                     </div>
                     <div className="project-section-body">
                         <div className="project-items-list">
-                            {filteredProjects.map(p => {
+                            {filteredProjects.length > 0 ? filteredProjects.map(p => {
                                 const { estimateTotal, totalExpenses, totalPayments, profit } = calculateProjectData(p.id);
                                 return (
                                     <div key={p.id} className="list-item">
                                         <div className="list-item-info">
                                             <strong>{p.name}</strong>
-                                            <span>Прибыль: {profit}</span>
+                                            <span>Прибыль: {formatCurrency(profit)}</span>
                                         </div>
                                     </div>
                                 );
-                            })}
+                            }) : (
+                                <div className="empty-list-message-with-button">
+                                    <p className="no-results-message">
+                                        {projects.length === 0 
+                                            ? 'Проектов пока нет. Создайте проекты, чтобы видеть отчеты.'
+                                            : 'Проектов, соответствующих выбранному периоду, не найдено.'
+                                        }
+                                    </p>
+                                    {projects.length === 0 && (
+                                        <button onClick={() => setActiveView('projects')} className="btn btn-primary">+ Создать проект</button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
