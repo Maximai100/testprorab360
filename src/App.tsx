@@ -329,8 +329,20 @@ const App: React.FC = () => {
     
     const handleInputFocus = (e: React.FocusEvent<HTMLElement>) => {
         setTimeout(() => {
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 700); // Delay to allow keyboard to appear and ensure element is visible
+            const inputElement = e.target;
+            const rect = inputElement.getBoundingClientRect();
+            const viewportHeight = window.Telegram?.WebApp?.viewportHeight || window.innerHeight;
+            const keyboardHeight = window.innerHeight - viewportHeight; // Приблизительная высота клавиатуры
+
+            // Если поле ввода находится ниже середины экрана или перекрывается клавиатурой
+            if (rect.bottom > viewportHeight - keyboardHeight) {
+                // Прокручиваем так, чтобы поле ввода было видно над клавиатурой
+                window.scrollTo({
+                    top: window.scrollY + rect.bottom - (viewportHeight - keyboardHeight - 20), // 20px отступ
+                    behavior: 'smooth'
+                });
+            }
+        }, 700); // Задержка для появления клавиатуры
     };
 
     const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
