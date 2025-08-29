@@ -329,8 +329,8 @@ const App: React.FC = () => {
     
     const handleInputFocus = (e: React.FocusEvent<HTMLElement>) => {
         setTimeout(() => {
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 500); // Delay to allow keyboard to appear
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 700); // Delay to allow keyboard to appear and ensure element is visible
     };
 
     const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
@@ -583,8 +583,7 @@ const App: React.FC = () => {
 Клиент: ${clientInfo || 'Не указан'}
 
 `;
-            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\
-');
+            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\n');
             const footer = `
 
 *Подытог:* ${formatCurrency(calculation.subtotal)}`;
