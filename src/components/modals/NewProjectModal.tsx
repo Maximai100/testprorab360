@@ -44,4 +44,5 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClo
             </div>
         </div>
     </div>
-);
+    );
+};
