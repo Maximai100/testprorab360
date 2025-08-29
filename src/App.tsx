@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { GoogleGenAI } from '@google/genai';
-import { ROBOTO_FONT_BASE64 } from './font';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { 
@@ -474,9 +473,8 @@ const App: React.FC = () => {
                 return;
             }
         
-            doc.addFileToVFS('Roboto-Regular.ttf', ROBOTO_FONT_BASE64);
-            doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-            doc.setFont('Roboto');
+            // Используем встроенный шрифт Helvetica для лучшей совместимости
+            doc.setFont('helvetica');
         
             let y = 15;
             const pageMargin = 15;
@@ -518,8 +516,8 @@ const App: React.FC = () => {
                 head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
                 body: tableData,
                 theme: 'grid',
-                headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'Roboto' },
-                bodyStyles: { font: 'Roboto' },
+                headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'helvetica' },
+                bodyStyles: { font: 'helvetica' },
                 didDrawPage: (data: any) => y = data.cursor.y,
             });
             
@@ -539,9 +537,9 @@ const App: React.FC = () => {
                 y += 7;
             }
             doc.setFontSize(14);
-            doc.setFont('Roboto', 'bold');
+            doc.setFont('helvetica', 'bold');
             doc.text(`Итого: ${formatCurrency(calculation.grandTotal)}`, totalsX, y + 2, { align: 'right' });
-            doc.setFont('Roboto', 'normal');
+            doc.setFont('helvetica', 'normal');
             
             // Images
             const images = validItems.filter(item => item.image);
