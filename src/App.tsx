@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 
 import { GoogleGenAI } from '@google/genai';
 import { ROBOTO_FONT_BASE64 } from './font';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
     PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
@@ -378,8 +380,8 @@ const App: React.FC = () => {
 
     const calculation = useMemo(() => {
         const subtotal = items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
-        const materialsTotal = items.filter(i => i.type === 'material').reduce((acc, item) => acc + (Number(i.quantity) * Number(i.price)), 0);
-        const workTotal = items.filter(i => i.type === 'work').reduce((acc, item) => acc + (Number(i.quantity) * Number(i.price)), 0);
+        const materialsTotal = items.filter(item => item.type === 'material').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
+        const workTotal = items.filter(item => item.type === 'work').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
         const discountAmount = discountType === 'percent' ? subtotal * (Number(discount) / 100) : Number(discount);
         const totalAfterDiscount = subtotal - discountAmount;
         const taxAmount = totalAfterDiscount * (Number(tax) / 100);
@@ -442,16 +444,7 @@ const App: React.FC = () => {
         setIsPdfLoading(true);
         tg?.HapticFeedback.notificationOccurred('warning');
         try {
-            await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay for scripts
-            
-            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-                throw new Error("Библиотека для создания PDF (jsPDF) не загрузилась. Проверьте интернет-соединение.");
-            }
-            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            if (typeof (doc as any).autoTable !== 'function') {
-                throw new Error("Плагин для таблиц PDF (autoTable) не загрузился. Проверьте интернет-соединение.");
-            }
 
             const validItems = getValidItems();
             if (validItems.length === 0) {
@@ -498,7 +491,7 @@ const App: React.FC = () => {
                 formatCurrency(item.quantity * item.price),
             ]);
         
-            (doc as any).autoTable({
+            doc.autoTable({
                 startY: y,
                 head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
                 body: tableData,
@@ -508,7 +501,7 @@ const App: React.FC = () => {
                 didDrawPage: (data: any) => y = data.cursor.y,
             });
             
-            y = (doc as any).autoTable.previous.finalY + 15;
+            y = doc.autoTable.previous.finalY + 15;
         
             // Totals
             const totalsX = pageWidth - pageMargin;

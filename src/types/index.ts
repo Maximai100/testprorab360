@@ -22,7 +22,6 @@ declare global {
         Telegram?: {
             WebApp: TelegramWebApp;
         };
-        jspdf: any; // For jsPDF library
     }
 }
 
