@@ -137,6 +137,9 @@ input, select {
     border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     padding: 6px 10px; /* Reduced vertical padding */
+    font-size: 16px; /* Prevent zoom on iOS */
+    -webkit-appearance: none;
+    appearance: none;
     font-size: 16px;
     font-family: inherit;
     width: 100%;
@@ -1493,4 +1496,45 @@ input[type=number] { -moz-appearance: textfield; }
     resize: none;
     font-size: 16px;
     line-height: 1.5;
+}
+
+/* Mobile keyboard optimization */
+@media (max-width: 768px) {
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+    
+    /* Better input positioning */
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Ensure inputs are visible when keyboard appears */
+    input:focus,
+    textarea:focus,
+    select:focus {
+        position: relative;
+        z-index: 1000;
+    }
+    
+    /* Smooth scrolling for better UX */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Prevent body scroll when modal is open */
+    body.modal-open {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+    }
 }

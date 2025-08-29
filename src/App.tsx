@@ -330,19 +330,29 @@ const App: React.FC = () => {
     const handleInputFocus = (e: React.FocusEvent<HTMLElement>) => {
         setTimeout(() => {
             const inputElement = e.target;
-            const rect = inputElement.getBoundingClientRect();
-            const viewportHeight = window.Telegram?.WebApp?.viewportHeight || window.innerHeight;
-            const keyboardHeight = window.innerHeight - viewportHeight; // Приблизительная высота клавиатуры
-
-            // Если поле ввода находится ниже середины экрана или перекрывается клавиатурой
-            if (rect.bottom > viewportHeight - keyboardHeight) {
-                // Прокручиваем так, чтобы поле ввода было видно над клавиатурой
-                window.scrollTo({
-                    top: window.scrollY + rect.bottom - (viewportHeight - keyboardHeight - 20), // 20px отступ
-                    behavior: 'smooth'
-                });
-            }
-        }, 700); // Задержка для появления клавиатуры
+            
+            // Используем scrollIntoView для более надежного позиционирования
+            inputElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+            
+            // Дополнительная проверка для мобильных устройств
+            setTimeout(() => {
+                const rect = inputElement.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const safeArea = viewportHeight * 0.3; // Безопасная зона в верхней части экрана
+                
+                // Если поле ввода находится в нижней части экрана, прокручиваем еще больше
+                if (rect.top > viewportHeight - safeArea) {
+                    window.scrollBy({
+                        top: rect.top - safeArea,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }, 300); // Уменьшенная задержка для более быстрой реакции
     };
 
     const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
@@ -503,7 +513,7 @@ const App: React.FC = () => {
                 formatCurrency(item.quantity * item.price),
             ]);
         
-            doc.autoTable({
+            (doc as any).autoTable({
                 startY: y,
                 head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
                 body: tableData,
@@ -513,7 +523,7 @@ const App: React.FC = () => {
                 didDrawPage: (data: any) => y = data.cursor.y,
             });
             
-            y = doc.autoTable.previous.finalY + 15;
+            y = (doc as any).autoTable.previous.finalY + 15;
         
             // Totals
             const totalsX = pageWidth - pageMargin;
@@ -1259,18 +1269,18 @@ const App: React.FC = () => {
 
             {isSettingsOpen && <SettingsModal onClose={() => closeModal(setIsSettingsOpen)} profile={companyProfile} onProfileChange={handleProfileChange} onLogoChange={handleLogoChange} onRemoveLogo={removeLogo} onSave={handleSaveProfile} onBackup={handleBackup} onRestore={handleRestore} onInputFocus={handleInputFocus} />}
             {isEstimatesListOpen && <EstimatesListModal onClose={() => closeModal(setIsEstimatesListOpen)} estimates={estimates} templates={templates} activeEstimateId={activeEstimateId} statusMap={statusMap} formatCurrency={formatCurrency} onLoadEstimate={handleLoadEstimate} onDeleteEstimate={handleDeleteEstimate} onStatusChange={handleStatusChange} onSaveAsTemplate={handleSaveAsTemplate} onDeleteTemplate={handleDeleteTemplate} onNewEstimate={handleNewEstimate} onInputFocus={handleInputFocus} />}
-            {isLibraryOpen && <LibraryModal onClose={() => closeModal(setIsLibraryOpen)} libraryItems={libraryItems} onLibraryItemsChange={setLibraryItems} onAddItemToEstimate={handleAddFromLibrary} formatCurrency={formatCurrency} onInputFocus={handleInputFocus} showConfirm={safeShowConfirm} showAlert={showAlert} />}
+            {isLibraryOpen && <LibraryModal onClose={() => closeModal(setIsLibraryOpen)} libraryItems={libraryItems} onLibraryItemsChange={setLibraryItems} onAddItemToEstimate={handleAddFromLibrary} formatCurrency={formatCurrency} onInputFocus={handleInputFocus} showConfirm={safeShowConfirm} showAlert={safeShowAlert} />}
             {isProjectModalOpen && <NewProjectModal project={editingProject} onClose={() => closeModal(setIsProjectModalOpen)} onProjectChange={setEditingProject} onSave={handleSaveProject} onInputFocus={handleInputFocus} />}
-            {isFinanceModalOpen && <FinanceEntryModal onClose={() => closeModal(setIsFinanceModalOpen)} onSave={handleSaveFinanceEntry} showAlert={showAlert} onInputFocus={handleInputFocus} />}
-            {isPhotoReportModalOpen && <PhotoReportModal onClose={() => closeModal(setIsPhotoReportModalOpen)} onSave={handleSavePhotoReport} showAlert={showAlert} />}
+            {isFinanceModalOpen && <FinanceEntryModal onClose={() => closeModal(setIsFinanceModalOpen)} onSave={handleSaveFinanceEntry} showAlert={safeShowAlert} onInputFocus={handleInputFocus} />}
+            {isPhotoReportModalOpen && <PhotoReportModal onClose={() => closeModal(setIsPhotoReportModalOpen)} onSave={handleSavePhotoReport} showAlert={safeShowAlert} />}
             {viewingPhoto && <PhotoViewerModal photo={viewingPhoto} onClose={() => closeModal(() => setViewingPhoto(null))} onDelete={handleDeletePhoto} />}
-            {isShoppingListOpen && <ShoppingListModal items={items} onClose={() => closeModal(setIsShoppingListOpen)} showAlert={showAlert} />}
-            {isDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsDocumentModalOpen)} onSave={handleSaveDocument} showAlert={showAlert} />}
-            {isGlobalDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsGlobalDocumentModalOpen)} onSave={handleSaveGlobalDocument} showAlert={showAlert} />}
-            {isWorkStageModalOpen && <WorkStageModal stage={editingWorkStage} onClose={() => closeModal(setIsWorkStageModalOpen)} onSave={handleSaveWorkStage} showAlert={showAlert} />}
-            {isNoteModalOpen && <NoteModal note={editingNote} onClose={() => closeModal(setIsNoteModalOpen)} onSave={handleSaveNote} showAlert={showAlert} />}
-            {isActModalOpen && activeProject && <ActGenerationModal onClose={() => closeModal(setIsActModalOpen)} project={activeProject} profile={companyProfile} totalAmount={actModalTotal} showAlert={showAlert} />}
-            {isAISuggestModalOpen && <AISuggestModal onClose={() => closeModal(setIsAISuggestModalOpen)} onAddItems={handleAddItemsFromAI} showAlert={showAlert} />}
+            {isShoppingListOpen && <ShoppingListModal items={items} onClose={() => closeModal(setIsShoppingListOpen)} showAlert={safeShowAlert} />}
+            {isDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsDocumentModalOpen)} onSave={handleSaveDocument} showAlert={safeShowAlert} />}
+            {isGlobalDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsGlobalDocumentModalOpen)} onSave={handleSaveGlobalDocument} showAlert={safeShowAlert} />}
+            {isWorkStageModalOpen && <WorkStageModal stage={editingWorkStage} onClose={() => closeModal(setIsWorkStageModalOpen)} onSave={handleSaveWorkStage} showAlert={safeShowAlert} />}
+            {isNoteModalOpen && <NoteModal note={editingNote} onClose={() => closeModal(setIsNoteModalOpen)} onSave={handleSaveNote} showAlert={safeShowAlert} />}
+            {isActModalOpen && activeProject && <ActGenerationModal onClose={() => closeModal(setIsActModalOpen)} project={activeProject} profile={companyProfile} totalAmount={actModalTotal} showAlert={safeShowAlert} />}
+            {isAISuggestModalOpen && <AISuggestModal onClose={() => closeModal(setIsAISuggestModalOpen)} onAddItems={handleAddItemsFromAI} showAlert={safeShowAlert} />}
             {isAddToolModalOpen && <AddToolModal onClose={() => closeModal(setIsAddToolModalOpen)} onSave={handleAddInventoryItem} />}
         </div>
     );
