@@ -5,7 +5,7 @@ import { Loader } from '../common/Loader';
 
 export const EstimateView: React.FC<EstimateViewProps> = ({
     currentEstimateProjectId, handleBackToProject, clientInfo, setClientInfo, setIsDirty, 
-    handleThemeChange, themeIcon, themeMode, setIsLibraryOpen, setIsEstimatesListOpen, setIsSettingsOpen, setIsAISuggestModalOpen,
+    handleThemeChange, themeIcon, themeMode, onOpenLibraryModal, onOpenEstimatesListModal, onOpenSettingsModal, onOpenAISuggestModal,
     estimateNumber, setEstimateNumber, estimateDate, setEstimateDate, handleInputFocus, items, 
     dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange, 
     handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem, 
@@ -79,7 +79,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
             </div>
             <div className="add-items-container">
                 <button onClick={handleAddItem} className="btn btn-secondary"><IconPlus/> Добавить позицию</button>
-                <button onClick={() => setIsLibraryOpen(true)} className="btn btn-secondary"><IconBook/> Из справочника</button>
+                <button onClick={() => onOpenLibraryModal(true)} className="btn btn-secondary"><IconBook/> Из справочника</button>
             </div>
             
             <div className="summary-details card"><div className="summary-row"><label htmlFor="discount">Скидка</label><div className="input-group"><input id="discount" type="number" value={discount || ''} onChange={(e) => { setDiscount(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/><div className="toggle-group"><button onClick={() => { setDiscountType('percent'); setIsDirty(true); }} className={discountType === 'percent' ? 'active' : ''}>%</button><button onClick={() => { setDiscountType('fixed'); setIsDirty(true); }} className={discountType === 'fixed' ? 'active' : ''}>РУБ</button></div></div></div><div className="summary-row"><label htmlFor="tax">Налог (%)</label><div className="input-group"><input id="tax" type="number" value={tax || ''} onChange={(e) => { setTax(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/></div></div></div>

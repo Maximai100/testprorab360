@@ -1,27 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { WorkspaceViewProps } from '../../types';
-import { IconPlus, IconTrash, IconDocument, IconDownload, IconExternalLink } from '../common/Icon';
+import { IconDocument, IconDownload, IconExternalLink, IconTrash } from '../common/Icon';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
-    tasks,
     scratchpad,
     globalDocuments,
-    onAddTask,
-    onToggleTask,
-    onDeleteTask,
     onScratchpadChange,
     onOpenGlobalDocumentModal,
     onDeleteGlobalDocument,
     onOpenScratchpad,
 }) => {
-    const [newTaskText, setNewTaskText] = useState('');
-
-    const handleAddTask = () => {
-        if (newTaskText.trim()) {
-            onAddTask(newTaskText.trim());
-            setNewTaskText('');
-        }
-    };
 
     return (
         <>
@@ -29,41 +17,6 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <h1>Рабочий стол</h1>
             </header>
             <main className="workspace-container">
-                {/* Tasks */}
-                <div className="card">
-                    <h2>Мои задачи</h2>
-                    <div className="task-input-container">
-                        <textarea 
-                            value={newTaskText} 
-                            onChange={(e) => setNewTaskText(e.target.value)} 
-                            placeholder="Добавить новую задачу..." 
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleAddTask();
-                                }
-                            }}
-                            rows={1}
-                            style={{ overflowY: 'hidden', resize: 'none', minHeight: '24px' }}
-                            onInput={(e) => {
-                                const target = e.target as HTMLTextAreaElement;
-                                target.style.height = 'auto';
-                                target.style.height = `${target.scrollHeight}px`;
-                            }}
-                        />
-                        <button onClick={handleAddTask} className="add-task-btn"><IconPlus/></button>
-                    </div>
-                    <ul className="task-list">
-                        {tasks.map(task => (
-                            <li key={task.id} className={task.completed ? 'completed' : ''}>
-                                <span onClick={() => onToggleTask(task.id)}>{task.text}</span>
-                                <button onClick={() => onDeleteTask(task.id)}><IconTrash /></button>
-                            </li>
-                        ))}
-                         {tasks.length === 0 && <p className="empty-list-message">У вас пока нет задач. Добавьте свою первую задачу выше!</p>}
-                    </ul>
-                </div>
-
                 {/* Scratchpad */}
                 <div className="card scratchpad-card">
                     <div className="card-header">
@@ -112,4 +65,3 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
         </>
     );
 };
-    

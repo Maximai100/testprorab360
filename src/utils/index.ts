@@ -145,3 +145,29 @@ export const numberToWordsRu = (number: number): string => {
 
     return result;
 };
+
+export const formatDueDate = (dueDate: Date | string | null): string => {
+    if (!dueDate) {
+        return '';
+    }
+
+    const date = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    today.setHours(0, 0, 0, 0);
+    tomorrow.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+
+    if (date.getTime() === today.getTime()) {
+        return 'Сегодня';
+    }
+    if (date.getTime() === tomorrow.getTime()) {
+        return 'Завтра';
+    }
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}.${month}`;
+};

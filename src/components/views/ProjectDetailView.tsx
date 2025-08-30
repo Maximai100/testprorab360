@@ -1,12 +1,12 @@
 import React, { useMemo, useCallback } from 'react';
 import { ProjectDetailViewProps, Estimate, FinanceEntry, PhotoReport, Document, WorkStage, Note } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare } from '../common/Icon';
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     activeProject, estimates, financeEntries, photoReports, documents, workStages, notes, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote, onOpenActModal
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote, onOpenActModal, onNavigateToTasks
 }) => {
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
     const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
@@ -65,6 +65,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                 <span className="dashboard-label">Прибыль</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div className="card project-section">
+                     <div className="project-section-header">
+                        <h3>Задачи</h3>
+                        <button className="add-in-header-btn" onClick={onNavigateToTasks}><IconCheckSquare/></button>
                     </div>
                 </div>
                 <div className="card project-section">

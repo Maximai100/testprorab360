@@ -1,9 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AddToolModalProps } from '../../types';
+import { AddToolModalProps, ToolCondition } from '../../types';
 import { IconClose } from '../common/Icon';
+
+const conditionMap: Record<ToolCondition, string> = {
+    excellent: 'Отличное',
+    needs_service: 'Требует обслуживания',
+    in_repair: 'В ремонте',
+};
 
 export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave }) => {
     const [name, setName] = useState('');
+    const [condition, setCondition] = useState<ToolCondition>('excellent');
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -23,7 +30,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave }) =
             // Or show an alert
             return;
         }
-        onSave({ name, location: 'На базе' });
+        onSave({ name, location: 'На базе', condition });
         onClose();
     };
 
@@ -42,6 +49,12 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave }) =
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Например, 'Перфоратор Bosch'"
                     />
+                    <label>Состояние</label>
+                    <select value={condition} onChange={(e) => setCondition(e.target.value as ToolCondition)}>
+                        {Object.entries(conditionMap).map(([key, value]) => (
+                            <option key={key} value={key}>{value}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="modal-footer">
                     <button onClick={handleSave} className="btn btn-primary">Сохранить</button>

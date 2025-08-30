@@ -1,13 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Project, Estimate, FinanceEntry } from '../../types';
+import { Project, Estimate, FinanceEntry, ReportsViewProps } from '../../types';
 
-interface ReportsViewProps {
-    projects: Project[];
-    estimates: Estimate[];
-    financeEntries: FinanceEntry[];
-}
-
-export const ReportsView: React.FC<ReportsViewProps> = ({ projects, estimates, financeEntries }) => {
+export const ReportsView: React.FC<ReportsViewProps> = ({ projects, estimates, financeEntries, formatCurrency, setActiveView }) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 

@@ -10,7 +10,7 @@ export const AISuggestModal: React.FC<AISuggestModalProps> = ({ onClose, onAddIt
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const API_KEY = process.env.GEMINI_API_KEY;
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

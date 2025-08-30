@@ -1,20 +1,45 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Смета за 5 минут
 
-# Run and deploy your AI Studio app
+Веб-приложение для создания и управления сметами, проектами и инвентарем.
 
-This contains everything you need to run your app locally.
+## Технологии
 
-View your app in AI Studio: https://ai.studio/apps/drive/17M504-vSWk34tFenAs62qt31_VMSxTUy
+- React 18
+- TypeScript
+- Vite
+- CSS3
 
-## Run Locally
+## Разработка
 
-**Prerequisites:**  Node.js
+**Требования:** Node.js 18+
 
+1. Установка зависимостей:
+   ```bash
+   npm install
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Запуск сервера разработки:
+   ```bash
+   npm run dev
+   ```
+
+3. Сборка для продакшена:
+   ```bash
+   npm run build
+   ```
+
+## Деплой на Vercel
+
+1. Подключите репозиторий к Vercel
+2. Vercel автоматически определит настройки из `vercel.json`
+3. Приложение будет доступно по адресу, предоставленному Vercel
+
+## Функции
+
+- Создание и редактирование смет
+- Управление проектами
+- Инвентарь и инструменты
+- Финансовый учет
+- Фотоотчеты
+- Документооборот
+- Задачи и заметки

@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { InventoryViewProps, InventoryItem, Project } from '../../types';
+import { InventoryViewProps, Tool, Project, ToolCondition } from '../../types';
 import { IconPlus, IconTrash } from '../common/Icon';
+
+const conditionMap: Record<ToolCondition, string> = {
+    excellent: 'Отличное',
+    needs_service: 'Требует обслуживания',
+    in_repair: 'В ремонте',
+};
 
 export const InventoryView: React.FC<InventoryViewProps> = ({
     inventoryItems,
@@ -37,9 +43,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     <div className="project-section-body">
                         <div className="project-items-list">
                             {inventoryItems.length > 0 ? inventoryItems.map(item => (
-                                <div key={item.id} className="list-item">
+                                <div key={item.id} className="list-item inventory-item">
                                     <div className="list-item-info">
                                         <strong>{item.name}</strong>
+                                        <select value={item.condition} onChange={(e) => onUpdateItem({ ...item, condition: e.target.value as ToolCondition })} className="status-select">
+                                            {Object.entries(conditionMap).map(([key, value]) => (
+                                                <option key={key} value={key}>{value}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="list-item-actions">
                                         <select value={item.location} onChange={(e) => onUpdateItem({ ...item, location: e.target.value })}>
