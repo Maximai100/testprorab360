@@ -5,14 +5,14 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
-    PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
+    PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, Tool, Consumable, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
     NewProjectModalProps, FinanceEntryModalProps, PhotoReportModalProps, PhotoViewerModalProps, ShoppingListModalProps, 
     DocumentUploadModalProps, WorkStageModalProps, NoteModalProps, ActGenerationModalProps, AISuggestModalProps, 
-    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps, WorkspaceViewProps, ScratchpadViewProps
+    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps, WorkspaceViewProps, ScratchpadViewProps, CalculationResults
 } from './types';
 import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu } from './utils';
 import { statusMap } from './constants';
-import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome } from './components/common/Icon';
+import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome, IconCheckSquare } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { EstimatesListModal } from './components/modals/EstimatesListModal';
@@ -31,14 +31,16 @@ import { AddToolModal } from './components/modals/AddToolModal';
 import { EstimateView } from './components/views/EstimateView';
 import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
-import { InventoryView } from './components/views/InventoryView';
+import { InventoryScreen } from './components/views/InventoryScreen';
+import { ToolDetailsScreen } from './components/views/ToolDetailsScreen';
 import { ReportsView } from './components/views/ReportsView';
 import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
+import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 
 const App: React.FC = () => {
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'scratchpad'>('workspace');
+    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -52,10 +54,67 @@ const App: React.FC = () => {
     const [notes, setNotes] = useState<Note[]>([]);
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
-    const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+    const [inventoryItems, setInventoryItems] = useState<Tool[]>([]);
     const [inventoryNotes, setInventoryNotes] = useState<InventoryNote[]>([]);
+    const [consumables, setConsumables] = useState<Consumable[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [scratchpad, setScratchpad] = useState('');
+    const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+
+    // --- Consumable Management ---
+    const handleAddConsumable = (consumable: Omit<Consumable, 'id'>) => {
+        const newConsumable: Consumable = { ...consumable, id: Date.now().toString() };
+        const updatedConsumables = [newConsumable, ...consumables];
+        setConsumables(updatedConsumables);
+        localStorage.setItem('consumables', JSON.stringify(updatedConsumables));
+    };
+
+    const handleUpdateConsumable = (updatedConsumable: Consumable) => {
+        const updatedConsumables = consumables.map(c =>
+            c.id === updatedConsumable.id ? updatedConsumable : c
+        );
+        setConsumables(updatedConsumables);
+        localStorage.setItem('consumables', JSON.stringify(updatedConsumables));
+    };
+
+    const handleDeleteConsumable = (id: string) => {
+        const updatedConsumables = consumables.filter(c => c.id !== id);
+        setConsumables(updatedConsumables);
+        localStorage.setItem('consumables', JSON.stringify(updatedConsumables));
+    };
+
+    // --- Task Management Handlers ---
+    const handleAddTask = (title: string, projectId: string | number | null) => {
+        const newTask: Task = {
+            id: Date.now(),
+            title,
+            projectId,
+            isCompleted: false,
+            createdAt: new Date(),
+            priority: 'medium',
+            tags: [],
+            dueDate: null,
+        };
+        const updatedTasks = [newTask, ...tasks];
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
+
+    const handleUpdateTask = (updatedTask: Task) => {
+        const updatedTasks = tasks.map(task =>
+            task.id === updatedTask.id ? updatedTask : task
+        );
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
+
+    const handleToggleTask = (id: number | string) => {
+        const updatedTasks = tasks.map(task =>
+            task.id === id ? { ...task, isCompleted: !task.isCompleted } : task
+        );
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    };
     
     // --- Current Estimate State ---
     const [activeEstimateId, setActiveEstimateId] = useState<number | null>(null);
@@ -205,7 +264,7 @@ const App: React.FC = () => {
             }
         } else {
             // New estimate state
-            setItems([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]);
+            setItems([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', type: 'material' }]);
             setClientInfo('');
             setEstimateNumber(generateNewEstimateNumber(currentEstimates));
             setEstimateDate(new Date().toISOString().split('T')[0]);
@@ -313,13 +372,38 @@ const App: React.FC = () => {
         if (savedNotes) { try { setNotes(JSON.parse(savedNotes)); } catch (e) { console.error("Failed to parse notes", e); } }
 
         const savedInventoryItems = localStorage.getItem('inventoryItems');
-        if (savedInventoryItems) { try { setInventoryItems(JSON.parse(savedInventoryItems)); } catch (e) { console.error("Failed to parse inventory items", e); } }
+        if (savedInventoryItems) { 
+            try {
+                const parsed = JSON.parse(savedInventoryItems).map((item: any) => ({
+                    ...item,
+                    id: item.id.toString(),
+                    condition: item.condition || item.status || 'excellent', // Migrate from old status field
+                }));
+                setInventoryItems(parsed);
+            } catch (e) { 
+                console.error("Failed to parse inventory items", e); 
+            }
+        }
 
         const savedInventoryNotes = localStorage.getItem('inventoryNotes');
         if (savedInventoryNotes) { try { setInventoryNotes(JSON.parse(savedInventoryNotes)); } catch (e) { console.error("Failed to parse inventory notes", e); } }
 
+        const savedConsumables = localStorage.getItem('consumables');
+        if (savedConsumables) { try { setConsumables(JSON.parse(savedConsumables)); } catch (e) { console.error("Failed to parse consumables", e); } }
+
         const savedTasks = localStorage.getItem('tasks');
-        if (savedTasks) { try { setTasks(JSON.parse(savedTasks)); } catch (e) { console.error("Failed to parse tasks", e); } }
+        if (savedTasks) { 
+            try {
+                const parsedTasks = JSON.parse(savedTasks).map((t: Task) => ({
+                    ...t, 
+                    createdAt: new Date(t.createdAt),
+                    dueDate: t.dueDate ? new Date(t.dueDate) : null 
+                }));
+                setTasks(parsedTasks); 
+            } catch (e) { 
+                console.error("Failed to parse tasks", e); 
+            }
+        }
 
         const savedScratchpad = localStorage.getItem('scratchpad');
         if (savedScratchpad) { setScratchpad(savedScratchpad); }
@@ -399,7 +483,7 @@ const App: React.FC = () => {
         setIsDirty(true);
     };
 
-    const calculation = useMemo(() => {
+    const calculation: CalculationResults = useMemo(() => {
         const subtotal = items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
         const materialsTotal = items.filter(item => item.type === 'material').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
         const workTotal = items.filter(item => item.type === 'work').reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
@@ -603,7 +687,8 @@ const App: React.FC = () => {
 Клиент: ${clientInfo || 'Не указан'}
 
 `;
-            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\n');
+            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\
+');
             const footer = `
 
 *Подытог:* ${formatCurrency(calculation.subtotal)}`;
@@ -928,23 +1013,26 @@ const App: React.FC = () => {
     };
 
     // --- Inventory Management ---
-    const handleAddInventoryItem = (item: Omit<InventoryItem, 'id'>) => {
-        const newItem: InventoryItem = { ...item, id: Date.now() };
+    const handleAddInventoryItem = (item: Omit<Tool, 'id'>) => {
+        const newItem: Tool = { ...item, id: Date.now().toString() };
         const updatedItems = [newItem, ...inventoryItems];
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
     };
 
-    const handleUpdateInventoryItem = (item: InventoryItem) => {
-        const updatedItems = inventoryItems.map(i => i.id === item.id ? i : i);
+
+
+    const handleUpdateInventoryItem = (item: Tool) => {
+        const updatedItems = inventoryItems.map(i => (i.id === item.id ? item : i));
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
     };
 
-    const handleDeleteInventoryItem = (id: number) => {
+    const handleDeleteInventoryItem = (id: string) => {
         const updatedItems = inventoryItems.filter(i => i.id !== id);
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+        setActiveView('inventoryList');
     };
 
     const handleAddInventoryNote = (note: Omit<InventoryNote, 'id' | 'date'>) => {
@@ -960,25 +1048,7 @@ const App: React.FC = () => {
         localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
     };
 
-    // --- Workspace Handlers ---
-    const handleAddTask = (text: string) => {
-        const newTask: Task = { id: Date.now(), text, completed: false };
-        const updatedTasks = [newTask, ...tasks];
-        setTasks(updatedTasks);
-        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    };
-
-    const handleToggleTask = (id: number) => {
-        const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-        setTasks(updatedTasks);
-        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    };
-
-    const handleDeleteTask = (id: number) => {
-        const updatedTasks = tasks.filter(t => t.id !== id);
-        setTasks(updatedTasks);
-        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    };
+    
 
     const handleScratchpadChange = (text: string) => {
         setScratchpad(text);
@@ -997,6 +1067,9 @@ const App: React.FC = () => {
             notes,
             libraryItems,
             companyProfile,
+            inventoryItems,
+            inventoryNotes,
+            consumables,
             tasks,
             scratchpad,
         };
@@ -1032,8 +1105,11 @@ const App: React.FC = () => {
                 setWorkStages(restoredData.workStages || []);
                 setNotes(restoredData.notes || []);
                 setLibraryItems(restoredData.libraryItems || []);
+                setInventoryItems((restoredData.inventoryItems || []).map((item: any) => ({ ...item, id: item.id.toString(), condition: item.condition || item.status || 'excellent' })));
+                setInventoryNotes(restoredData.inventoryNotes || []);
+                setConsumables(restoredData.consumables || []);
                 setCompanyProfile(restoredData.companyProfile || { name: '', details: '', logo: null });
-                setTasks(restoredData.tasks || []);
+                setTasks((restoredData.tasks || []).map((t: Task) => ({ ...t, createdAt: new Date(t.createdAt), dueDate: t.dueDate ? new Date(t.dueDate) : null })));
                 setScratchpad(restoredData.scratchpad || '');
 
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: restoredData.estimates || [], activeEstimateId: null }));
@@ -1045,6 +1121,10 @@ const App: React.FC = () => {
                 localStorage.setItem('workStages', JSON.stringify(restoredData.workStages || []));
                 localStorage.setItem('projectNotes', JSON.stringify(restoredData.notes || []));
                 localStorage.setItem('itemLibrary', JSON.stringify(restoredData.libraryItems || []));
+                localStorage.setItem('inventoryItems', JSON.stringify(restoredData.inventoryItems || []));
+                localStorage.setItem('companyProfile', JSON.stringify(restoredData.companyProfile || { name: '', details: '', logo: null }));
+                                localStorage.setItem('inventoryNotes', JSON.stringify(restoredData.inventoryNotes || []));
+                localStorage.setItem('consumables', JSON.stringify(restoredData.consumables || []));
                 localStorage.setItem('companyProfile', JSON.stringify(restoredData.companyProfile || { name: '', details: '', logo: null }));
                 localStorage.setItem('tasks', JSON.stringify(restoredData.tasks || []));
                 localStorage.setItem('scratchpad', restoredData.scratchpad || '');
@@ -1072,12 +1152,8 @@ const App: React.FC = () => {
         switch (activeView) {
             case 'workspace':
                 return <WorkspaceView 
-                    tasks={tasks}
                     scratchpad={scratchpad}
                     globalDocuments={globalDocuments}
-                    onAddTask={handleAddTask}
-                    onToggleTask={handleToggleTask}
-                    onDeleteTask={handleDeleteTask}
                     onScratchpadChange={handleScratchpadChange}
                     onOpenGlobalDocumentModal={() => openModal(setIsGlobalDocumentModalOpen, 'globalDocumentUpload')}
                     onDeleteGlobalDocument={handleDeleteGlobalDocument}
@@ -1135,24 +1211,59 @@ const App: React.FC = () => {
                     onOpenNoteModal={handleOpenNoteModal}
                     onDeleteNote={handleDeleteNote}
                     onOpenActModal={handleOpenActModal}
+                    onNavigateToTasks={() => setActiveView('projectTasks')}
                 />;
-            case 'inventory':
-                return <InventoryView
-                    inventoryItems={inventoryItems}
-                    inventoryNotes={inventoryNotes}
+            case 'allTasks':
+                return <ProjectTasksScreen 
+                    tasks={tasks}
                     projects={projects}
-                    onAddItem={handleAddInventoryItem}
-                    onUpdateItem={handleUpdateInventoryItem}
-                    onDeleteItem={handleDeleteInventoryItem}
-                    onAddNote={handleAddInventoryNote}
-                    onDeleteNote={handleDeleteInventoryNote}
-                    onOpenAddToolModal={() => openModal(setIsAddToolModalOpen, 'addTool')}
+                    projectId={null}
+                    onAddTask={handleAddTask}
+                    onUpdateTask={handleUpdateTask}
+                    onToggleTask={handleToggleTask}
                 />;
+            case 'projectTasks':
+                return <ProjectTasksScreen 
+                    tasks={tasks.filter(t => t.projectId === activeProjectId)}
+                    projects={projects}
+                    projectId={activeProjectId!}
+                    onAddTask={handleAddTask}
+                    onUpdateTask={handleUpdateTask}
+                    onToggleTask={handleToggleTask}
+                />;
+            case 'inventoryList':
+                return <InventoryScreen 
+                    tools={inventoryItems}
+                    projects={projects}
+                    consumables={consumables}
+                    onToolClick={(tool) => {
+                        setSelectedTool(tool);
+                        setActiveView('toolDetails');
+                    }}
+                    onUpdateTool={handleUpdateInventoryItem}
+                    onOpenAddToolModal={() => openModal(setIsAddToolModalOpen, 'addTool')}
+                    onAddConsumable={handleAddConsumable}
+                    onUpdateConsumable={handleUpdateConsumable}
+                    onDeleteConsumable={handleDeleteConsumable}
+                />;
+            case 'toolDetails':
+                return <ToolDetailsScreen 
+                    tool={selectedTool!}
+                    onSave={(tool) => {
+                        handleUpdateInventoryItem(tool as Tool);
+                        setActiveView('inventoryList');
+                    }}
+                    onBack={() => setActiveView('inventoryList')}
+                    onDelete={handleDeleteInventoryItem}
+                />;
+            
             case 'reports':
                 return <ReportsView
                     projects={projects}
                     estimates={estimates}
                     financeEntries={financeEntries}
+                    formatCurrency={formatCurrency}
+                    setActiveView={setActiveView}
                 />;
             case 'scratchpad':
                 return <ScratchpadView
@@ -1254,13 +1365,17 @@ const App: React.FC = () => {
                     <IconDocument/>
                     <span>Смета</span>
                 </button>
-                <button onClick={() => setActiveView('inventory')} className={activeView === 'inventory' ? 'active' : ''}>
+                <button onClick={() => setActiveView('inventoryList')} className={activeView.startsWith('inventory') || activeView === 'toolDetails' ? 'active' : ''}>
                     <IconClipboard/>
                     <span>Инвентарь</span>
                 </button>
                 <button onClick={() => setActiveView('reports')} className={activeView === 'reports' ? 'active' : ''}>
                     <IconTrendingUp/>
                     <span>Отчеты</span>
+                </button>
+                <button onClick={() => setActiveView('allTasks')} className={activeView === 'allTasks' ? 'active' : ''}>
+                    <IconCheckSquare/>
+                    <span>Задачи</span>
                 </button>
                 
             </nav>
