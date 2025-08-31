@@ -8,9 +8,11 @@ import {
     PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, Tool, Consumable, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
     NewProjectModalProps, FinanceEntryModalProps, PhotoReportModalProps, PhotoViewerModalProps, ShoppingListModalProps, 
     DocumentUploadModalProps, WorkStageModalProps, NoteModalProps, ActGenerationModalProps, AISuggestModalProps, 
-    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps, WorkspaceViewProps, ScratchpadViewProps, CalculationResults
+    EstimateViewProps, ProjectsListViewProps, ProjectDetailViewProps, InventoryViewProps, AddToolModalProps, ReportsViewProps, WorkspaceViewProps, ScratchpadViewProps, CalculationResults,
+    ProjectStatus,
+    ProjectFinancials
 } from './types';
-import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu } from './utils';
+import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeImage, readFileAsDataURL, numberToWordsRu, generateUUID } from './utils';
 import { statusMap } from './constants';
 import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome, IconCheckSquare } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
@@ -39,12 +41,73 @@ import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 
 const App: React.FC = () => {
+    // Error boundary state
+    const [hasError, setHasError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    // Error handler
+    const handleError = (error: Error) => {
+        console.error('App error:', error);
+        setHasError(true);
+        setErrorMessage(error.message);
+    };
+
+    // Global error handler
+    useEffect(() => {
+        const handleGlobalError = (event: ErrorEvent) => {
+            console.error('Global error:', event.error);
+            setHasError(true);
+            setErrorMessage(event.error?.message || 'Произошла неизвестная ошибка');
+        };
+
+        window.addEventListener('error', handleGlobalError);
+        return () => window.removeEventListener('error', handleGlobalError);
+    }, []);
+
+    // Show error screen if there's an error
+    if (hasError) {
+        return (
+            <div style={{ 
+                padding: '20px', 
+                textAlign: 'center', 
+                fontFamily: 'Arial, sans-serif',
+                backgroundColor: '#f5f5f5',
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <h2>Произошла ошибка</h2>
+                <p>{errorMessage}</p>
+                <button 
+                    onClick={() => {
+                        setHasError(false);
+                        setErrorMessage('');
+                        window.location.reload();
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginTop: '20px'
+                    }}
+                >
+                    Перезагрузить приложение
+                </button>
+            </div>
+        );
+    }
+
     // --- App Navigation State ---
     const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
-    const [templates, setTemplates] = useState<Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId'>[]>([]);
+    const [templates, setTemplates] = useState<Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
@@ -59,11 +122,50 @@ const App: React.FC = () => {
     const [consumables, setConsumables] = useState<Consumable[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [scratchpad, setScratchpad] = useState('');
-    const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+    const [toolsScratchpad, setToolsScratchpad] = useState('');
+    const [consumablesScratchpad, setConsumablesScratchpad] = useState('');
+    const calculateProjectFinancials = (projectId: string): ProjectFinancials => {
+        const projectEstimates = estimates.filter(e => e.projectId === projectId);
+        const projectFinances = financeEntries.filter(f => f.projectId === projectId);
+
+        const estimateTotal = projectEstimates.reduce((sum, est) => {
+            const subtotal = est.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
+            const discountAmount = est.discountType === 'percent' ? subtotal * (Number(est.discount) / 100) : Number(est.discount);
+            const totalAfterDiscount = subtotal - discountAmount;
+            const taxAmount = totalAfterDiscount * (Number(est.tax) / 100);
+            return sum + totalAfterDiscount + taxAmount;
+        }, 0);
+
+        const paidTotal = projectFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+        const expensesTotal = projectFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+
+        const expensesBreakdown = projectFinances
+            .filter(f => f.type === 'expense')
+            .reduce((acc, f) => {
+                const category = f.category || 'other';
+                const existing = acc.find(i => i.categoryName === category);
+                if (existing) {
+                    existing.amount += f.amount;
+                } else {
+                    acc.push({ categoryName: category, amount: f.amount });
+                }
+                return acc;
+            }, [] as { categoryName: string; amount: number }[]);
+
+        const profit = paidTotal - expensesTotal;
+        const profitability = estimateTotal > 0 ? (profit / estimateTotal) * 100 : 0;
+
+        const cashFlowEntries = projectFinances
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .map(f => ({ date: f.date, type: f.type, amount: f.amount, description: f.description }));
+
+        return { estimateTotal, paidTotal, expensesTotal, expensesBreakdown, profit, profitability, cashFlowEntries };
+    };
 
     // --- Consumable Management ---
-    const handleAddConsumable = (consumable: Omit<Consumable, 'id'>) => {
-        const newConsumable: Consumable = { ...consumable, id: Date.now().toString() };
+    const handleAddConsumable = (consumable: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const now = new Date().toISOString();
+        const newConsumable: Consumable = { ...consumable, id: generateUUID(), createdAt: now, updatedAt: now };
         const updatedConsumables = [newConsumable, ...consumables];
         setConsumables(updatedConsumables);
         localStorage.setItem('consumables', JSON.stringify(updatedConsumables));
@@ -71,7 +173,7 @@ const App: React.FC = () => {
 
     const handleUpdateConsumable = (updatedConsumable: Consumable) => {
         const updatedConsumables = consumables.map(c =>
-            c.id === updatedConsumable.id ? updatedConsumable : c
+            c.id === updatedConsumable.id ? { ...updatedConsumable, updatedAt: new Date().toISOString() } : c
         );
         setConsumables(updatedConsumables);
         localStorage.setItem('consumables', JSON.stringify(updatedConsumables));
@@ -84,16 +186,18 @@ const App: React.FC = () => {
     };
 
     // --- Task Management Handlers ---
-    const handleAddTask = (title: string, projectId: string | number | null) => {
+    const handleAddTask = (title: string, projectId: string | null) => {
+        const now = new Date().toISOString();
         const newTask: Task = {
-            id: Date.now(),
+            id: generateUUID(),
             title,
             projectId,
             isCompleted: false,
-            createdAt: new Date(),
             priority: 'medium',
             tags: [],
             dueDate: null,
+            createdAt: now,
+            updatedAt: now,
         };
         const updatedTasks = [newTask, ...tasks];
         setTasks(updatedTasks);
@@ -102,24 +206,24 @@ const App: React.FC = () => {
 
     const handleUpdateTask = (updatedTask: Task) => {
         const updatedTasks = tasks.map(task =>
-            task.id === updatedTask.id ? updatedTask : task
+            task.id === updatedTask.id ? { ...updatedTask, updatedAt: new Date().toISOString() } : task
         );
         setTasks(updatedTasks);
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
     };
 
-    const handleToggleTask = (id: number | string) => {
+    const handleToggleTask = (id: string) => {
         const updatedTasks = tasks.map(task =>
-            task.id === id ? { ...task, isCompleted: !task.isCompleted } : task
+            task.id === id ? { ...task, isCompleted: !task.isCompleted, updatedAt: new Date().toISOString() } : task
         );
         setTasks(updatedTasks);
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
     };
     
     // --- Current Estimate State ---
-    const [activeEstimateId, setActiveEstimateId] = useState<number | null>(null);
-    const [currentEstimateProjectId, setCurrentEstimateProjectId] = useState<number | null>(null);
-    const [items, setItems] = useState<Item[]>([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', type: 'material' }]);
+    const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
+    const [currentEstimateProjectId, setCurrentEstimateProjectId] = useState<string | null>(null);
+    const [items, setItems] = useState<Item[]>([{ id: generateUUID(), name: '', quantity: 1, price: 0, unit: '', type: 'material', image: null }]);
     const [clientInfo, setClientInfo] = useState('');
     const [estimateNumber, setEstimateNumber] = useState('');
     const [estimateDate, setEstimateDate] = useState('');
@@ -129,8 +233,8 @@ const App: React.FC = () => {
     const [tax, setTax] = useState(0);
 
     // --- Project View State ---
-    const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
-    const [projectStatusFilter, setProjectStatusFilter] = useState<'in_progress' | 'completed'>('in_progress');
+    const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+    const [projectStatusFilter, setProjectStatusFilter] = useState<ProjectStatus>('in_progress');
     const [projectSearch, setProjectSearch] = useState('');
     
     // --- Modals and UI State ---
@@ -158,13 +262,13 @@ const App: React.FC = () => {
     const [isDirty, setIsDirty] = useState(false);
     const [isPdfLoading, setIsPdfLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-        const [draggingItem, setDraggingItem] = useState<number | null>(null);
+    const [draggingItem, setDraggingItem] = useState<number | null>(null);
 
     const lastFocusedElement = useRef<HTMLElement | null>(null);
     const activeModalName = useRef<string | null>(null);
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
-    const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     // Helper functions for modal management
     const openModal = useCallback((setOpenState: React.Dispatch<React.SetStateAction<boolean>>, modalName: string) => {
@@ -193,7 +297,7 @@ const App: React.FC = () => {
                     case 'project': closeModal(setIsProjectModalOpen); break;
                     case 'finance': closeModal(setIsFinanceModalOpen); break;
                     case 'photoReport': closeModal(setIsPhotoReportModalOpen); break;
-                    case 'photoViewer': closeModal(setViewingPhoto); break; // Special case for PhotoViewerModal
+                    case 'photoViewer': closeModal(setViewingPhoto as any); break; // Special case for PhotoViewerModal
                     case 'shoppingList': closeModal(setIsShoppingListOpen); break;
                     case 'documentUpload': closeModal(setIsDocumentModalOpen); break;
                     case 'globalDocumentUpload': closeModal(setIsGlobalDocumentModalOpen); break;
@@ -238,16 +342,22 @@ const App: React.FC = () => {
     };
 
     useEffect(() => {
-        if (isDirty) {
-            window.Telegram?.WebApp.enableClosingConfirmation();
-        } else {
-            window.Telegram?.WebApp.disableClosingConfirmation();
+        if (window.Telegram) {
+            if (isDirty) {
+                if (typeof window.Telegram.enableClosingConfirmation === 'function') {
+                    window.Telegram.enableClosingConfirmation();
+                }
+            } else {
+                if (typeof window.Telegram.disableClosingConfirmation === 'function') {
+                    window.Telegram.disableClosingConfirmation();
+                }
+            }
         }
     }, [isDirty]);
 
-    const populateForm = (estimate: Estimate | Partial<Estimate> | null, currentEstimates: Estimate[], projectIdForNew: number | null = null) => {
+    const populateForm = (estimate: Estimate | Partial<Estimate> | null, currentEstimates: Estimate[], projectIdForNew: string | null = null) => {
         if (estimate) {
-            setItems(estimate.items || []);
+            setItems(estimate.items?.map(i => ({...i, id: i.id || generateUUID()})) || []);
             setClientInfo(estimate.clientInfo || '');
             setEstimateNumber(estimate.number || generateNewEstimateNumber(currentEstimates));
             setEstimateDate(estimate.date || new Date().toISOString().split('T')[0]);
@@ -264,7 +374,7 @@ const App: React.FC = () => {
             }
         } else {
             // New estimate state
-            setItems([{ id: Date.now(), name: '', quantity: 1, price: 0, unit: '', type: 'material' }]);
+            setItems([{ id: generateUUID(), name: '', quantity: 1, price: 0, unit: '', type: 'material', image: null }]);
             setClientInfo('');
             setEstimateNumber(generateNewEstimateNumber(currentEstimates));
             setEstimateDate(new Date().toISOString().split('T')[0]);
@@ -281,169 +391,179 @@ const App: React.FC = () => {
     // Load all data on initial render
     useEffect(() => {
         try {
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.disableVerticalSwipes();
+            if (window.Telegram) {
+                if (typeof window.Telegram.ready === 'function') {
+                    window.Telegram.ready();
+                }
+                if (typeof window.Telegram.expand === 'function') {
+                    window.Telegram.expand();
+                }
+                if (typeof window.Telegram.disableVerticalSwipes === 'function') {
+                    window.Telegram.disableVerticalSwipes();
+                }
             }
         } catch (error) {
             console.error("Failed to initialize Telegram Web App:", error);
+            // Don't throw error, just log it
         }
 
-        const savedData = localStorage.getItem('estimatesData');
-        let initialEstimates: Estimate[] = [];
-        let activeEstimate: Estimate | null = null;
-        
-        if (savedData) {
+        const migrateItem = (item: any, key: string) => {
+            const now = new Date().toISOString();
+            let updated = false;
+
+            if (typeof item.id !== 'string') { item.id = generateUUID(); updated = true; }
+            if (key !== 'templates') { // Templates don't have audit fields
+                if (!item.createdAt) { item.createdAt = now; updated = true; }
+                if (!item.updatedAt) { item.updatedAt = now; updated = true; }
+            }
+
+            if (key === 'inventoryItems') {
+                if (item.condition === 'fair' || item.condition === 'poor') { item.condition = 'needs_service'; updated = true; }
+                if (item.currentProjectId) { item.projectId = item.currentProjectId; delete item.currentProjectId; updated = true; }
+            }
+
+            if (key === 'consumables') {
+                if (typeof item.quantity === 'string') { item.quantity = parseFloat(item.quantity) || 0; updated = true; }
+                if (!item.unit) { item.unit = 'шт.'; updated = true; }
+            }
+
+            if (key === 'projectDocuments' || key === 'globalDocuments') {
+                if (item.dataUrl) { item.fileUrl = item.dataUrl; delete item.dataUrl; updated = true; }
+            }
+            
+            if (item.lastModified) { delete item.lastModified; updated = true; }
+
+            return updated;
+        };
+
+        const loadAndMigrate = <T extends { id: any }> (storageKey: string, setState: React.Dispatch<React.SetStateAction<T[]>>) => {
             try {
-                const parsedData = JSON.parse(savedData);
-                let savedEstimates = (parsedData.estimates || []) as Estimate[];
+                const savedData = localStorage.getItem(storageKey);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    let needsResave = false;
+                    const migratedData = data.map((item: any) => {
+                        const itemUpdated = migrateItem(item, storageKey);
+                        if (itemUpdated) needsResave = true;
+                        return item;
+                    });
+
+                    if (needsResave) {
+                        console.log(`Migrating and saving data for ${storageKey}...`);
+                        localStorage.setItem(storageKey, JSON.stringify(migratedData));
+                    }
+                    setState(migratedData);
+                }
+            } catch (e) {
+                console.error(`Failed to load or migrate ${storageKey}`, e);
+            }
+        };
+
+        // Special handling for estimates
+        const savedEstimatesData = localStorage.getItem('estimatesData');
+        if (savedEstimatesData) {
+            try {
+                const parsedData = JSON.parse(savedEstimatesData);
+                let savedEstimates = (parsedData.estimates || []) as any[];
                 const savedActiveId = parsedData.activeEstimateId;
-                
                 let needsResave = false;
-                savedEstimates = savedEstimates.map((e: any) => {
-                    let updated = { ...e };
-                    if (typeof e.status === 'undefined') {
-                        needsResave = true;
-                        updated = {
-                            ...updated,
-                            number: e.number || generateNewEstimateNumber([]),
-                            date: e.date || new Date(e.lastModified).toISOString().split('T')[0],
-                            status: 'draft',
-                        };
-                    }
-                    if (typeof e.projectId === 'undefined') {
-                        needsResave = true;
-                        updated.projectId = null;
-                    }
-                    // Data migration for item type
-                    if (e.items && e.items.some((i: any) => typeof i.type === 'undefined')) {
-                        needsResave = true;
-                        updated.items = e.items.map((i: any) => ({ ...i, type: i.type || 'material' }));
-                    }
 
-                    return updated;
+                const migratedEstimates = savedEstimates.map(e => {
+                    const estimateUpdated = migrateItem(e, 'estimates');
+                    if (estimateUpdated) needsResave = true;
+                    return e;
                 });
-                
-                if (needsResave) localStorage.setItem('estimatesData', JSON.stringify({ estimates: savedEstimates, activeEstimateId: savedActiveId }));
-                
-                initialEstimates = savedEstimates;
-                activeEstimate = savedEstimates.find(e => e.id === savedActiveId) || savedEstimates[0] || null;
 
-            } catch (error) { console.error("Failed to parse saved estimates:", error); }
-        }
-        
-        setEstimates(initialEstimates);
-        // On first load, if no project is associated with the active estimate, don't populate. Let user start from projects view.
-        if (activeEstimate && activeEstimate.projectId) {
-            populateForm(activeEstimate, initialEstimates);
+                if (needsResave) {
+                     localStorage.setItem('estimatesData', JSON.stringify({ estimates: migratedEstimates, activeEstimateId: savedActiveId }));
+                }
+
+                setEstimates(migratedEstimates);
+                const activeEstimate = migratedEstimates.find(e => e.id === savedActiveId) || migratedEstimates[0] || null;
+                if (activeEstimate) {
+                    populateForm(activeEstimate, migratedEstimates);
+                }
+
+            } catch (e) { console.error("Failed to parse saved estimates:", e); }
         } else {
-             populateForm(null, initialEstimates);
+            populateForm(null, []);
         }
-        
+
+        loadAndMigrate('projects', setProjects);
+        loadAndMigrate('financeEntries', setFinanceEntries);
+        loadAndMigrate('photoReports', setPhotoReports);
+        loadAndMigrate('projectDocuments', setDocuments);
+        loadAndMigrate('globalDocuments', setGlobalDocuments);
+        loadAndMigrate('workStages', setWorkStages);
+        loadAndMigrate('notes', setNotes);
+        loadAndMigrate('itemLibrary', setLibraryItems);
+        loadAndMigrate('inventoryItems', setInventoryItems);
+        loadAndMigrate('inventoryNotes', setInventoryNotes);
+        loadAndMigrate('consumables', setConsumables);
+        loadAndMigrate('tasks', setTasks);
+
         const savedProfile = localStorage.getItem('companyProfile');
         if (savedProfile) { try { setCompanyProfile(JSON.parse(savedProfile)); } catch (e) { console.error("Failed to parse profile", e); }}
-        
-        const savedLibrary = localStorage.getItem('itemLibrary');
-        if (savedLibrary) { try { setLibraryItems(JSON.parse(savedLibrary)); } catch (e) { console.error("Failed to parse library", e); }}
 
         const savedTemplates = localStorage.getItem('estimateTemplates');
         if (savedTemplates) { try { setTemplates(JSON.parse(savedTemplates)); } catch (e) { console.error("Failed to parse templates", e); }}
-        
-        const savedProjects = localStorage.getItem('projects');
-        if (savedProjects) { try { setProjects(JSON.parse(savedProjects)); } catch (e) { console.error("Failed to parse projects", e); } } 
-        
-        const savedFinances = localStorage.getItem('financeEntries');
-        if (savedFinances) { try { setFinanceEntries(JSON.parse(savedFinances)); } catch (e) { console.error("Failed to parse finances", e); } }
-
-        const savedPhotos = localStorage.getItem('photoReports');
-        if (savedPhotos) { try { setPhotoReports(JSON.parse(savedPhotos)); } catch (e) { console.error("Failed to parse photos", e); } }
-
-        const savedDocuments = localStorage.getItem('projectDocuments');
-        if (savedDocuments) { try { setDocuments(JSON.parse(savedDocuments)); } catch (e) { console.error("Failed to parse documents", e); } }
-
-        const savedGlobalDocuments = localStorage.getItem('globalDocuments');
-        if (savedGlobalDocuments) { try { setGlobalDocuments(JSON.parse(savedGlobalDocuments)); } catch (e) { console.error("Failed to parse global documents", e); } }
-
-        const savedWorkStages = localStorage.getItem('workStages');
-        if (savedWorkStages) { try { setWorkStages(JSON.parse(savedWorkStages)); } catch (e) { console.error("Failed to parse work stages", e); } }
-
-        const savedNotes = localStorage.getItem('projectNotes');
-        if (savedNotes) { try { setNotes(JSON.parse(savedNotes)); } catch (e) { console.error("Failed to parse notes", e); } }
-
-        const savedInventoryItems = localStorage.getItem('inventoryItems');
-        if (savedInventoryItems) { 
-            try {
-                const parsed = JSON.parse(savedInventoryItems).map((item: any) => ({
-                    ...item,
-                    id: item.id.toString(),
-                    condition: item.condition || item.status || 'excellent', // Migrate from old status field
-                }));
-                setInventoryItems(parsed);
-            } catch (e) { 
-                console.error("Failed to parse inventory items", e); 
-            }
-        }
-
-        const savedInventoryNotes = localStorage.getItem('inventoryNotes');
-        if (savedInventoryNotes) { try { setInventoryNotes(JSON.parse(savedInventoryNotes)); } catch (e) { console.error("Failed to parse inventory notes", e); } }
-
-        const savedConsumables = localStorage.getItem('consumables');
-        if (savedConsumables) { try { setConsumables(JSON.parse(savedConsumables)); } catch (e) { console.error("Failed to parse consumables", e); } }
-
-        const savedTasks = localStorage.getItem('tasks');
-        if (savedTasks) { 
-            try {
-                const parsedTasks = JSON.parse(savedTasks).map((t: Task) => ({
-                    ...t, 
-                    createdAt: new Date(t.createdAt),
-                    dueDate: t.dueDate ? new Date(t.dueDate) : null 
-                }));
-                setTasks(parsedTasks); 
-            } catch (e) { 
-                console.error("Failed to parse tasks", e); 
-            }
-        }
 
         const savedScratchpad = localStorage.getItem('scratchpad');
         if (savedScratchpad) { setScratchpad(savedScratchpad); }
+
+        const savedToolsScratchpad = localStorage.getItem('toolsScratchpad');
+        if (savedToolsScratchpad) { setToolsScratchpad(savedToolsScratchpad); }
+
+        const savedConsumablesScratchpad = localStorage.getItem('consumablesScratchpad');
+        if (savedConsumablesScratchpad) { setConsumablesScratchpad(savedConsumablesScratchpad); }
+
+        // Migration for Notes to Project Scratchpad
+        const savedNotes = localStorage.getItem('projectNotes');
+        if (savedNotes) {
+            try {
+                const notes = JSON.parse(savedNotes);
+                if (notes.length > 0) {
+                    const updatedProjects = projects.map(p => {
+                        const projectNotes = notes.filter((n: Note) => n.projectId === p.id);
+                        if (projectNotes.length > 0) {
+                            const existingScratchpad = p.scratchpad || '';
+                            const notesText = projectNotes.map((n: Note) => n.text).join('\n\n---\n\n');
+                            return { ...p, scratchpad: existingScratchpad + '\n\n---\n\n' + notesText };
+                        }
+                        return p;
+                    });
+                    setProjects(updatedProjects);
+                    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+                    localStorage.removeItem('projectNotes'); // Remove old notes
+                }
+            } catch (e) {
+                console.error("Failed to migrate notes", e);
+            }
+        }
 
     }, []);
     
     const handleInputFocus = (e: React.FocusEvent<HTMLElement>) => {
         setTimeout(() => {
             const inputElement = e.target;
-            
-            // Используем scrollIntoView для более надежного позиционирования
-            inputElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-            });
-            
-            // Дополнительная проверка для мобильных устройств
+            inputElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
             setTimeout(() => {
                 const rect = inputElement.getBoundingClientRect();
                 const viewportHeight = window.innerHeight;
-                const safeArea = viewportHeight * 0.3; // Безопасная зона в верхней части экрана
-                
-                // Если поле ввода находится в нижней части экрана, прокручиваем еще больше
+                const safeArea = viewportHeight * 0.3;
                 if (rect.top > viewportHeight - safeArea) {
-                    window.scrollBy({
-                        top: rect.top - safeArea,
-                        behavior: 'smooth'
-                    });
+                    window.scrollBy({ top: rect.top - safeArea, behavior: 'smooth' });
                 }
             }, 100);
-        }, 300); // Уменьшенная задержка для более быстрой реакции
+        }, 300);
     };
 
-    const handleAddItem = () => { setItems(prev => [...prev, { id: Date.now(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
-    const handleAddFromLibrary = (libItem: LibraryItem) => { setItems(prev => [...prev, { id: Date.now(), name: libItem.name, quantity: 1, price: libItem.price, unit: libItem.unit, image: null, type: 'work' }]); setIsLibraryOpen(false); setIsDirty(true); };
+    const handleAddItem = () => { setItems(prev => [...prev, { id: generateUUID(), name: '', quantity: 1, price: 0, unit: '', image: null, type: 'work' }]); setIsDirty(true); };
+    const handleAddFromLibrary = (libItem: LibraryItem) => { setItems(prev => [...prev, { id: generateUUID(), name: libItem.name, quantity: 1, price: libItem.price, unit: libItem.unit, image: null, type: 'work' }]); setIsLibraryOpen(false); setIsDirty(true); };
     const handleAddItemsFromAI = (newItems: Omit<Item, 'id' | 'image' | 'type'>[]) => {
         const itemsToAdd: Item[] = newItems.map(item => ({
             ...item,
-            id: Date.now() + Math.random(),
+            id: generateUUID(),
             image: null,
             type: 'work' // Default type, user can change it
         }));
@@ -451,8 +571,8 @@ const App: React.FC = () => {
         setIsDirty(true);
     };
 
-    const handleItemChange = (id: number, field: keyof Item, value: string | number) => { setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item)); setIsDirty(true); };
-    const handleRemoveItem = (id: number) => { setItems(prev => prev.filter(item => item.id !== id)); setIsDirty(true); };
+    const handleItemChange = (id: string, field: keyof Item, value: string | number) => { setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item)); setIsDirty(true); };
+    const handleRemoveItem = (id: string) => { setItems(prev => prev.filter(item => item.id !== id)); setIsDirty(true); };
     
     const handleDragSort = () => {
         if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) return;
@@ -465,7 +585,7 @@ const App: React.FC = () => {
         setIsDirty(true);
     };
 
-    const handleItemImageChange = async (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleItemImageChange = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
@@ -478,7 +598,7 @@ const App: React.FC = () => {
         }
     };
     
-    const handleRemoveItemImage = (id: number) => {
+    const handleRemoveItemImage = (id: string) => {
         setItems(prev => prev.map(item => item.id === id ? { ...item, image: null } : item));
         setIsDirty(true);
     };
@@ -502,15 +622,22 @@ const App: React.FC = () => {
         setIsSaving(true);
         try {
             const newEstimates = [...estimates];
-            const now = Date.now();
-            const currentId = activeEstimateId || now;
+            const now = new Date().toISOString();
+            const currentId = activeEstimateId || generateUUID();
             
             const currentEstimateData: Estimate = { 
                 id: currentId,
-                clientInfo, items, discount, discountType, tax, 
-                number: estimateNumber, date: estimateDate, status,
+                clientInfo,
+                items,
+                discount,
+                discountType,
+                tax,
+                number: estimateNumber,
+                date: estimateDate,
+                status,
                 projectId: currentEstimateProjectId,
-                lastModified: now
+                createdAt: estimates.find(e => e.id === currentId)?.createdAt || now,
+                updatedAt: now
             };
     
             const existingIndex = newEstimates.findIndex(e => e.id === activeEstimateId);
@@ -533,7 +660,7 @@ const App: React.FC = () => {
         }
     };
     
-    const handleNewEstimate = (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId'>) => {
+    const handleNewEstimate = (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
         if (isDirty) {
             safeShowConfirm('У вас есть несохраненные изменения. Вы уверены, что хотите создать новую смету?', (ok) => {
                 if (ok) {
@@ -557,14 +684,12 @@ const App: React.FC = () => {
                 return;
             }
         
-            // Используем встроенный шрифт Helvetica для лучшей совместимости
             doc.setFont('helvetica');
         
             let y = 15;
             const pageMargin = 15;
             const pageWidth = doc.internal.pageSize.getWidth();
         
-            // Header
             if (companyProfile.logo) {
                 try {
                     doc.addImage(companyProfile.logo, 'JPEG', pageMargin, y, 30, 30);
@@ -577,7 +702,6 @@ const App: React.FC = () => {
             doc.text(companyProfile.details || '', pageWidth - pageMargin, y + 15, { align: 'right', maxWidth: 80 });
             y += 45;
         
-            // Estimate Meta
             doc.setFontSize(16);
             doc.text(`Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}`, pageMargin, y);
             y += 10;
@@ -585,7 +709,6 @@ const App: React.FC = () => {
             doc.text(`Клиент / Объект: ${clientInfo}`, pageMargin, y);
             y += 15;
             
-            // Table
             const tableData = validItems.map((item, index) => [
                 index + 1,
                 item.name,
@@ -607,7 +730,6 @@ const App: React.FC = () => {
             
             y = (doc as any).autoTable.previous.finalY + 15;
         
-            // Totals
             const totalsX = pageWidth - pageMargin;
             doc.setFontSize(12);
             doc.text(`Подытог: ${formatCurrency(calculation.subtotal)}`, totalsX, y, { align: 'right' });
@@ -625,7 +747,6 @@ const App: React.FC = () => {
             doc.text(`Итого: ${formatCurrency(calculation.grandTotal)}`, totalsX, y + 2, { align: 'right' });
             doc.setFont('helvetica', 'normal');
             
-            // Images
             const images = validItems.filter(item => item.image);
             if (images.length > 0) {
                 doc.addPage();
@@ -637,7 +758,7 @@ const App: React.FC = () => {
                 for (const item of images) {
                     if (!item.image) continue;
                     doc.setFontSize(10);
-                    doc.text(`Позиция #${validItems.indexOf(item) + 1}: ${item.name}`, pageMargin, imageY);
+                    doc.text(`Позиция #${validItems.findIndex(i => i.id === item.id) + 1}: ${item.name}`, pageMargin, imageY);
                     imageY += 5;
                     try {
                         const imgProps = doc.getImageProperties(item.image);
@@ -687,8 +808,7 @@ const App: React.FC = () => {
 Клиент: ${clientInfo || 'Не указан'}
 
 `;
-            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\
-');
+            const itemsText = validItems.map((item, index) => `${index + 1}. ${item.name} (${item.quantity} ${item.unit || 'шт.'}) - ${formatCurrency(item.quantity * item.price)}`).join('\n');
             const footer = `
 
 *Подытог:* ${formatCurrency(calculation.subtotal)}`;
@@ -700,7 +820,9 @@ const App: React.FC = () => {
 *Итого:* ${formatCurrency(calculation.grandTotal)}`;
             
             const message = header + itemsText + footer + discountText + taxText + total;
-            window.Telegram?.WebApp.sendData(message);
+            if (window.Telegram && typeof window.Telegram.sendData === 'function') {
+                window.Telegram.sendData(message);
+            }
         } catch (error) {
             console.error("Share failed:", error);
             safeShowAlert("Не удалось подготовить данные для отправки.");
@@ -714,7 +836,7 @@ const App: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-            const resizedLogo = await resizeImage(file, 200); // Resize to max 200px for profile
+            const resizedLogo = await resizeImage(file, 200);
             setCompanyProfile(prev => ({ ...prev, logo: resizedLogo }));
         } catch (error) {
             console.error("Logo processing failed:", error);
@@ -723,13 +845,12 @@ const App: React.FC = () => {
     };
     const removeLogo = () => setCompanyProfile(prev => ({...prev, logo: null}));
 
-    const handleLoadEstimate = (id: number) => {
+    const handleLoadEstimate = (id: string) => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
                 populateForm(estimateToLoad, estimates);
                 closeModal(setIsEstimatesListOpen);
-                // If we're loading from a project, switch to the estimate view
                 if (activeView === 'projectDetail') {
                     setActiveView('estimate');
                 }
@@ -745,7 +866,7 @@ const App: React.FC = () => {
         }
     };
     
-    const handleDeleteEstimate = (id: number) => {
+    const handleDeleteEstimate = (id: string) => {
         safeShowConfirm("Вы уверены, что хотите удалить эту смету?", (ok) => {
             if (ok) {
                 tg?.HapticFeedback.notificationOccurred('warning');
@@ -760,11 +881,10 @@ const App: React.FC = () => {
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
             }
         });
-
     };
     
-    const handleStatusChange = (id: number, newStatus: EstimateStatus) => {
-        const newEstimates = estimates.map(e => e.id === id ? { ...e, status: newStatus } : e);
+    const handleStatusChange = (id: string, newStatus: EstimateStatus) => {
+        const newEstimates = estimates.map(e => e.id === id ? { ...e, status: newStatus, updatedAt: new Date().toISOString() } : e);
         setEstimates(newEstimates);
         localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId }));
         if (id === activeEstimateId) {
@@ -772,15 +892,15 @@ const App: React.FC = () => {
         }
     };
 
-    const handleSaveAsTemplate = (id: number) => {
+    const handleSaveAsTemplate = (id: string) => {
         const estimateToSave = estimates.find(e => e.id === id);
         if (estimateToSave) {
             const newTemplate = {
-                items: estimateToSave.items,
+                items: estimateToSave.items.map(i => ({...i, id: generateUUID()})),
                 discount: estimateToSave.discount,
                 discountType: estimateToSave.discountType,
                 tax: estimateToSave.tax,
-                lastModified: Date.now()
+                lastModified: Date.now() // Kept for template identification
             };
             const newTemplates = [...templates, newTemplate];
             setTemplates(newTemplates);
@@ -793,7 +913,7 @@ const App: React.FC = () => {
     const handleDeleteTemplate = (timestamp: number) => {
         safeShowConfirm('Вы уверены, что хотите удалить этот шаблон?', (ok) => {
             if (ok) {
-                const newTemplates = templates.filter(t => t.lastModified !== timestamp);
+                const newTemplates = templates.filter((t: any) => t.lastModified !== timestamp);
                 setTemplates(newTemplates);
                 localStorage.setItem('estimateTemplates', JSON.stringify(newTemplates));
             }
@@ -813,7 +933,7 @@ const App: React.FC = () => {
     }, [projects, projectStatusFilter, projectSearch]);
 
     const handleOpenProjectModal = (project: Partial<Project> | null = null) => {
-        setEditingProject(project || { name: '', client: '', address: '', status: 'in_progress' });
+        setEditingProject(project || { name: '', client: '', address: '', status: 'planned' });
         openModal(setIsProjectModalOpen, 'project');
     };
 
@@ -822,16 +942,19 @@ const App: React.FC = () => {
             safeShowAlert('Введите название проекта.');
             return;
         }
+        const now = new Date().toISOString();
         let updatedProjects;
         if (editingProject.id) { // Update existing
-            updatedProjects = projects.map(p => p.id === editingProject.id ? editingProject as Project : p);
+            updatedProjects = projects.map(p => p.id === editingProject.id ? { ...p, ...editingProject, updatedAt: now } as Project : p);
         } else { // Create new
             const newProject: Project = {
-                id: Date.now(),
+                id: generateUUID(),
                 name: editingProject.name.trim(),
                 client: editingProject.client?.trim() || '',
                 address: editingProject.address?.trim() || '',
-                status: 'in_progress'
+                status: 'planned',
+                createdAt: now,
+                updatedAt: now,
             };
             updatedProjects = [newProject, ...projects];
         }
@@ -841,10 +964,9 @@ const App: React.FC = () => {
         setEditingProject(null);
     };
 
-    const handleDeleteProject = (id: number) => {
+    const handleDeleteProject = (id: string) => {
         safeShowConfirm('Вы уверены, что хотите удалить проект и все связанные с ним данные (сметы, финансы и т.д.)?', (ok) => {
             if (ok) {
-                // Delete project and all associated data
                 const newProjects = projects.filter(p => p.id !== id);
                 const newEstimates = estimates.filter(e => e.projectId !== id);
                 const newFinances = financeEntries.filter(f => f.projectId !== id);
@@ -893,7 +1015,7 @@ const App: React.FC = () => {
         if (isDirty) {
             safeShowConfirm('У вас есть несохраненные изменения. Вернуться к проекту без сохранения?', (ok) => {
                 if (ok) {
-                    setIsDirty(false); // Discard changes
+                    setIsDirty(false);
                     setActiveView('projectDetail');
                 }
             });
@@ -903,60 +1025,64 @@ const App: React.FC = () => {
     };
 
     // --- Finance Management ---
-    const handleSaveFinanceEntry = (entry: Omit<FinanceEntry, 'id' | 'projectId'>) => {
+    const handleSaveFinanceEntry = (entry: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
         if (!activeProjectId) return;
-        const newEntry: FinanceEntry = { ...entry, id: Date.now(), projectId: activeProjectId };
+        const now = new Date().toISOString();
+        const newEntry: FinanceEntry = { ...entry, id: generateUUID(), projectId: activeProjectId, createdAt: now, updatedAt: now };
         const updatedEntries = [newEntry, ...financeEntries];
         setFinanceEntries(updatedEntries);
         localStorage.setItem('financeEntries', JSON.stringify(updatedEntries));
         closeModal(setIsFinanceModalOpen);
     };
-    const handleDeleteFinanceEntry = (id: number) => {
+    const handleDeleteFinanceEntry = (id: string) => {
         const updatedEntries = financeEntries.filter(f => f.id !== id);
         setFinanceEntries(updatedEntries);
         localStorage.setItem('financeEntries', JSON.stringify(updatedEntries));
     };
 
     // --- Photo Report Management ---
-    const handleSavePhotoReport = (photo: Omit<PhotoReport, 'id' | 'projectId'>) => {
+    const handleSavePhotoReport = (photo: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
         if (!activeProjectId) return;
-        const newPhoto: PhotoReport = { ...photo, id: Date.now(), projectId: activeProjectId };
+        const now = new Date().toISOString();
+        const newPhoto: PhotoReport = { ...photo, id: generateUUID(), projectId: activeProjectId, createdAt: now, updatedAt: now };
         const updatedPhotos = [newPhoto, ...photoReports];
         setPhotoReports(updatedPhotos);
         localStorage.setItem('photoReports', JSON.stringify(updatedPhotos));
         closeModal(setIsPhotoReportModalOpen);
     };
-    const handleDeletePhoto = (id: number) => {
+    const handleDeletePhoto = (id: string) => {
         const updatedPhotos = photoReports.filter(p => p.id !== id);
         setPhotoReports(updatedPhotos);
         localStorage.setItem('photoReports', JSON.stringify(updatedPhotos));
-        closeModal(setViewingPhoto); // Special case for PhotoViewerModal
+        closeModal(setViewingPhoto as any);
     };
 
     // --- Document Management ---
-    const handleSaveDocument = (name: string, dataUrl: string) => {
+    const handleSaveDocument = (name: string, fileUrl: string) => {
         if (!activeProjectId) return;
-        const newDoc: Document = { id: Date.now(), projectId: activeProjectId, name, dataUrl, date: new Date().toISOString() };
+        const now = new Date().toISOString();
+        const newDoc: Document = { id: generateUUID(), projectId: activeProjectId, name, fileUrl, date: now, createdAt: now, updatedAt: now };
         const updatedDocs = [newDoc, ...documents];
         setDocuments(updatedDocs);
         localStorage.setItem('projectDocuments', JSON.stringify(updatedDocs));
         closeModal(setIsDocumentModalOpen);
     };
-    const handleDeleteDocument = (id: number) => {
+    const handleDeleteDocument = (id: string) => {
         const updatedDocs = documents.filter(d => d.id !== id);
         setDocuments(updatedDocs);
         localStorage.setItem('projectDocuments', JSON.stringify(updatedDocs));
     };
 
-    const handleSaveGlobalDocument = (name: string, dataUrl: string) => {
-        const newDoc: Document = { id: Date.now(), name, dataUrl, date: new Date().toISOString() };
+    const handleSaveGlobalDocument = (name: string, fileUrl: string) => {
+        const now = new Date().toISOString();
+        const newDoc: Document = { id: generateUUID(), name, fileUrl, date: now, createdAt: now, updatedAt: now };
         const updatedDocs = [newDoc, ...globalDocuments];
         setGlobalDocuments(updatedDocs);
         localStorage.setItem('globalDocuments', JSON.stringify(updatedDocs));
         closeModal(setIsGlobalDocumentModalOpen);
     };
 
-    const handleDeleteGlobalDocument = (id: number) => {
+    const handleDeleteGlobalDocument = (id: string) => {
         const updatedDocs = globalDocuments.filter(d => d.id !== id);
         setGlobalDocuments(updatedDocs);
         localStorage.setItem('globalDocuments', JSON.stringify(updatedDocs));
@@ -967,13 +1093,14 @@ const App: React.FC = () => {
         setEditingWorkStage(stage);
         openModal(setIsWorkStageModalOpen, 'workStage');
     };
-    const handleSaveWorkStage = (stageData: Omit<WorkStage, 'id' | 'projectId'>) => {
+    const handleSaveWorkStage = (stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
         if (!activeProjectId) return;
+        const now = new Date().toISOString();
         let updatedStages;
         if (editingWorkStage?.id) {
-            updatedStages = workStages.map(ws => ws.id === editingWorkStage.id ? { ...ws, ...stageData } : ws);
+            updatedStages = workStages.map(ws => ws.id === editingWorkStage.id ? { ...ws, ...stageData, updatedAt: now } : ws);
         } else {
-            const newStage: WorkStage = { ...stageData, id: Date.now(), projectId: activeProjectId };
+            const newStage: WorkStage = { ...stageData, id: generateUUID(), projectId: activeProjectId, createdAt: now, updatedAt: now };
             updatedStages = [newStage, ...workStages];
         }
         setWorkStages(updatedStages);
@@ -981,7 +1108,7 @@ const App: React.FC = () => {
         closeModal(setIsWorkStageModalOpen);
         setEditingWorkStage(null);
     };
-    const handleDeleteWorkStage = (id: number) => {
+    const handleDeleteWorkStage = (id: string) => {
         const updatedStages = workStages.filter(ws => ws.id !== id);
         setWorkStages(updatedStages);
         localStorage.setItem('workStages', JSON.stringify(updatedStages));
@@ -994,11 +1121,12 @@ const App: React.FC = () => {
     };
     const handleSaveNote = (text: string) => {
         if (!activeProjectId) return;
+        const now = new Date().toISOString();
         let updatedNotes;
         if (editingNote?.id) {
-            updatedNotes = notes.map(n => n.id === editingNote.id ? { ...n, text, lastModified: Date.now() } : n);
+            updatedNotes = notes.map(n => n.id === editingNote.id ? { ...n, text, updatedAt: now } : n);
         } else {
-            const newNote: Note = { text, id: Date.now(), projectId: activeProjectId, lastModified: Date.now() };
+            const newNote: Note = { text, id: generateUUID(), projectId: activeProjectId, createdAt: now, updatedAt: now };
             updatedNotes = [newNote, ...notes];
         }
         setNotes(updatedNotes);
@@ -1006,24 +1134,23 @@ const App: React.FC = () => {
         closeModal(setIsNoteModalOpen);
         setEditingNote(null);
     };
-    const handleDeleteNote = (id: number) => {
+    const handleDeleteNote = (id: string) => {
         const updatedNotes = notes.filter(n => n.id !== id);
         setNotes(updatedNotes);
         localStorage.setItem('projectNotes', JSON.stringify(updatedNotes));
     };
 
     // --- Inventory Management ---
-    const handleAddInventoryItem = (item: Omit<Tool, 'id'>) => {
-        const newItem: Tool = { ...item, id: Date.now().toString() };
+    const handleAddInventoryItem = (item: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const now = new Date().toISOString();
+        const newItem: Tool = { ...item, id: generateUUID(), createdAt: now, updatedAt: now, location: 'on_base' };
         const updatedItems = [newItem, ...inventoryItems];
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
     };
 
-
-
     const handleUpdateInventoryItem = (item: Tool) => {
-        const updatedItems = inventoryItems.map(i => (i.id === item.id ? item : i));
+        const updatedItems = inventoryItems.map(i => (i.id === item.id ? { ...item, updatedAt: new Date().toISOString() } : i));
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
     };
@@ -1036,19 +1163,35 @@ const App: React.FC = () => {
     };
 
     const handleAddInventoryNote = (note: Omit<InventoryNote, 'id' | 'date'>) => {
-        const newNote: InventoryNote = { ...note, id: Date.now(), date: new Date().toISOString() };
+        const newNote: InventoryNote = { ...note, id: generateUUID(), date: new Date().toISOString() };
         const updatedNotes = [newNote, ...inventoryNotes];
         setInventoryNotes(updatedNotes);
         localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
     };
 
-    const handleDeleteInventoryNote = (id: number) => {
+    const handleDeleteInventoryNote = (id: string) => {
         const updatedNotes = inventoryNotes.filter(n => n.id !== id);
         setInventoryNotes(updatedNotes);
         localStorage.setItem('inventoryNotes', JSON.stringify(updatedNotes));
     };
 
-    
+    const handleProjectScratchpadChange = (projectId: string, newContent: string) => {
+        const updatedProjects = projects.map(p => 
+            p.id === projectId ? { ...p, scratchpad: newContent, updatedAt: new Date().toISOString() } : p
+        );
+        setProjects(updatedProjects);
+        localStorage.setItem('projects', JSON.stringify(updatedProjects));
+    };
+
+    const handleToolsScratchpadChange = (newContent: string) => {
+        setToolsScratchpad(newContent);
+        localStorage.setItem('toolsScratchpad', newContent);
+    };
+
+    const handleConsumablesScratchpadChange = (newContent: string) => {
+        setConsumablesScratchpad(newContent);
+        localStorage.setItem('consumablesScratchpad', newContent);
+    };
 
     const handleScratchpadChange = (text: string) => {
         setScratchpad(text);
@@ -1096,20 +1239,31 @@ const App: React.FC = () => {
                 const json = e.target?.result as string;
                 const restoredData = JSON.parse(json);
 
-                setEstimates(restoredData.estimates || []);
+                const migrateRestored = <T extends { id: any, lastModified?: any, createdAt?: any, updatedAt?: any }> (data: T[]): T[] => {
+                    return (data || []).map(item => {
+                        const newItem = { ...item };
+                        if (typeof newItem.id !== 'string') newItem.id = generateUUID();
+                        if (!newItem.createdAt) newItem.createdAt = new Date(newItem.lastModified || Date.now()).toISOString();
+                        if (!newItem.updatedAt) newItem.updatedAt = new Date(newItem.lastModified || Date.now()).toISOString();
+                        delete newItem.lastModified;
+                        return newItem;
+                    });
+                };
+
+                setEstimates(migrateRestored(restoredData.estimates));
                 setTemplates(restoredData.templates || []);
-                setProjects(restoredData.projects || []);
-                setFinanceEntries(restoredData.financeEntries || []);
-                setPhotoReports(restoredData.photoReports || []);
-                setDocuments(restoredData.documents || []);
-                setWorkStages(restoredData.workStages || []);
-                setNotes(restoredData.notes || []);
-                setLibraryItems(restoredData.libraryItems || []);
-                setInventoryItems((restoredData.inventoryItems || []).map((item: any) => ({ ...item, id: item.id.toString(), condition: item.condition || item.status || 'excellent' })));
-                setInventoryNotes(restoredData.inventoryNotes || []);
-                setConsumables(restoredData.consumables || []);
+                setProjects(migrateRestored(restoredData.projects));
+                setFinanceEntries(migrateRestored(restoredData.financeEntries));
+                setPhotoReports(migrateRestored(restoredData.photoReports));
+                setDocuments(migrateRestored(restoredData.documents));
+                setWorkStages(migrateRestored(restoredData.workStages));
+                setNotes(migrateRestored(restoredData.notes));
+                setLibraryItems(migrateRestored(restoredData.libraryItems));
+                setInventoryItems(migrateRestored(restoredData.inventoryItems));
+                setInventoryNotes(migrateRestored(restoredData.inventoryNotes));
+                setConsumables(migrateRestored(restoredData.consumables));
                 setCompanyProfile(restoredData.companyProfile || { name: '', details: '', logo: null });
-                setTasks((restoredData.tasks || []).map((t: Task) => ({ ...t, createdAt: new Date(t.createdAt), dueDate: t.dueDate ? new Date(t.dueDate) : null })));
+                setTasks(migrateRestored(restoredData.tasks));
                 setScratchpad(restoredData.scratchpad || '');
 
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: restoredData.estimates || [], activeEstimateId: null }));
@@ -1122,8 +1276,7 @@ const App: React.FC = () => {
                 localStorage.setItem('projectNotes', JSON.stringify(restoredData.notes || []));
                 localStorage.setItem('itemLibrary', JSON.stringify(restoredData.libraryItems || []));
                 localStorage.setItem('inventoryItems', JSON.stringify(restoredData.inventoryItems || []));
-                localStorage.setItem('companyProfile', JSON.stringify(restoredData.companyProfile || { name: '', details: '', logo: null }));
-                                localStorage.setItem('inventoryNotes', JSON.stringify(restoredData.inventoryNotes || []));
+                localStorage.setItem('inventoryNotes', JSON.stringify(restoredData.inventoryNotes || []));
                 localStorage.setItem('consumables', JSON.stringify(restoredData.consumables || []));
                 localStorage.setItem('companyProfile', JSON.stringify(restoredData.companyProfile || { name: '', details: '', logo: null }));
                 localStorage.setItem('tasks', JSON.stringify(restoredData.tasks || []));
@@ -1177,26 +1330,23 @@ const App: React.FC = () => {
                 />;
             case 'projectDetail':
                 if (!activeProject) {
-                    // This should not happen if logic is correct, but as a fallback:
                     setActiveView('projects');
                     return null;
                 }
+                const financials = calculateProjectFinancials(activeProject.id);
                 return <ProjectDetailView 
                     activeProject={activeProject}
-                    estimates={estimates}
-                    financeEntries={financeEntries}
-                    photoReports={photoReports}
-                    documents={documents}
-                    workStages={workStages}
-                    notes={notes}
+                    estimates={estimates.filter(e => e.projectId === activeProjectId)}
+                    financeEntries={financeEntries.filter(f => f.projectId === activeProjectId)}
+                    photoReports={photoReports.filter(p => p.projectId === activeProjectId)}
+                    documents={documents.filter(d => d.projectId === activeProjectId)}
+                    workStages={workStages.filter(w => w.projectId === activeProjectId)}
+                    financials={financials}
                     formatCurrency={formatCurrency}
                     statusMap={statusMap}
                     setActiveView={setActiveView}
                     setActiveProjectId={setActiveProjectId}
-                    handleOpenProjectModal={(project) => {
-                        setEditingProject(project || { name: '', client: '', address: '', status: 'in_progress' });
-                        openModal(setIsProjectModalOpen, 'project');
-                    }}
+                    handleOpenProjectModal={handleOpenProjectModal}
                     handleDeleteProject={handleDeleteProject}
                     handleLoadEstimate={handleLoadEstimate}
                     handleAddNewEstimateForProject={handleAddNewEstimateForProject}
@@ -1212,6 +1362,7 @@ const App: React.FC = () => {
                     onDeleteNote={handleDeleteNote}
                     onOpenActModal={handleOpenActModal}
                     onNavigateToTasks={() => setActiveView('projectTasks')}
+                    onProjectScratchpadChange={handleProjectScratchpadChange}
                 />;
             case 'allTasks':
                 return <ProjectTasksScreen 
@@ -1236,6 +1387,8 @@ const App: React.FC = () => {
                     tools={inventoryItems}
                     projects={projects}
                     consumables={consumables}
+                    toolsScratchpad={toolsScratchpad}
+                    consumablesScratchpad={consumablesScratchpad}
                     onToolClick={(tool) => {
                         setSelectedTool(tool);
                         setActiveView('toolDetails');
@@ -1245,10 +1398,13 @@ const App: React.FC = () => {
                     onAddConsumable={handleAddConsumable}
                     onUpdateConsumable={handleUpdateConsumable}
                     onDeleteConsumable={handleDeleteConsumable}
+                    onToolsScratchpadChange={handleToolsScratchpadChange}
+                    onConsumablesScratchpadChange={handleConsumablesScratchpadChange}
                 />;
             case 'toolDetails':
                 return <ToolDetailsScreen 
                     tool={selectedTool!}
+                    projects={projects}
                     onSave={(tool) => {
                         handleUpdateInventoryItem(tool as Tool);
                         setActiveView('inventoryList');
@@ -1386,7 +1542,7 @@ const App: React.FC = () => {
             {isProjectModalOpen && <NewProjectModal project={editingProject} onClose={() => closeModal(setIsProjectModalOpen)} onProjectChange={setEditingProject} onSave={handleSaveProject} onInputFocus={handleInputFocus} />}
             {isFinanceModalOpen && <FinanceEntryModal onClose={() => closeModal(setIsFinanceModalOpen)} onSave={handleSaveFinanceEntry} showAlert={safeShowAlert} onInputFocus={handleInputFocus} />}
             {isPhotoReportModalOpen && <PhotoReportModal onClose={() => closeModal(setIsPhotoReportModalOpen)} onSave={handleSavePhotoReport} showAlert={safeShowAlert} />}
-            {viewingPhoto && <PhotoViewerModal photo={viewingPhoto} onClose={() => closeModal(() => setViewingPhoto(null))} onDelete={handleDeletePhoto} />}
+            {viewingPhoto && <PhotoViewerModal photo={viewingPhoto} onClose={() => closeModal(setViewingPhoto as any)} onDelete={handleDeletePhoto} />}
             {isShoppingListOpen && <ShoppingListModal items={items} onClose={() => closeModal(setIsShoppingListOpen)} showAlert={safeShowAlert} />}
             {isDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsDocumentModalOpen)} onSave={handleSaveDocument} showAlert={safeShowAlert} />}
             {isGlobalDocumentModalOpen && <DocumentUploadModal onClose={() => closeModal(setIsGlobalDocumentModalOpen)} onSave={handleSaveGlobalDocument} showAlert={safeShowAlert} />}

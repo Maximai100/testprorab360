@@ -1,6 +1,17 @@
-import { Estimate } from './types';
+import { Estimate } from '../types';
 
-export const tg = window.Telegram?.WebApp;
+export const generateUUID = () => {
+    if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    // Fallback for environments without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
+export const tg = window.Telegram;
 
 /**
  * Safely shows an alert. Falls back to browser's alert if Telegram API is unavailable or outdated.

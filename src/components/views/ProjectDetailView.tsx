@@ -1,19 +1,19 @@
 import React, { useMemo, useCallback } from 'react';
-import { ProjectDetailViewProps, Estimate, FinanceEntry, PhotoReport, Document, WorkStage, Note } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare } from '../common/Icon';
+import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp } from '../common/Icon';
 
-export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
-    activeProject, estimates, financeEntries, photoReports, documents, workStages, notes, formatCurrency, statusMap, setActiveView, setActiveProjectId,
+
+export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: ProjectFinancials, onProjectScratchpadChange: (projectId: string, content: string) => void, financeEntries: FinanceEntry[] }> = ({
+    activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenNoteModal, onDeleteNote, onOpenActModal, onNavigateToTasks
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, financials, financeEntries
 }) => {
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
-    const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
-    const projectNotes = useMemo(() => notes.filter(n => n.projectId === activeProject.id), [notes, activeProject.id]);
+    const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
     
     const calculateEstimateTotal = useCallback((estimate: Estimate) => {
         const subtotal = estimate.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
@@ -22,14 +22,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         const taxAmount = totalAfterDiscount * (Number(estimate.tax) / 100);
         return totalAfterDiscount + taxAmount;
     }, []);
-
-    const { estimateTotal, totalExpenses, totalPayments, profit } = useMemo(() => {
-        const estimateTotal = projectEstimates.reduce((sum, est) => sum + calculateEstimateTotal(est), 0);
-        const totalExpenses = projectFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
-        const totalPayments = projectFinances.filter(f => f.type === 'payment').reduce((sum, f) => sum + f.amount, 0);
-        const profit = estimateTotal - totalExpenses;
-        return { estimateTotal, totalExpenses, totalPayments, profit };
-    }, [projectEstimates, projectFinances, calculateEstimateTotal]);
 
 
     return (
@@ -40,30 +32,75 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <div className="header-actions">
                     <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать"><IconEdit/></button>
                     <button onClick={() => handleDeleteProject(activeProject.id)} className="header-btn" aria-label="Удалить"><IconTrash/></button>
-                    {activeProject.status === 'completed' && <button onClick={() => onOpenActModal(estimateTotal)} className="header-btn" aria-label="Сгенерировать акт"><IconDocument/></button>}
+                    {activeProject.status === 'completed' && <button onClick={() => onOpenActModal(financials.estimateTotal)} className="header-btn" aria-label="Сгенерировать акт"><IconDocument/></button>}
                 </div>
             </header>
             <main className="project-detail-main">
-                <div className="card project-section">
-                    <div className="project-section-header"><h3>Финансовый дашборд</h3></div>
+                <div className="card project-section financial-dashboard">
+                    <div className="project-section-header">
+                        <h3>Финансовый дашборд</h3>
+                    </div>
                     <div className="project-section-body">
-                         <div className="dashboard-grid">
-                            <div className="dashboard-item">
-                                <span className="dashboard-value">{formatCurrency(estimateTotal)}</span>
-                                <span className="dashboard-label">Сумма смет</span>
-                            </div>
-                            <div className="dashboard-item">
-                                <span className="dashboard-value expense-value">{formatCurrency(totalExpenses)}</span>
-                                <span className="dashboard-label">Расходы</span>
-                            </div>
-                            <div className="dashboard-item">
-                                <span className="dashboard-value payment-value">{formatCurrency(totalPayments)}</span>
-                                <span className="dashboard-label">Оплачено</span>
-                            </div>
+                        <div className="dashboard-grid-final">
+                            <div className="dashboard-column">
                                 <div className="dashboard-item">
-                                <span className="dashboard-value profit-value">{formatCurrency(profit)}</span>
-                                <span className="dashboard-label">Прибыль</span>
+                                    <span className="dashboard-value">{formatCurrency(financials.estimateTotal)}</span>
+                                    <span className="dashboard-label">Сумма смет</span>
+                                </div>
+                                <div className="dashboard-item">
+                                    <span className="dashboard-value payment-value">{formatCurrency(financials.paidTotal)}</span>
+                                    <span className="dashboard-label">Оплачено</span>
+                                </div>
                             </div>
+                            <div className="dashboard-column">
+                                <div className="dashboard-item expenses-card">
+                                    <span className="dashboard-value expense-value">{formatCurrency(financials.expensesTotal)}</span>
+                                    <span className="dashboard-label">Расходы</span>
+                                    <div className="dashboard-breakdown">
+                                        {financials.expensesBreakdown.map(item => (
+                                            <div key={item.categoryName} className="breakdown-item">
+                                                <span>{item.categoryName}</span>
+                                                <span>{formatCurrency(item.amount)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="dashboard-item profit-card-final">
+                            <span className="dashboard-label">Прибыль</span>
+                            <div className="profit-details-final">
+                                <span className="dashboard-value profit-value">{formatCurrency(financials.profit)}</span>
+                                <span className="dashboard-label">Рентабельность {`${financials.profitability.toFixed(0)}%`}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Кэшфлоу</h3>
+                    </div>
+                    <div className="project-section-body">
+                        <div className="cashflow-list">
+                            {financials.cashFlowEntries.map((entry, index) => (
+                                <div key={index} className="cashflow-item">
+                                    <div className="cashflow-date">
+                                        {new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
+                                    </div>
+                                    <div className="cashflow-type">
+                                        <span className={entry.type === 'income' ? 'income-color' : 'expense-color'}>
+                                            {entry.type === 'income' ? 'Приход' : 'Расход'}
+                                        </span>
+                                    </div>
+                                    <div className="cashflow-amount-details">
+                                        <span className={`amount ${entry.type === 'income' ? 'income-color' : 'expense-color'}`}>
+                                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
+                                        </span>
+                                        <span className="description">({entry.description || 'Без описания'})</span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -137,7 +174,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     <div key={stage.id} className="list-item">
                                         <IconCalendar />
                                         <div className="list-item-info" onClick={() => onOpenWorkStageModal(stage)}>
-                                            <strong>{stage.name}</strong>
+                                            <strong>{stage.title}</strong>
                                             <span>{new Date(stage.startDate).toLocaleDateString('ru-RU')} - {new Date(stage.endDate).toLocaleDateString('ru-RU')}</span>
                                         </div>
                                         <div className="list-item-actions">
@@ -192,7 +229,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                             <span>{new Date(doc.date).toLocaleDateString('ru-RU')}</span>
                                         </div>
                                         <div className="list-item-actions">
-                                            <a href={doc.dataUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
+                                            <a href={doc.fileUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
                                             <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
                                         </div>
                                     </div>
@@ -208,31 +245,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </div>
                 <div className="card project-section">
                     <div className="project-section-header">
-                        <h3>Заметки ({projectNotes.length})</h3>
-                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}}><IconPlus/></button>
+                        <h3>Блокнот</h3>
                     </div>
                     <div className="project-section-body">
-                        {projectNotes.length > 0 ? (
-                            <div className="project-items-list">
-                                {projectNotes.map(note => (
-                                    <div key={note.id} className="list-item note-item">
-                                        <IconMessageSquare />
-                                        <div className="list-item-info" onClick={() => onOpenNoteModal(note)}>
-                                            <p className="note-content">{note.text}</p>
-                                            <span className="note-date">Изменено: {new Date(note.lastModified).toLocaleDateString('ru-RU')}</span>
-                                        </div>
-                                        <div className="list-item-actions">
-                                            <button onClick={() => onDeleteNote(note.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="empty-list-message-with-button">
-                                <p className="no-results-message">Заметок пока нет. Добавьте важные мысли и напоминания по проекту.</p>
-                                <button onClick={(e) => {e.preventDefault(); onOpenNoteModal(null);}} className="btn btn-primary">+ Добавить заметку</button>
-                            </div>
-                        )}
+                        <textarea 
+                            className="scratchpad-textarea"
+                            placeholder="Здесь можно хранить любую текстовую информацию по проекту..."
+                            value={activeProject.scratchpad || ''}
+                            onChange={(e) => onProjectScratchpadChange(activeProject.id, e.target.value)}
+                            rows={8}
+                        />
                     </div>
                 </div>
             </main>

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FinanceEntryModalProps } from '../../types';
+import { FinanceEntryModalProps, FinanceCategory } from '../../types';
 import { IconClose } from '../common/Icon';
 import { resizeImage } from '../../utils';
 
 export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, onSave, showAlert, onInputFocus }) => {
-    const [type, setType] = useState<'expense' | 'payment'>('expense');
+    const [type, setType] = useState<'income' | 'expense'>('expense');
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
+    const [category, setCategory] = useState<FinanceCategory>('other');
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
     const [amountError, setAmountError] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -55,7 +56,7 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
             amount: parseFloat(amount),
             description,
             date: new Date().toISOString(),
-            receiptImage,
+            category,
         });
     };
 
@@ -65,9 +66,17 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                 <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
-                    <select value={type} onChange={e => setType(e.target.value as any)}>
+                    <select value={type} onChange={e => setType(e.target.value as 'income' | 'expense')}>
                         <option value="expense">Расход</option>
-                        <option value="payment">Оплата от клиента</option>
+                        <option value="income">Доход</option>
+                    </select>
+                    <label>Категория</label>
+                    <select value={category} onChange={e => setCategory(e.target.value as FinanceCategory)}>
+                        <option value="materials">Материалы</option>
+                        <option value="labor">Работа</option>
+                        <option value="transport">Транспорт</option>
+                        <option value="tools_rental">Аренда инструмента</option>
+                        <option value="other">Другое</option>
                     </select>
                     <label>Сумма (РУБ)</label>
                     <input 

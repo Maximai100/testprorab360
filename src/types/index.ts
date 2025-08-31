@@ -1,10 +1,29 @@
+export type ProjectStatus = 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
+export type ToolLocation = 'on_base' | 'in_repair' | 'on_project';
+export type FinanceCategory = 'materials' | 'labor' | 'transport' | 'tools_rental' | 'other';
+export type TaskPriority = 'low' | 'medium' | 'high';
+export type ToolCondition = 'excellent' | 'good' | 'needs_service';
+export type WorkStageStatus = 'planned' | 'in_progress' | 'completed';
+export type ItemType = 'material' | 'work';
+export type LibraryItemCategory = 'electrics' | 'plumbing' | 'finishing_materials';
+
+export interface ProjectFinancials {
+    estimateTotal: number;
+    paidTotal: number;
+    expensesTotal: number;
+    expensesBreakdown: { categoryName: string; amount: number }[];
+    profit: number;
+    profitability: number;
+    cashFlowEntries: { date: string; type: 'income' | 'expense'; amount: number; description: string }[];
+}
+
 export interface ProjectTasksScreenProps {
     tasks: Task[];
     projects: Project[];
-    projectId: string | number | null;
-    onAddTask: (title: string, projectId: string | number | null) => void;
+    projectId: string | null;
+    onAddTask: (title: string, projectId: string | null) => void;
     onUpdateTask: (task: Task) => void;
-    onToggleTask: (id: string | number) => void;
+    onToggleTask: (id: string) => void;
 }
 
 export interface InventoryScreenProps {
@@ -14,7 +33,7 @@ export interface InventoryScreenProps {
     onToolClick: (tool: Tool) => void;
     onUpdateTool: (tool: Tool) => void;
     onOpenAddToolModal: () => void;
-    onAddConsumable: (consumable: Omit<Consumable, 'id'>) => void;
+    onAddConsumable: (consumable: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>) => void;
     onUpdateConsumable: (consumable: Consumable) => void;
     onDeleteConsumable: (id: string) => void;
 }
@@ -27,65 +46,76 @@ export interface ToolDetailsScreenProps {
 }
 
 export interface Consumable {
-    id: string;
+    id: string; // Генерируется UUID
     name: string;
-    quantity: string;
+    quantity: number;
+    unit: string;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Tool {
-    id: string;
+    id: string; // Генерируется UUID
     name: string;
     category: string;
-    condition: 'excellent' | 'good' | 'fair' | 'poor';
-    location?: string;
+    condition: ToolCondition;
+    location?: ToolLocation;
     notes?: string;
-    image?: string;
-    purchaseDate?: string;
+    image?: string; // URL-адрес изображения
+    purchaseDate?: string; // ISO 8601 format
     purchasePrice?: number;
-    currentProjectId?: string | number;
+    projectId?: string | null; // Required if location is 'on_project'
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Project {
-    id: number;
+    id: string; // Генерируется UUID
     name: string;
     client: string;
     address: string;
-    status: 'in_progress' | 'completed';
+    status: ProjectStatus;
+    scratchpad?: string;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Task {
-    id: number;
+    id: string; // Генерируется UUID
     title: string;
-    projectId: string | number | null;
+    projectId: string | null;
     isCompleted: boolean;
-    createdAt: Date;
-    priority: 'low' | 'medium' | 'high';
+    priority: TaskPriority;
     tags: string[];
-    dueDate: Date | null;
+    dueDate: string | null; // ISO 8601 format
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Item {
-    id: number;
+    id: string; // Генерируется UUID
     name: string;
     quantity: number;
     price: number;
     unit: string;
-    image?: string | null;
-    type: 'material' | 'work';
+    image: string | null; // URL-адрес изображения
+    type: ItemType;
 }
 
 export interface LibraryItem {
-    id: number;
+    id: string; // Генерируется UUID
     name: string;
     price: number;
     unit: string;
-    category?: string;
+    category?: LibraryItemCategory;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface CompanyProfile {
     name: string;
     details: string;
-    logo: string | null;
+    logo: string | null; // URL-адрес изображения
 }
 
 export type EstimateStatus = 'draft' | 'sent' | 'approved' | 'rejected';
@@ -93,78 +123,90 @@ export type EstimateStatus = 'draft' | 'sent' | 'approved' | 'rejected';
 export type ThemeMode = 'light' | 'dark';
 
 export interface Estimate {
-    id: number;
+    id: string; // Генерируется UUID
     clientInfo: string;
     items: Item[];
     discount: number;
     discountType: 'percent' | 'fixed';
     tax: number;
-    number: string;
-    date: string;
+    number: string; // Генерируется в формате 'ГГГГ-ННН', где ННН - порядковый номер для года
+    date: string; // ISO 8601 format
     status: EstimateStatus;
-    projectId: number | null;
-    lastModified: number;
+    projectId: string | null;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface FinanceEntry {
-    id: number;
-    projectId: number;
+    id: string; // Генерируется UUID
+    projectId: string;
     type: 'income' | 'expense';
     amount: number;
     description: string;
-    date: string;
-    category?: string;
+    date: string; // ISO 8601 format
+    category?: FinanceCategory;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface PhotoReport {
-    id: number;
-    projectId: number;
+    id: string; // Генерируется UUID
+    projectId: string;
     title: string;
     description: string;
-    photos: string[];
-    date: string;
+    photos: string[]; // Массив URL-адресов изображений
+    date: string; // ISO 8601 format
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Document {
-    id: number;
-    projectId?: number;
+    id: string; // Генерируется UUID
+    projectId?: string;
     name: string;
-    dataUrl: string;
-    date: string;
+    fileUrl: string; // URL to the stored file
+    date: string; // ISO 8601 format
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface WorkStage {
-    id: number;
-    projectId: number;
+    id: string; // Генерируется UUID
+    projectId: string;
     title: string;
     description: string;
-    startDate: string;
-    endDate?: string;
-    status: 'planned' | 'in_progress' | 'completed';
-    progress: number;
+    startDate: string; // ISO 8601 format
+    endDate?: string; // ISO 8601 format
+    status: WorkStageStatus;
+    progress: number; // Прогресс в процентах от 0 до 100
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface Note {
-    id: number;
-    projectId: number;
+    id: string; // Генерируется UUID
+    projectId: string;
     text: string;
-    lastModified: number;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface InventoryItem {
-    id: string;
+    id: string; // Генерируется UUID
     name: string;
     category: string;
     status: 'available' | 'in_use' | 'maintenance' | 'retired';
     location?: string;
     notes?: string;
+    createdAt: string; // ISO 8601 format
+    updatedAt: string; // ISO 8601 format
 }
 
 export interface InventoryNote {
-    id: number;
+    id: string; // Генерируется UUID
     toolId: string;
     text: string;
-    date: string;
+    date: string; // ISO 8601 format
 }
 
 export interface CalculationResults {
@@ -192,16 +234,16 @@ export interface SettingsModalProps {
 export interface EstimatesListModalProps {
     onClose: () => void;
     estimates: Estimate[];
-    templates: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId'>[];
-    activeEstimateId: number | null;
+    templates: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[];
+    activeEstimateId: string | null;
     statusMap: Record<EstimateStatus, string>;
     formatCurrency: (value: number) => string;
-    onLoadEstimate: (id: number) => void;
-    onDeleteEstimate: (id: number) => void;
-    onStatusChange: (id: number, status: EstimateStatus) => void;
-    onSaveAsTemplate: (id: number) => void;
+    onLoadEstimate: (id: string) => void;
+    onDeleteEstimate: (id: string) => void;
+    onStatusChange: (id: string, status: EstimateStatus) => void;
+    onSaveAsTemplate: (id: string) => void;
     onDeleteTemplate: (timestamp: number) => void;
-    onNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId'>) => void;
+    onNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }
 
@@ -226,21 +268,21 @@ export interface NewProjectModalProps {
 
 export interface FinanceEntryModalProps {
     onClose: () => void;
-    onSave: (entry: Omit<FinanceEntry, 'id' | 'projectId'>) => void;
+    onSave: (entry: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
     showAlert: (message: string) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }
 
 export interface PhotoReportModalProps {
     onClose: () => void;
-    onSave: (photo: Omit<PhotoReport, 'id' | 'projectId'>) => void;
+    onSave: (photo: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
     showAlert: (message: string) => void;
 }
 
 export interface PhotoViewerModalProps {
     photo: PhotoReport;
     onClose: () => void;
-    onDelete: (id: number) => void;
+    onDelete: (id: string) => void;
 }
 
 export interface ShoppingListModalProps {
@@ -251,14 +293,14 @@ export interface ShoppingListModalProps {
 
 export interface DocumentUploadModalProps {
     onClose: () => void;
-    onSave: (name: string, dataUrl: string) => void;
+    onSave: (name: string, fileUrl: string) => void;
     showAlert: (message: string) => void;
 }
 
 export interface WorkStageModalProps {
     stage: Partial<WorkStage> | null;
     onClose: () => void;
-    onSave: (stage: Omit<WorkStage, 'id' | 'projectId'>) => void;
+    onSave: (stage: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
     showAlert: (message: string) => void;
 }
 
@@ -285,12 +327,12 @@ export interface AISuggestModalProps {
 
 export interface AddToolModalProps {
     onClose: () => void;
-    onSave: (tool: Omit<Tool, 'id'>) => void;
+    onSave: (tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 // View Props
 export interface EstimateViewProps {
-    currentEstimateProjectId: number | null;
+    currentEstimateProjectId: string | null;
     handleBackToProject: () => void;
     clientInfo: string;
     setClientInfo: (value: string) => void;
@@ -313,11 +355,11 @@ export interface EstimateViewProps {
     handleDragSort: () => void;
     draggingItem: number | null;
     setDraggingItem: (value: number | null) => void;
-    fileInputRefs: React.MutableRefObject<Record<number, HTMLInputElement | null>>;
-    handleItemImageChange: (id: number, e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleRemoveItemImage: (id: number) => void;
-    handleRemoveItem: (id: number) => void;
-    handleItemChange: (id: number, field: keyof Item, value: string | number) => void;
+    fileInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+    handleItemImageChange: (id: string, e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleRemoveItemImage: (id: string) => void;
+    handleRemoveItem: (id: string) => void;
+    handleItemChange: (id: string, field: keyof Item, value: string | number) => void;
     formatCurrency: (value: number) => string;
     handleAddItem: () => void;
     discount: number;
@@ -333,19 +375,19 @@ export interface EstimateViewProps {
     isSaving: boolean;
     handleExportPDF: () => void;
     handleShare: () => void;
-    handleNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId'>) => void;
+    onNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 export interface ProjectsListViewProps {
     handleOpenProjectModal: (project: Partial<Project> | null) => void;
-    projectStatusFilter: 'in_progress' | 'completed';
-    setProjectStatusFilter: (value: 'in_progress' | 'completed') => void;
+    projectStatusFilter: ProjectStatus;
+    setProjectStatusFilter: (value: ProjectStatus) => void;
     projectSearch: string;
     setProjectSearch: (value: string) => void;
     handleInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
     filteredProjects: Project[];
     projects: Project[];
-    setActiveProjectId: (value: number | null) => void;
+    setActiveProjectId: (value: string | null) => void;
     setActiveView: (value: string) => void;
 }
 
@@ -356,27 +398,28 @@ export interface ProjectDetailViewProps {
     photoReports: PhotoReport[];
     documents: Document[];
     workStages: WorkStage[];
-    notes: Note[];
+    financials: ProjectFinancials;
     formatCurrency: (value: number) => string;
     statusMap: Record<EstimateStatus, string>;
     setActiveView: (value: string) => void;
-    setActiveProjectId: (value: number | null) => void;
+    setActiveProjectId: (value: string | null) => void;
     handleOpenProjectModal: (project: Partial<Project> | null) => void;
-    handleDeleteProject: (id: number) => void;
-    handleLoadEstimate: (id: number) => void;
+    handleDeleteProject: (id: string) => void;
+    handleLoadEstimate: (id: string) => void;
     handleAddNewEstimateForProject: () => void;
     onOpenFinanceModal: () => void;
-    onDeleteFinanceEntry: (id: number) => void;
+    onDeleteFinanceEntry: (id: string) => void;
     onOpenPhotoReportModal: () => void;
     onViewPhoto: (photo: PhotoReport) => void;
     onOpenDocumentModal: () => void;
-    onDeleteDocument: (id: number) => void;
+    onDeleteDocument: (id: string) => void;
     onOpenWorkStageModal: (stage: Partial<WorkStage> | null) => void;
-    onDeleteWorkStage: (id: number) => void;
+    onDeleteWorkStage: (id: string) => void;
     onOpenNoteModal: (note: Partial<Note> | null) => void;
-    onDeleteNote: (id: number) => void;
+    onDeleteNote: (id: string) => void;
     onOpenActModal: (total: number) => void;
     onNavigateToTasks: () => void;
+    onProjectScratchpadChange: (projectId: string, content: string) => void;
 }
 
 export interface InventoryViewProps {
@@ -400,7 +443,7 @@ export interface WorkspaceViewProps {
     globalDocuments: Document[];
     onScratchpadChange: (text: string) => void;
     onOpenGlobalDocumentModal: () => void;
-    onDeleteGlobalDocument: (id: number) => void;
+    onDeleteGlobalDocument: (id: string) => void;
     onOpenScratchpad: () => void;
 }
 

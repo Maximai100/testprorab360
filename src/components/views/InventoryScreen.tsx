@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { Tool, Project, InventoryScreenProps, Consumable } from '../../types';
+import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
 import { IconPlus, IconTrash } from '../common/Icon';
-import { EditConsumableModal } from '../modals/EditConsumableModal'; // Import the new modal
 
-export const InventoryScreen: React.FC<InventoryScreenProps> = ({
+export const InventoryScreen: React.FC<InventoryScreenProps & {
+    toolsScratchpad: string;
+    consumablesScratchpad: string;
+    onToolsScratchpadChange: (content: string) => void;
+    onConsumablesScratchpadChange: (content: string) => void;
+}> = ({
     tools,
     projects,
     consumables,
@@ -11,41 +15,36 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
     onUpdateTool,
     onOpenAddToolModal,
     onAddConsumable,
-    onUpdateConsumable, // New prop
-    onDeleteConsumable, // New prop
+    onUpdateConsumable,
+    onDeleteConsumable,
+    toolsScratchpad,
+    consumablesScratchpad,
+    onToolsScratchpadChange,
+    onConsumablesScratchpadChange,
 }) => {
     const [activeTab, setActiveTab] = useState('tools');
     const [newConsumableName, setNewConsumableName] = useState('');
-    const [newConsumableQuantity, setNewConsumableQuantity] = useState('');
-
-    // New state for the edit consumable modal
-    const [showEditConsumableModal, setShowEditConsumableModal] = useState(false);
-    const [selectedConsumable, setSelectedConsumable] = useState<Consumable | null>(null);
-
-    const handleLocationChange = (tool: Tool, newLocation: string) => {
-        onUpdateTool({ ...tool, location: newLocation });
-    };
+    const [newConsumableQuantity, setNewConsumableQuantity] = useState<number | string>('');
+    const [newConsumableUnit, setNewConsumableUnit] = useState('шт.');
 
     const handleAddConsumable = () => {
-        if (newConsumableName.trim() && newConsumableQuantity.trim()) {
+        const quantity = typeof newConsumableQuantity === 'string' ? parseFloat(newConsumableQuantity) : newConsumableQuantity;
+        if (newConsumableName.trim() && quantity > 0) {
             onAddConsumable({
                 name: newConsumableName.trim(),
-                quantity: newConsumableQuantity.trim(),
+                quantity: quantity,
+                unit: newConsumableUnit,
             });
             setNewConsumableName('');
             setNewConsumableQuantity('');
+            setNewConsumableUnit('шт.');
         }
     };
 
-    // New function to handle clicking on a consumable
-    const handleConsumableClick = (consumable: Consumable) => {
-        setSelectedConsumable(consumable);
-        setShowEditConsumableModal(true);
-    };
-
-    const handleCloseEditConsumableModal = () => {
-        setShowEditConsumableModal(false);
-        setSelectedConsumable(null);
+    const handleUpdateConsumableQuantity = (consumable: Consumable, newQuantity: number) => {
+        if (newQuantity >= 0) {
+            onUpdateConsumable({ ...consumable, quantity: newQuantity });
+        }
     };
 
     return (
@@ -63,94 +62,117 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                 </div>
 
                 {activeTab === 'tools' && (
-                    <div className="card project-section">
-                        <div className="project-section-body">
-                            <div className="project-items-list">
-                                {tools.length > 0 ? (
-                                    tools.map(tool => (
-                                        <div key={tool.id} className="list-item inventory-item">
-                                            <div className="list-item-info" onClick={() => onToolClick(tool)} style={{cursor: 'pointer'}}>
-                                                <strong>{tool.name}</strong>
+                    <>
+                        <div className="card project-section">
+                            <div className="project-section-body">
+                                <div className="project-items-list">
+                                    {tools.length > 0 ? (
+                                        tools.map(tool => (
+                                            <div key={tool.id} className="list-item inventory-item">
+                                                <div className="list-item-info" onClick={() => onToolClick(tool)} style={{cursor: 'pointer'}}>
+                                                    <strong>{tool.name}</strong>
+                                                </div>
+                                                <div className="list-item-actions">
+                                                    <span>
+                                                        {tool.location === 'on_project' 
+                                                            ? projects.find(p => p.id === tool.projectId)?.name || 'На объекте' 
+                                                            : tool.location === 'on_base' ? 'На базе' : 'В ремонте'}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="list-item-actions">
-                                                <select 
-                                                    value={tool.location} 
-                                                    onChange={(e) => handleLocationChange(tool, e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()} // Предотвращаем переход на другой экран
-                                                >
-                                                    <option value="На базе">На базе</option>
-                                                    {projects.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <>
-                                        <p className="no-results-message">Инструментов пока нет.</p>
-                                        <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
-                                    </>
-                                )}
+                                        ))
+                                    ) : (
+                                        <>
+                                            <p className="no-results-message">Инструментов пока нет.</p>
+                                            <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div className="card project-section">
+                            <div className="project-section-header">
+                                <h3>Блокнот для инструментов</h3>
+                            </div>
+                            <div className="project-section-body">
+                                <textarea 
+                                    className="scratchpad-textarea"
+                                    placeholder="Заметки по инструментам..."
+                                    value={toolsScratchpad}
+                                    onChange={(e) => onToolsScratchpadChange(e.target.value)}
+                                    rows={8}
+                                />
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {activeTab === 'consumables' && (
-                    <div className="card project-section">
-                        <div className="project-section-body">
-                            <div className="add-consumable-form">
-                                <input
-                                    type="text"
-                                    placeholder="Наименование"
-                                    value={newConsumableName}
-                                    onChange={(e) => setNewConsumableName(e.target.value)}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Количество"
-                                    value={newConsumableQuantity}
-                                    onChange={(e) => setNewConsumableQuantity(e.target.value)}
-                                />
-                                <button onClick={handleAddConsumable} className="btn btn-primary">Добавить расходник</button>
-                            </div>
-                            <div className="consumables-list project-items-list">
-                                {consumables.length > 0 ? (
-                                    consumables.map(consumable => (
-                                        <div
-                                            key={consumable.id}
-                                            className="list-item inventory-item"
-                                            onClick={() => handleConsumableClick(consumable)} // Add onClick handler
-                                            style={{ cursor: 'pointer' }} // Indicate clickability
-                                        >
-                                            <div className="list-item-info">
-                                                <strong>{consumable.name}</strong>
-                                                <span>Кол-во: {consumable.quantity}</span>
+                    <>
+                        <div className="card project-section">
+                            <div className="project-section-body">
+                                <div className="add-consumable-form">
+                                    <input
+                                        type="text"
+                                        placeholder="Наименование"
+                                        value={newConsumableName}
+                                        onChange={(e) => setNewConsumableName(e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Количество"
+                                        value={newConsumableQuantity}
+                                        onChange={(e) => setNewConsumableQuantity(e.target.value)}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Ед. изм."
+                                        value={newConsumableUnit}
+                                        onChange={(e) => setNewConsumableUnit(e.target.value)}
+                                    />
+                                    <button onClick={handleAddConsumable} className="btn btn-primary">Добавить</button>
+                                </div>
+                                <div className="consumables-list project-items-list">
+                                    {consumables.length > 0 ? (
+                                        consumables.map(consumable => (
+                                            <div
+                                                key={consumable.id}
+                                                className="list-item inventory-item"
+                                            >
+                                                <div className="list-item-info">
+                                                    <strong>{consumable.name}</strong>
+                                                </div>
+                                                <div className="list-item-actions">
+                                                    <button onClick={() => handleUpdateConsumableQuantity(consumable, consumable.quantity - 1)} className="btn-icon">-</button>
+                                                    <span>{consumable.quantity} {consumable.unit}</span>
+                                                    <button onClick={() => handleUpdateConsumableQuantity(consumable, consumable.quantity + 1)} className="btn-icon">+</button>
+                                                    <button onClick={() => onDeleteConsumable(consumable.id)} className="btn-icon btn-tertiary"><IconTrash /></button>
+                                                </div>
                                             </div>
-                                            <div className="list-item-actions">
-                                                {/* Add actions here if needed, e.g., delete button */}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="no-results-message">Расходников пока нет.</p>
-                                )}
+                                        ))
+                                    ) : (
+                                        <p className="no-results-message">Расходников пока нет.</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div className="card project-section">
+                            <div className="project-section-header">
+                                <h3>Блокнот для расходников</h3>
+                            </div>
+                            <div className="project-section-body">
+                                <textarea 
+                                    className="scratchpad-textarea"
+                                    placeholder="Заметки по расходникам..."
+                                    value={consumablesScratchpad}
+                                    onChange={(e) => onConsumablesScratchpadChange(e.target.value)}
+                                    rows={8}
+                                />
+                            </div>
+                        </div>
+                    </>
                 )}
             </main>
-
-            {/* Render the EditConsumableModal */}
-            {showEditConsumableModal && selectedConsumable && (
-                <EditConsumableModal
-                    consumable={selectedConsumable}
-                    onClose={handleCloseEditConsumableModal}
-                    onSave={onUpdateConsumable}
-                    onDelete={onDeleteConsumable}
-                />
-            )}
         </>
     );
 };

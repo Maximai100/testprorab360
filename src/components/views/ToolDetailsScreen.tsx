@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Tool } from '../../types';
+import { Tool, ToolLocation, Project } from '../../types';
 import { IconCamera, IconChevronRight } from '../common/Icon';
 import { safeShowConfirm } from '../../utils';
 
 interface ToolDetailsScreenProps {
     tool: Partial<Tool>;
+    projects: Project[];
     onSave: (tool: Partial<Tool>) => void;
     onBack: () => void;
     onDelete: (id: string) => void;
@@ -13,11 +14,16 @@ interface ToolDetailsScreenProps {
 const conditionMap: Record<string, string> = {
     excellent: 'Отличное',
     good: 'Хорошее',
-    fair: 'Удовлетворительное',
-    poor: 'Плохое',
+    needs_service: 'Требует обслуживания',
 };
 
-export const ToolDetailsScreen: React.FC<ToolDetailsScreenProps> = ({ tool, onSave, onBack, onDelete }) => {
+const locationMap: Record<ToolLocation, string> = {
+    on_base: 'На базе',
+    in_repair: 'В ремонте',
+    on_project: 'На объекте',
+};
+
+export const ToolDetailsScreen: React.FC<ToolDetailsScreenProps> = ({ tool, projects, onSave, onBack, onDelete }) => {
     const [editableTool, setEditableTool] = useState(tool);
 
     useEffect(() => {
@@ -62,18 +68,13 @@ export const ToolDetailsScreen: React.FC<ToolDetailsScreenProps> = ({ tool, onSa
                         </div>
 
                         <div className="meta-field">
-                            <label htmlFor="serialNumber">Серийный номер</label>
-                            <input type="text" id="serialNumber" name="serialNumber" value={editableTool.serialNumber || ''} onChange={handleInputChange} />
-                        </div>
-
-                        <div className="meta-field">
                             <label htmlFor="purchaseDate">Дата покупки</label>
                             <input type="date" id="purchaseDate" name="purchaseDate" value={editableTool.purchaseDate ? new Date(editableTool.purchaseDate).toISOString().split('T')[0] : ''} onChange={handleInputChange} />
                         </div>
 
                         <div className="meta-field">
-                            <label htmlFor="price">Цена</label>
-                            <input type="number" id="price" name="price" value={editableTool.price || ''} onChange={handleInputChange} />
+                            <label htmlFor="purchasePrice">Цена</label>
+                            <input type="number" id="purchasePrice" name="purchasePrice" value={editableTool.purchasePrice || ''} onChange={handleInputChange} />
                         </div>
 
                         <div className="meta-field">
@@ -84,6 +85,27 @@ export const ToolDetailsScreen: React.FC<ToolDetailsScreenProps> = ({ tool, onSa
                                 ))}
                             </select>
                         </div>
+
+                        <div className="meta-field">
+                            <label htmlFor="location">Местоположение</label>
+                            <select id="location" name="location" value={editableTool.location || 'on_base'} onChange={handleInputChange}>
+                                {Object.entries(locationMap).map(([key, value]) => (
+                                    <option key={key} value={key}>{value}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {editableTool.location === 'on_project' && (
+                            <div className="meta-field">
+                                <label htmlFor="projectId">Проект</label>
+                                <select id="projectId" name="projectId" value={editableTool.projectId || ''} onChange={handleInputChange}>
+                                    <option value="">Выберите проект</option>
+                                    {projects.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         <div className="project-section">
                             <div className="project-section-header" style={{padding: '0', borderTop: '1px solid var(--border-color)', paddingTop: '16px'}}>

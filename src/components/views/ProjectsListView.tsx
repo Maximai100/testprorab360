@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProjectsListViewProps, Project } from '../../types';
+import { ProjectsListViewProps, Project, ProjectStatus } from '../../types';
 import { IconPlus } from '../common/Icon';
 
 export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
@@ -16,8 +16,11 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
         <main>
             <div className="project-filters">
                 <div className="toggle-switch">
+                    <button onClick={() => setProjectStatusFilter('planned')} className={projectStatusFilter === 'planned' ? 'active' : ''}>Планируются</button>
                     <button onClick={() => setProjectStatusFilter('in_progress')} className={projectStatusFilter === 'in_progress' ? 'active' : ''}>В работе</button>
+                    <button onClick={() => setProjectStatusFilter('on_hold')} className={projectStatusFilter === 'on_hold' ? 'active' : ''}>На паузе</button>
                     <button onClick={() => setProjectStatusFilter('completed')} className={projectStatusFilter === 'completed' ? 'active' : ''}>Завершены</button>
+                    <button onClick={() => setProjectStatusFilter('cancelled')} className={projectStatusFilter === 'cancelled' ? 'active' : ''}>Отменены</button>
                 </div>
                 <input type="search" placeholder="Поиск по проектам..." value={projectSearch} onChange={e => setProjectSearch(e.target.value)} onFocus={handleInputFocus} />
             </div>

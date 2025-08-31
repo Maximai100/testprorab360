@@ -3,13 +3,13 @@
 }
 
 :root {
-    --primary-color: #3390ec;
+    --primary-color: #007aff;
     --primary-text-color: #ffffff;
     --bg-color: #ffffff;
     --secondary-bg-color: #f3f2f8;
     --text-color: #000000;
     --hint-color: #8E8E93;
-    --link-color: #3390ec;
+    --link-color: #007aff;
     --border-color: #e0e0e0;
     --danger-color: #e53935;
     --success-color: #28a745;
@@ -21,13 +21,13 @@
 }
 
 body.dark-theme {
-    --primary-color: #58a7f8;
+    --primary-color: #007aff;
     --primary-text-color: #ffffff;
     --bg-color: #1c1c1d;
     --secondary-bg-color: #2c2c2e;
     --text-color: #ffffff;
     --hint-color: #8d8d92;
-    --link-color: #58a7f8;
+    --link-color: #007aff;
     --border-color: #3a3a3c;
     --danger-color: #ff453a;
     --success-color: #30d158;
@@ -933,18 +933,100 @@ body.dark-theme .bottom-nav {
 }
 
 
-.dashboard-grid {
+/* Финальная двухколоночная структура дашборда */
+.financial-dashboard .project-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dashboard-grid-final {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+    align-items: start;
 }
+
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .dashboard-item {
+    background-color: var(--bg-color);
+    padding: 16px;
+    border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background-color: var(--bg-color);
-    padding: 12px;
-    border-radius: var(--border-radius);
+    height: 100%;
+}
+
+.expenses-card {
+    justify-content: space-between;
+}
+
+.dashboard-breakdown {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--hint-color);
+}
+
+.profit-card-final {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profit-details-final {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.cashflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cashflow-item {
+    display: grid;
+    grid-template-columns: 60px 100px 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cashflow-date {
+    color: var(--hint-color);
+}
+
+.cashflow-type span {
+    font-weight: 500;
+}
+
+.cashflow-amount-details {
+    text-align: right;
+}
+
+.cashflow-amount-details .amount {
+    font-weight: 500;
+}
+
+.cashflow-amount-details .description {
+    font-size: 14px;
+    color: var(--hint-color);
+    margin-top: 2px;
 }
 .dashboard-value {
     font-size: 18px;
@@ -973,6 +1055,61 @@ body.dark-theme .bottom-nav {
 }
 .expense-value { color: var(--danger-color); }
 .payment-value { color: var(--success-color); }
+
+/* Стили для кэшфлоу */
+.cashflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cashflow-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.cashflow-date {
+    font-size: 14px;
+    color: var(--text-color);
+    min-width: 60px;
+}
+
+.cashflow-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cashflow-type {
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.cashflow-amount-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cashflow-amount-details .amount {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cashflow-amount-details .description {
+    font-size: 12px;
+    color: var(--hint-color);
+}
+
+.income-color {
+    color: var(--success-color);
+}
+
+.expense-color {
+    color: var(--error-color);
+}
 
 .photo-grid {
     display: grid;
@@ -1744,4 +1881,60 @@ input[type=number] { -moz-appearance: textfield; }
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+/* Стили для CashFlowWidget */
+.cashflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Расстояние между записями */
+}
+
+.cashflow-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cashflow-item:last-child {
+    border-bottom: none;
+}
+
+.cashflow-date {
+    flex-shrink: 0;
+    width: 55px; /* Фиксированная ширина для выравнивания */
+    color: var(--text-color-secondary);
+    font-size: 0.9em;
+}
+
+.cashflow-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cashflow-main-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-weight: 500;
+}
+
+.cashflow-description {
+    font-size: 0.85em;
+    color: var(--text-color-secondary);
+    text-align: right;
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* Цвета для прихода/расхода */
+.income-color {
+    color: #28a745; /* Зеленый для прихода */
+}
+
+.expense-color {
+    color: #dc3545; /* Красный для расхода */
 }

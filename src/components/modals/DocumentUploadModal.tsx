@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DocumentUploadModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
-import { readFileAsDataURL } from '../../utils';
 
 export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClose, onSave, showAlert }) => {
-    const [file, setFile] = useState<File | null>(null);
-    const [dataUrl, setDataUrl] = useState<string | null>(null);
+    const [fileName, setFileName] = useState('');
+    const [fileUrl, setFileUrl] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -20,43 +19,31 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
         }
     }, []);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-            try {
-                const url = await readFileAsDataURL(selectedFile);
-                setDataUrl(url);
-            } catch (error) {
-                showAlert('Не удалось прочитать файл.');
-                setFile(null);
-                setDataUrl(null);
-            }
-        }
-    };
-
     const handleSave = () => {
-        if (file && dataUrl) {
-            onSave(file.name, dataUrl);
+        if (fileName.trim() && fileUrl.trim()) {
+            try {
+                new URL(fileUrl.trim()); // Validate URL
+                onSave(fileName.trim(), fileUrl.trim());
+            } catch (error) {
+                showAlert('Введите корректный URL-адрес.');
+            }
+        } else {
+            showAlert('Заполните все поля.');
         }
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
-                <div className="modal-header"><h2>Загрузить документ</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
+                <div className="modal-header"><h2>Добавить документ</h2><button onClick={onClose} className="close-btn"><IconClose/></button></div>
                 <div className="modal-body">
-                    <label>Выберите файл</label>
-                    <input type="file" onChange={handleFileChange} />
-                    {file && (
-                        <div className="document-preview">
-                            <p><strong>Файл:</strong> {file.name}</p>
-                            <p><strong>Размер:</strong> {(file.size / 1024).toFixed(1)} KB</p>
-                        </div>
-                    )}
+                    <label htmlFor="doc-name">Название документа</label>
+                    <input id="doc-name" type="text" value={fileName} onChange={e => setFileName(e.target.value)} placeholder="Например, 'Договор'" />
+                    <label htmlFor="doc-url">URL-адрес документа</label>
+                    <input id="doc-url" type="text" value={fileUrl} onChange={e => setFileUrl(e.target.value)} placeholder="https://example.com/document.pdf" />
                 </div>
                 <div className="modal-footer">
-                    <button onClick={handleSave} className="btn btn-primary" disabled={!file}>Сохранить</button>
+                    <button onClick={handleSave} className="btn btn-primary" disabled={!fileName.trim() || !fileUrl.trim()}>Сохранить</button>
                 </div>
             </div>
         </div>
