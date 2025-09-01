@@ -1337,7 +1337,14 @@ const getWorkStageStatusText = (status: string): string => {
                 // 1. Мы находимся в проекте (activeView === 'projectDetail')
                 // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
                 // НЕ привязываем если переходим из блока сметы (cameFromProject === false)
-                const projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                
+                // Дополнительная проверка: если мы в проекте, то всегда привязываем
+                if (activeView === 'projectDetail' && activeProjectId) {
+                    console.log('handleLoadEstimate: принудительно привязываем к проекту, так как находимся в проекте');
+                    // Принудительно устанавливаем projectIdForEstimate = activeProjectId
+                    projectIdForEstimate = activeProjectId;
+                }
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
                 console.log('handleLoadEstimate: activeView =', activeView);
                 console.log('handleLoadEstimate: activeProjectId =', activeProjectId);
@@ -1394,7 +1401,14 @@ const getWorkStageStatusText = (status: string): string => {
                     // 1. Мы находимся в проекте (activeView === 'projectDetail')
                     // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
                     // НЕ привязываем если переходим из блока сметы (cameFromProject === false)
-                    const projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                    let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                    
+                    // Дополнительная проверка: если мы в проекте, то всегда привязываем
+                    if (activeView === 'projectDetail' && activeProjectId) {
+                        console.log('handleDeleteEstimate: принудительно привязываем к проекту, так как находимся в проекте');
+                        // Принудительно устанавливаем projectIdForEstimate = activeProjectId
+                        projectIdForEstimate = activeProjectId;
+                    }
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
                     console.log('handleDeleteEstimate: cameFromProject =', cameFromProject);
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
