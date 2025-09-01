@@ -1353,6 +1353,31 @@ const getWorkStageStatusText = (status: string): string => {
             }
         });
     };
+
+    // Функция удаления сметы из проекта
+    const handleDeleteProjectEstimate = (id: string) => {
+        safeShowConfirm("Вы уверены, что хотите удалить эту смету из проекта?", (ok) => {
+            if (ok) {
+                tg?.HapticFeedback?.notificationOccurred?.('warning');
+                const newEstimates = estimates.filter(e => e.id !== id);
+                setEstimates(newEstimates);
+                
+                // Если удаляемая смета была активной, загружаем другую
+                if (activeEstimateId === id) {
+                    const estimateToLoad = newEstimates.find(e => e.projectId === activeProjectId) || newEstimates[0] || null;
+                    if (estimateToLoad) {
+                        populateForm(estimateToLoad, newEstimates, activeProjectId);
+                    } else {
+                        // Если нет других смет, очищаем форму
+                        populateForm(null, newEstimates, activeProjectId);
+                    }
+                }
+                
+                localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: activeEstimateId === id ? null : activeEstimateId }));
+                safeShowAlert('Смета удалена из проекта');
+            }
+        });
+    };
     
     const handleStatusChange = (id: string, newStatus: EstimateStatus) => {
         const newEstimates = estimates.map(e => e.id === id ? { ...e, status: newStatus, updatedAt: new Date().toISOString() } : e);
@@ -1829,6 +1854,7 @@ const getWorkStageStatusText = (status: string): string => {
                     handleDeleteProject={handleDeleteProject}
                     handleLoadEstimate={handleLoadEstimate}
                     handleAddNewEstimateForProject={handleAddNewEstimateForProject}
+                    handleDeleteProjectEstimate={handleDeleteProjectEstimate}
                     onOpenFinanceModal={() => openModal(setIsFinanceModalOpen, 'finance')}
                     onDeleteFinanceEntry={handleDeleteFinanceEntry}
                     onOpenPhotoReportModal={() => openModal(setIsPhotoReportModalOpen, 'photoReport')}

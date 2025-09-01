@@ -6,7 +6,7 @@ import { ListItem } from '../ui/ListItem';
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: ProjectFinancials, onProjectScratchpadChange: (projectId: string, content: string) => void, financeEntries: FinanceEntry[] }> = ({
     activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
-    handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
+    handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject, handleDeleteProjectEstimate,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
     onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, financials, financeEntries
 }) => {
@@ -152,6 +152,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                         </span>
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
+                                    onDelete={() => handleDeleteProjectEstimate(est.id)}
                                 />
                             )) : (
                                 <div className="empty-state-container">

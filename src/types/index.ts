@@ -408,6 +408,7 @@ export interface ProjectDetailViewProps {
     handleDeleteProject: (id: string) => void;
     handleLoadEstimate: (id: string) => void;
     handleAddNewEstimateForProject: () => void;
+    handleDeleteProjectEstimate: (id: string) => void;
     onOpenFinanceModal: () => void;
     onDeleteFinanceEntry: (id: string) => void;
     onOpenPhotoReportModal: () => void;
