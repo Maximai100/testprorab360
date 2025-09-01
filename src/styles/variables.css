@@ -4,7 +4,7 @@
   --color-background: #000000;       /* Основной фон */
   --color-surface-1: #1C1C1E;        /* Фон карточек и элементов */
   --color-surface-2: #2C2C2E;        /* Фон для вложенных элементов или при наведении */
-  --color-primary: #0A84FF;          /* Основной акцентный цвет (синий) */
+  --color-primary: #4f5bd5;          /* Основной акцентный цвет (синий) */
   --color-text-primary: #FFFFFF;     /* Основной текст */
   --color-text-secondary: #8E8E93;   /* Вторичный текст (серый) */
   --color-text-placeholder: #5C5C5E; /* Текст плейсхолдеров */
