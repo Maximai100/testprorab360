@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { GoogleGenAI } from '@google/genai';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+// Динамический импорт jsPDF для совместимости с браузером
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
     PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, Tool, Consumable, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
@@ -678,9 +677,25 @@ const App: React.FC = () => {
         tg?.HapticFeedback.notificationOccurred('warning');
         try {
             console.log('Starting PDF export...');
-            const doc = new jsPDF();
+            
+            // Динамический импорт jsPDF
+            console.log('Importing jsPDF...');
+            const { jsPDF } = await import('jspdf');
+            console.log('jsPDF imported successfully');
+            
+            console.log('Importing jspdf-autotable...');
+            await import('jspdf-autotable');
+            console.log('jspdf-autotable imported successfully');
+            
+                        const doc = new jsPDF();
             console.log('jsPDF instance created successfully');
-
+            
+            // Проверяем, что autoTable доступен
+            if (!(doc as any).autoTable) {
+                throw new Error('autoTable plugin not loaded');
+            }
+            console.log('autoTable plugin is available');
+            
             const validItems = getValidItems();
             if (validItems.length === 0) {
                 safeShowAlert("Добавьте хотя бы одну позицию в смету.");
