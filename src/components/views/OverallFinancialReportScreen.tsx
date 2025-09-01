@@ -255,7 +255,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalEstimatesAmount)}
               </div>
@@ -279,7 +283,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-primary)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalIncome)}
               </div>
@@ -303,7 +311,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalExpenses)}
               </div>
@@ -327,7 +339,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: totalProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalProfit)}
               </div>
@@ -351,7 +367,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: overallProfitability >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {overallProfitability.toFixed(1)}%
               </div>
@@ -375,7 +395,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {projects.filter(p => p.status === 'in_progress').length}
               </div>

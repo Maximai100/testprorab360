@@ -113,7 +113,11 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalEstimateAmount)}
               </div>
@@ -137,7 +141,11 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: 'var(--color-primary)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(totalPaidByClient)}
               </div>
@@ -161,7 +169,11 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
                 fontSize: 'var(--font-size-xxl)',
                 fontWeight: '700',
                 color: remainingToPay > 0 ? 'var(--color-danger)' : 'var(--color-success)',
-                marginBottom: 'var(--spacing-s)'
+                marginBottom: 'var(--spacing-s)',
+                backgroundColor: 'var(--color-surface-1)',
+                padding: 'var(--spacing-m)',
+                borderRadius: 'var(--border-radius-s)',
+                display: 'inline-block'
               }}>
                 {formatCurrency(Math.abs(remainingToPay))}
                 {remainingToPay > 0 ? ' (к оплате)' : ' (оплачено полностью)'}
