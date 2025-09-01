@@ -83,24 +83,20 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <h3>Кэшфлоу</h3>
                     </div>
                     <div className="project-section-body">
-                        <div className="cashflow-list">
+                        <div className="project-items-list">
                             {financials.cashFlowEntries.map((entry, index) => (
-                                <div key={index} className="cashflow-item">
-                                    <div className="cashflow-date">
-                                        {new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
-                                    </div>
-                                    <div className="cashflow-type">
-                                        <span className={entry.type === 'income' ? 'income-color' : 'expense-color'}>
-                                            {entry.type === 'income' ? 'Приход' : 'Расход'}
-                                        </span>
-                                    </div>
-                                    <div className="cashflow-amount-details">
-                                        <span className={`amount ${entry.type === 'income' ? 'income-color' : 'expense-color'}`}>
-                                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
-                                        </span>
-                                        <span className="description">({entry.description || 'Без описания'})</span>
-                                    </div>
-                                </div>
+                                <ListItem
+                                    key={index}
+                                    icon={entry.type === 'income'
+                                        ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
+                                        : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
+                                    }
+                                    iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
+                                    title={entry.description || (entry.type === 'expense' ? 'Расход' : 'Приход')}
+                                    subtitle={new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
+                                    amountText={`${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount)}`}
+                                    amountColor={entry.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                />
                             ))}
                         </div>
                     </div>
@@ -152,14 +148,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                             <div className="project-items-list">
                                 {projectFinances.map(f => (
                                     <ListItem
-                                        key={f.id}
-                                        iconWrapperClassName="finance-icon-wrapper"
-                                        icon={f.receiptImage ? <img src={f.receiptImage} alt="чек" className="finance-receipt-thumb"/> : <IconCreditCard />}
-                                        title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
-                                        subtitle={f.category}
-                                        amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
-                                        amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
-                                        onDelete={() => onDeleteFinanceEntry(f.id)}
+                                      key={f.id}
+                                      icon={f.type === 'income'
+                                        ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
+                                        : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
+                                      }
+                                      iconBgColor={f.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
+                                      title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
+                                      subtitle={f.category}
+                                      amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
+                                      amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                      onDelete={() => onDeleteFinanceEntry(f.id)}
                                     />
                                 ))}
                             </div>
