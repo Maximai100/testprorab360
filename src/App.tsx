@@ -1339,7 +1339,24 @@ const getWorkStageStatusText = (status: string): string => {
                 console.log('handleLoadEstimate: estimateToLoad.projectId =', estimateToLoad.projectId);
                 console.log('handleLoadEstimate: будет ли смета привязана к проекту?', !!projectIdForEstimate);
                 
-                populateForm(estimateToLoad, estimates, projectIdForEstimate);
+                // Если смета привязывается к проекту, обновляем её в базе данных
+                if (projectIdForEstimate && estimateToLoad.projectId !== projectIdForEstimate) {
+                    console.log('handleLoadEstimate: обновляем projectId сметы в базе данных');
+                    const updatedEstimates = estimates.map(e => 
+                        e.id === id ? { ...e, projectId: projectIdForEstimate, updatedAt: new Date().toISOString() } : e
+                    );
+                    setEstimates(updatedEstimates);
+                    localStorage.setItem('estimatesData', JSON.stringify({ estimates: updatedEstimates, activeEstimateId }));
+                    
+                    // Загружаем обновленную смету
+                    const updatedEstimate = updatedEstimates.find(e => e.id === id);
+                    if (updatedEstimate) {
+                        populateForm(updatedEstimate, updatedEstimates, projectIdForEstimate);
+                    }
+                } else {
+                    populateForm(estimateToLoad, estimates, projectIdForEstimate);
+                }
+                
                 closeModal(setIsEstimatesListOpen);
                 if (activeView === 'projectDetail') {
                     setActiveView('estimate');

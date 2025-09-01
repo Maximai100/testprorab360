@@ -13,7 +13,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     console.log('ProjectDetailView: handleDeleteProjectEstimate получен как пропс:', !!handleDeleteProjectEstimate);
     console.log('ProjectDetailView: estimates:', estimates);
     
-    const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
+    const projectEstimates = useMemo(() => {
+        const filtered = estimates.filter(e => e.projectId === activeProject.id);
+        console.log('ProjectDetailView: projectEstimates фильтрация:', {
+            totalEstimates: estimates.length,
+            activeProjectId: activeProject.id,
+            filteredCount: filtered.length,
+            estimatesWithProjectId: estimates.filter(e => e.projectId).map(e => ({ id: e.id, projectId: e.projectId, number: e.number }))
+        });
+        return filtered;
+    }, [estimates, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
