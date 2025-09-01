@@ -34,8 +34,11 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClo
                 {project?.id && <>
                     <label>Статус</label>
                     <select value={project.status} onChange={(e) => onProjectChange(p => ({...p!, status: e.target.value as Project['status']}))}>
+                        <option value="planned">Запланирован</option>
                         <option value="in_progress">В работе</option>
+                        <option value="on_hold">Приостановлен</option>
                         <option value="completed">Завершен</option>
+                        <option value="cancelled">Отменен</option>
                     </select>
                 </>}
             </div>
