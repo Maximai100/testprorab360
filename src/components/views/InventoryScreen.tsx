@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
 import { IconPlus, IconTrash } from '../common/Icon';
+import { ListItem } from '../ui/ListItem';
 
 export const InventoryScreen: React.FC<InventoryScreenProps & {
     toolsScratchpad: string;
@@ -68,18 +69,18 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <div className="project-items-list">
                                     {tools.length > 0 ? (
                                         tools.map(tool => (
-                                            <div key={tool.id} className="list-item inventory-item">
-                                                <div className="list-item-info" onClick={() => onToolClick(tool)} style={{cursor: 'pointer'}}>
-                                                    <strong>{tool.name}</strong>
-                                                </div>
-                                                <div className="list-item-actions">
-                                                    <span>
-                                                        {tool.location === 'on_project' 
-                                                            ? projects.find(p => p.id === tool.projectId)?.name || 'На объекте' 
-                                                            : tool.location === 'on_base' ? 'На базе' : 'В ремонте'}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            <ListItem
+                                              key={tool.id}
+                                              iconName="build" // Можешь выбрать любую подходящую иконку
+                                              title={tool.name}
+                                              amountText={
+                                                tool.location === 'on_project'
+                                                  ? projects.find(p => p.id === tool.projectId)?.name || 'На объекте'
+                                                  : tool.location === 'on_base' ? 'На базе' : 'В ремонте'
+                                              }
+                                              onClick={() => onToolClick(tool)}
+                                              // onDelete здесь не нужен, так как его нет в интерфейсе
+                                            />
                                         ))
                                     ) : (
                                         <>
