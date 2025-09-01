@@ -1329,15 +1329,17 @@ const getWorkStageStatusText = (status: string): string => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
-                // Привязываем смету к проекту если:
+                // Привязываем смету к проекту ТОЛЬКО если:
                 // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId)
-                const projectIdForEstimate = (activeView === 'projectDetail' || activeProjectId) ? activeProjectId : null;
+                // 2. ИЛИ мы перешли в "Мои документы" из проекта (activeView === 'projectDetail' был до перехода)
+                // НЕ привязываем если переходим из блока сметы (activeView === 'estimate')
+                const projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
                 console.log('handleLoadEstimate: activeView =', activeView);
                 console.log('handleLoadEstimate: activeProjectId =', activeProjectId);
                 console.log('handleLoadEstimate: estimateToLoad.projectId =', estimateToLoad.projectId);
                 console.log('handleLoadEstimate: будет ли смета привязана к проекту?', !!projectIdForEstimate);
+                console.log('handleLoadEstimate: контекст перехода - из проекта или из блока сметы?', activeView === 'projectDetail' ? 'ИЗ ПРОЕКТА' : 'ИЗ БЛОКА СМЕТЫ');
                 
                 // Если смета привязывается к проекту, обновляем её в базе данных
                 if (projectIdForEstimate && estimateToLoad.projectId !== projectIdForEstimate) {
@@ -1383,10 +1385,10 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
-                    // Привязываем новую смету к проекту если:
+                    // Привязываем новую смету к проекту ТОЛЬКО если:
                     // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                    // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId)
-                    const projectIdForEstimate = (activeView === 'projectDetail' || activeProjectId) ? activeProjectId : null;
+                    // НЕ привязываем если переходим из блока сметы (activeView === 'estimate')
+                    const projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
