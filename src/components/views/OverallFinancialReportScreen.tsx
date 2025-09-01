@@ -19,11 +19,37 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
   formatCurrency,
   onBack
 }) => {
+  // Состояние для фильтров по датам
+  const [startDate, setStartDate] = React.useState(() => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    return firstDay.toISOString().split('T')[0];
+  });
+  
+  const [endDate, setEndDate] = React.useState(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return lastDay.toISOString().split('T')[0];
+  });
+
   // Получаем текущую дату
   const today = new Date().toLocaleDateString('ru-RU', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
+  });
+
+  // Фильтруем финансовые записи по датам
+  const filteredFinanceEntries = financeEntries.filter(entry => {
+    if (entry.date) {
+      const entryDate = new Date(entry.date);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59); // Включаем весь день
+      
+      return entryDate >= start && entryDate <= end;
+    }
+    return true; // Если дата не указана, включаем
   });
 
   // Рассчитываем общие финансовые показатели
@@ -33,11 +59,11 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
     return sum + estimateTotal;
   }, 0);
 
-  const totalIncome = financeEntries
+  const totalIncome = filteredFinanceEntries
     .filter(entry => entry.type === 'income')
     .reduce((sum, entry) => sum + entry.amount, 0);
 
-  const totalExpenses = financeEntries
+  const totalExpenses = filteredFinanceEntries
     .filter(entry => entry.type === 'expense')
     .reduce((sum, entry) => sum + entry.amount, 0);
 
@@ -47,7 +73,7 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
   // Финансовые показатели по проектам
   const projectFinancials = projects.map(project => {
     const projectEstimates = estimates.filter(e => e.projectId === project.id);
-    const projectFinanceEntries = financeEntries.filter(f => f.projectId === project.id);
+    const projectFinanceEntries = filteredFinanceEntries.filter(f => f.projectId === project.id);
 
     const projectEstimatesAmount = projectEstimates.reduce((sum, estimate) => {
       const estimateTotal = estimate.items?.reduce((itemSum: number, item: any) =>
@@ -76,7 +102,7 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
   }).filter(p => p.estimates > 0 || p.income > 0 || p.expenses > 0);
 
   // Расходы по категориям (по всем проектам)
-  const expensesByCategory = financeEntries
+  const expensesByCategory = filteredFinanceEntries
     .filter(entry => entry.type === 'expense')
     .reduce((acc, entry) => {
       const category = entry.category || 'Без категории';
@@ -142,6 +168,72 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
           }}>
             от {today}
           </p>
+        </div>
+
+        {/* Фильтры по датам */}
+        <div className="card">
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
+            📅 Фильтр по периоду
+          </h3>
+          
+          <div style={{ 
+            display: 'grid', 
+            gap: 'var(--spacing-m)', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            alignItems: 'end'
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: 'var(--spacing-s)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-s)',
+                fontWeight: '500'
+              }}>
+                Начало периода
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-s)',
+                  border: '1px solid var(--color-separator)',
+                  borderRadius: 'var(--border-radius-s)',
+                  backgroundColor: 'var(--color-surface-1)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--font-size-m)'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: 'var(--spacing-s)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-s)',
+                fontWeight: '500'
+              }}>
+                Конец периода
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-s)',
+                  border: '1px solid var(--color-separator)',
+                  borderRadius: 'var(--border-radius-s)',
+                  backgroundColor: 'var(--color-surface-1)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--font-size-m)'
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Общие финансовые показатели */}

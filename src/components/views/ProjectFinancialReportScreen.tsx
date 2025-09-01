@@ -19,9 +19,35 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
   formatCurrency,
   onBack
 }) => {
-  // Фильтруем данные по проекту
+  // Состояние для фильтров по датам
+  const [startDate, setStartDate] = React.useState(() => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    return firstDay.toISOString().split('T')[0];
+  });
+  
+  const [endDate, setEndDate] = React.useState(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return lastDay.toISOString().split('T')[0];
+  });
+
+  // Фильтруем данные по проекту и датам
   const projectEstimates = estimates.filter(e => e.projectId === project.id);
-  const projectFinanceEntries = financeEntries.filter(f => f.projectId === project.id);
+  const projectFinanceEntries = financeEntries.filter(f => {
+    if (f.projectId !== project.id) return false;
+    
+    // Фильтрация по датам
+    if (f.date) {
+      const entryDate = new Date(f.date);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59); // Включаем весь день
+      
+      return entryDate >= start && entryDate <= end;
+    }
+    return true; // Если дата не указана, включаем
+  });
 
   // Рассчитываем финансовые показатели
   const totalEstimatesAmount = projectEstimates.reduce((sum, estimate) => {
@@ -76,6 +102,72 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
       </header>
 
       <main className="project-detail-main" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-m)' }}>
+        
+        {/* Фильтры по датам */}
+        <div className="card">
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
+            📅 Фильтр по периоду
+          </h3>
+          
+          <div style={{ 
+            display: 'grid', 
+            gap: 'var(--spacing-m)', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            alignItems: 'end'
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: 'var(--spacing-s)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-s)',
+                fontWeight: '500'
+              }}>
+                Начало периода
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-s)',
+                  border: '1px solid var(--color-separator)',
+                  borderRadius: 'var(--border-radius-s)',
+                  backgroundColor: 'var(--color-surface-1)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--font-size-m)'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: 'var(--spacing-s)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-s)',
+                fontWeight: '500'
+              }}>
+                Конец периода
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-s)',
+                  border: '1px solid var(--color-separator)',
+                  borderRadius: 'var(--border-radius-s)',
+                  backgroundColor: 'var(--color-surface-1)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--font-size-m)'
+                }}
+              />
+            </div>
+          </div>
+        </div>
         
         {/* Основные финансовые показатели */}
         <div className="card">
