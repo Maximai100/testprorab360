@@ -87,7 +87,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     <div className="project-section-body">
                         <div className="project-items-list">
                             {financials.cashFlowEntries.length > 0 ? (
-                                financials.cashFlowEntries.map((entry, index) => (
+                                financials.cashFlowEntries.slice(0, 3).map((entry, index) => (
                                     <ListItem
                                         key={index}
                                         icon={entry.type === 'income'
@@ -105,6 +105,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 <div className="empty-state-container">
                                     <IconTrendingUp />
                                     <p>Движений по счету пока нет.</p>
+                                </div>
+                            )}
+                            {financials.cashFlowEntries.length > 3 && (
+                                <div className="collapsed-indicator">
+                                    <span>... и еще {financials.cashFlowEntries.length - 3} транзакций</span>
                                 </div>
                             )}
                         </div>
