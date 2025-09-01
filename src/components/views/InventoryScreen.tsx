@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
 import { IconPlus, IconTrash } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
+import { ConsumableListItem } from '../ui/ConsumableListItem';
 
 export const InventoryScreen: React.FC<InventoryScreenProps & {
     toolsScratchpad: string;
@@ -136,20 +137,12 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <div className="consumables-list project-items-list">
                                     {consumables.length > 0 ? (
                                         consumables.map(consumable => (
-                                            <div
+                                            <ConsumableListItem
                                                 key={consumable.id}
-                                                className="list-item inventory-item"
-                                            >
-                                                <div className="list-item-info">
-                                                    <strong>{consumable.name}</strong>
-                                                </div>
-                                                <div className="list-item-actions">
-                                                    <button onClick={() => handleUpdateConsumableQuantity(consumable, consumable.quantity - 1)} className="btn-icon">-</button>
-                                                    <span>{consumable.quantity} {consumable.unit}</span>
-                                                    <button onClick={() => handleUpdateConsumableQuantity(consumable, consumable.quantity + 1)} className="btn-icon">+</button>
-                                                    <button onClick={() => onDeleteConsumable(consumable.id)} className="btn-icon btn-tertiary"><IconTrash /></button>
-                                                </div>
-                                            </div>
+                                                consumable={consumable}
+                                                onQuantityChange={handleUpdateConsumableQuantity}
+                                                onDelete={onDeleteConsumable}
+                                            />
                                         ))
                                     ) : (
                                         <p className="no-results-message">Расходников пока нет.</p>
