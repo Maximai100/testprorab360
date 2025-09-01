@@ -17,8 +17,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <h1>Рабочий стол</h1>
             </header>
             <main className="workspace-container">
-                {/* Scratchpad */}
-                <div className="card scratchpad-card">
+                {/* Scratchpad - увеличенный размер */}
+                <div className="card scratchpad-card" style={{ flex: 1, marginBottom: 'var(--spacing-m)' }}>
                     <div className="card-header">
                         <h2>Блокнот</h2>
                         <button onClick={onOpenScratchpad} className="expand-btn" aria-label="Развернуть блокнот">
@@ -29,14 +29,14 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         value={scratchpad} 
                         onChange={(e) => onScratchpadChange(e.target.value)} 
                         placeholder="Место для быстрых заметок..."
-                        rows={6}
+                        style={{ height: '100%', minHeight: '300px' }}
                     />
                 </div>
 
-                {/* My Documents */}
-                <div className="card">
+                {/* Мои файлы - внизу экрана */}
+                <div className="card" style={{ marginBottom: 'var(--spacing-l)' }}>
                     <div className="card-header">
-                        <h2>Мои документы</h2>
+                        <h2>Мои файлы</h2>
                         <button onClick={onOpenGlobalDocumentModal} className="btn btn-secondary add-document-btn">+ Добавить</button>
                     </div>
                     <ul className="document-list">
@@ -55,8 +55,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         ))}
                         {globalDocuments.length === 0 && (
                             <div className="empty-list-message-with-button">
-                                <p className="empty-list-message">У вас пока нет документов. Загрузите важные файлы, чтобы они всегда были под рукой!</p>
-                                <button onClick={onOpenGlobalDocumentModal} className="btn btn-primary">+ Загрузить документ</button>
+                                <p className="empty-list-message">У вас пока нет файлов. Загрузите важные документы, чтобы они всегда были под рукой!</p>
+                                <button onClick={onOpenGlobalDocumentModal} className="btn btn-primary">+ Загрузить файл</button>
                             </div>
                         )}
                     </ul>

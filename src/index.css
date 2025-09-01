@@ -1616,6 +1616,8 @@ input[type=number] { -moz-appearance: textfield; }
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+    min-height: 0;
 }
 
 .card-header {
@@ -1788,6 +1790,10 @@ input[type=number] { -moz-appearance: textfield; }
 
 .scratchpad-card {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .scratchpad-card .expand-btn {
@@ -1816,6 +1822,19 @@ input[type=number] { -moz-appearance: textfield; }
     resize: none;
     font-size: 16px;
     line-height: 1.5;
+}
+
+.scratchpad-card textarea {
+    flex: 1;
+    min-height: 0;
+    resize: none;
+    font-size: 16px;
+    line-height: 1.5;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-color);
+    font-family: inherit;
 }
 
 .task-list li.completed span {
