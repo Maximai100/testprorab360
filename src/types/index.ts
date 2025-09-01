@@ -420,6 +420,7 @@ export interface ProjectDetailViewProps {
     onOpenActModal: (total: number) => void;
     onNavigateToTasks: () => void;
     onProjectScratchpadChange: (projectId: string, content: string) => void;
+    onExportWorkSchedulePDF: (project: Project, workStages: WorkStage[]) => void;
 }
 
 export interface InventoryViewProps {

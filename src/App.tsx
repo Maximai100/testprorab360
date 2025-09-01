@@ -941,6 +941,262 @@ const createPrintableHTML = (): string => {
 </html>`;
 };
 
+// Функция экспорта графика работ в PDF
+const handleExportWorkSchedulePDF = useCallback(async (project: Project, projectWorkStages: WorkStage[]) => {
+    try {
+        console.log('Starting work schedule PDF export...');
+        
+        if (projectWorkStages.length === 0) {
+            safeShowAlert("Нет этапов работ для экспорта.");
+            return;
+        }
+
+        // Создаем HTML для печати графика работ
+        const printContent = createWorkScheduleHTML(project, projectWorkStages);
+        
+        // Создаем новое окно для печати
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            throw new Error('Не удалось открыть окно для печати');
+        }
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Ждем загрузки содержимого
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print();
+                // Закрываем окно после печати
+                setTimeout(() => {
+                    printWindow.close();
+                }, 1000);
+            }, 500);
+        };
+
+        safeShowAlert('Откроется диалог печати. Выберите "Сохранить как PDF"');
+        
+    } catch (error: any) {
+        console.error("Work schedule export failed:", error);
+        
+        // Фоллбэк на скачивание HTML файла
+        try {
+            const htmlContent = createWorkScheduleHTML(project, projectWorkStages);
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `график-работ-${project.name}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            safeShowAlert('Скачан HTML файл. Откройте его в браузере и распечатайте в PDF');
+        } catch (fallbackError) {
+            console.error('HTML export also failed:', fallbackError);
+            safeShowAlert(`Не удалось экспортировать график работ: ${error.message}`);
+        }
+    }
+}, []);
+
+// Функция создания HTML для печати графика работ
+const createWorkScheduleHTML = (project: Project, workStages: WorkStage[]): string => {
+    const sortedStages = workStages.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>График работ - ${project.name}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10mm;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .project-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .project-info {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .schedule-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .number-col { width: 8%; text-align: center; }
+        .title-col { width: 35%; }
+        .dates-col { width: 25%; text-align: center; }
+        .status-col { width: 15%; text-align: center; }
+        .progress-col { width: 17%; text-align: center; }
+        
+        .status-planned { color: #666; }
+        .status-in_progress { color: #007bff; font-weight: bold; }
+        .status-completed { color: #28a745; font-weight: bold; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-completed {
+            background-color: #28a745;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        @page {
+            margin: 15mm;
+            size: A4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="project-name">${project.name}</div>
+        <div class="project-info">Клиент: ${project.client}</div>
+        <div class="project-info">Адрес: ${project.address}</div>
+        <div class="project-info">Статус: ${getProjectStatusText(project.status)}</div>
+    </div>
+    
+    <div class="schedule-title">
+        График работ (${workStages.length} этапов)
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th class="number-col">№</th>
+                <th class="title-col">Наименование этапа</th>
+                <th class="dates-col">Период выполнения</th>
+                <th class="status-col">Статус</th>
+                <th class="progress-col">Прогресс</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${sortedStages.map((stage, index) => `
+                <tr>
+                    <td class="number-col">${index + 1}</td>
+                    <td class="title-col">${stage.title}</td>
+                    <td class="dates-col">
+                        ${stage.startDate ? new Date(stage.startDate).toLocaleDateString('ru-RU') : 'Не указано'}
+                        ${stage.endDate ? ` - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}` : ''}
+                    </td>
+                    <td class="status-col status-${stage.status}">
+                        ${getWorkStageStatusText(stage.status)}
+                    </td>
+                    <td class="progress-col">
+                        <div class="progress-bar">
+                            <div class="progress-fill ${stage.status === 'completed' ? 'progress-completed' : ''}" style="width: ${stage.progress}%"></div>
+                        </div>
+                        <div style="margin-top: 2px; font-size: 9px;">${stage.progress}%</div>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        Документ создан: ${new Date().toLocaleDateString('ru-RU')} | Смета за 5 минут
+    </div>
+    
+    <script>
+        // Автоматически печатаем при загрузке (только если это новое окно)
+        if (window.opener) {
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>`;
+};
+
+// Вспомогательные функции для статусов
+const getProjectStatusText = (status: string): string => {
+    const statusMap: Record<string, string> = {
+        'planned': 'Запланирован',
+        'in_progress': 'В работе',
+        'on_hold': 'Приостановлен',
+        'completed': 'Завершен',
+        'cancelled': 'Отменен'
+    };
+    return statusMap[status] || status;
+};
+
+const getWorkStageStatusText = (status: string): string => {
+    const statusMap: Record<string, string> = {
+        'planned': 'Запланирован',
+        'in_progress': 'В работе',
+        'completed': 'Завершен'
+    };
+    return statusMap[status] || status;
+};
+
     const handleShare = useCallback(() => {
         try {
             const validItems = getValidItems();
@@ -1516,6 +1772,7 @@ const createPrintableHTML = (): string => {
                     onOpenActModal={handleOpenActModal}
                     onNavigateToTasks={() => setActiveView('projectTasks')}
                     onProjectScratchpadChange={handleProjectScratchpadChange}
+                    onExportWorkSchedulePDF={handleExportWorkSchedulePDF}
                 />;
             case 'allTasks':
                 return <ProjectTasksScreen 

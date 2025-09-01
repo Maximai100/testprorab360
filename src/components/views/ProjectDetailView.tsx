@@ -8,7 +8,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, financials, financeEntries
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, financials, financeEntries
 }) => {
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
@@ -197,7 +197,21 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                  <div className="card project-section">
                     <div className="project-section-header">
                         <h3>График работ ({projectWorkStages.length})</h3>
-                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}><IconPlus/></button>
+                        <div className="header-actions">
+                            {projectWorkStages.length > 0 && (
+                                <button 
+                                    className="export-btn" 
+                                    onClick={(e) => {
+                                        e.preventDefault(); 
+                                        onExportWorkSchedulePDF(activeProject, projectWorkStages);
+                                    }}
+                                    title="Экспорт в PDF"
+                                >
+                                    📄
+                                </button>
+                            )}
+                            <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}><IconPlus/></button>
+                        </div>
                     </div>
                     <div className="project-section-body">
                         {projectWorkStages.length > 0 ? (
