@@ -358,6 +358,12 @@ const App: React.FC = () => {
     }, [isDirty]);
 
     const populateForm = (estimate: Estimate | Partial<Estimate> | null, currentEstimates: Estimate[], projectIdForNew: string | null = null) => {
+        console.log('populateForm вызвана с:', { 
+            estimateId: estimate?.id, 
+            projectIdForNew, 
+            estimateProjectId: estimate?.projectId 
+        });
+        
         if (estimate) {
             setItems(estimate.items?.map(i => ({...i, id: i.id || generateUUID()})) || []);
             setClientInfo(estimate.clientInfo || '');
@@ -370,9 +376,12 @@ const App: React.FC = () => {
             if ('id' in estimate && estimate.id) {
                 setActiveEstimateId(estimate.id);
                 setCurrentEstimateProjectId(estimate.projectId || null);
+                console.log('populateForm: установлен activeEstimateId =', estimate.id);
+                console.log('populateForm: установлен currentEstimateProjectId =', estimate.projectId || null);
             } else {
                  setActiveEstimateId(null);
                  setCurrentEstimateProjectId(projectIdForNew);
+                 console.log('populateForm: установлен currentEstimateProjectId =', projectIdForNew);
             }
         } else {
             // New estimate state
@@ -386,6 +395,7 @@ const App: React.FC = () => {
             setTax(0);
             setActiveEstimateId(null);
             setCurrentEstimateProjectId(projectIdForNew);
+            console.log('populateForm: создана новая смета с currentEstimateProjectId =', projectIdForNew);
         }
         setIsDirty(false); // Reset dirty flag when loading new data
     };
@@ -1315,9 +1325,14 @@ const getWorkStageStatusText = (status: string): string => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
-                // Привязываем смету к проекту только если мы находимся в проекте
-                // Если переходим из блока сметы (иконка внизу), то НЕ привязываем к проекту
-                const projectIdForEstimate = (activeView === 'projectDetail' && activeProjectId) ? activeProjectId : null;
+                // Привязываем смету к проекту если:
+                // 1. Мы находимся в проекте (activeView === 'projectDetail')
+                // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId)
+                const projectIdForEstimate = (activeView === 'projectDetail' || activeProjectId) ? activeProjectId : null;
+                console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
+                console.log('handleLoadEstimate: activeView =', activeView);
+                console.log('handleLoadEstimate: activeProjectId =', activeProjectId);
+                
                 populateForm(estimateToLoad, estimates, projectIdForEstimate);
                 closeModal(setIsEstimatesListOpen);
                 if (activeView === 'projectDetail') {
@@ -1345,8 +1360,11 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
-                    // Привязываем новую смету к проекту только если мы находимся в проекте
-                    const projectIdForEstimate = (activeView === 'projectDetail' && activeProjectId) ? activeProjectId : null;
+                    // Привязываем новую смету к проекту если:
+                    // 1. Мы находимся в проекте (activeView === 'projectDetail')
+                    // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId)
+                    const projectIdForEstimate = (activeView === 'projectDetail' || activeProjectId) ? activeProjectId : null;
+                    console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
@@ -1377,9 +1395,11 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === activeProjectId) || newEstimates[0] || null;
                     if (estimateToLoad) {
+                        console.log('handleDeleteProjectEstimate: загружаем новую смету:', estimateToLoad.id);
                         populateForm(estimateToLoad, newEstimates, activeProjectId);
                     } else {
                         // Если нет других смет в проекте, очищаем форму
+                        console.log('handleDeleteProjectEstimate: нет других смет в проекте, очищаем форму');
                         populateForm(null, newEstimates, activeProjectId);
                     }
                 }
