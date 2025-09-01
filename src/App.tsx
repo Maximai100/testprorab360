@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { GoogleGenAI } from '@google/genai';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
@@ -677,7 +677,9 @@ const App: React.FC = () => {
         setIsPdfLoading(true);
         tg?.HapticFeedback.notificationOccurred('warning');
         try {
+            console.log('Starting PDF export...');
             const doc = new jsPDF();
+            console.log('jsPDF instance created successfully');
 
             const validItems = getValidItems();
             if (validItems.length === 0) {
@@ -791,6 +793,12 @@ const App: React.FC = () => {
             doc.save(`смета-${estimateNumber}.pdf`);
         } catch (error: any) {
             console.error("PDF Export failed:", error);
+            console.error("Error details:", {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+                cause: error.cause
+            });
             safeShowAlert(`Не удалось создать PDF: ${error.message}`);
         } finally {
             setIsPdfLoading(false);
