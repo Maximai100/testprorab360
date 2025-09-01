@@ -278,12 +278,14 @@ const App: React.FC = () => {
     }, []);
 
     const closeModal = useCallback((setOpenState: React.Dispatch<React.SetStateAction<boolean>>) => {
+        console.log('Closing modal, current activeModalName:', activeModalName.current);
         setOpenState(false);
         activeModalName.current = null;
         if (lastFocusedElement.current) {
             lastFocusedElement.current.focus();
             lastFocusedElement.current = null;
         }
+        console.log('Modal closed successfully');
     }, []);
 
     // Effect for Escape key to close modals
@@ -1245,7 +1247,18 @@ const getWorkStageStatusText = (status: string): string => {
     }, [getValidItems, estimateNumber, estimateDate, clientInfo, formatCurrency, calculation, tax]);
     
     const handleProfileChange = (field: keyof CompanyProfile, value: string) => setCompanyProfile(prev => ({ ...prev, [field]: value }));
-    const handleSaveProfile = () => { localStorage.setItem('companyProfile', JSON.stringify(companyProfile)); closeModal(setIsSettingsOpen); tg?.HapticFeedback.notificationOccurred('success'); };
+    const handleSaveProfile = () => { 
+        try {
+            console.log('Saving company profile:', companyProfile);
+            localStorage.setItem('companyProfile', JSON.stringify(companyProfile)); 
+            closeModal(setIsSettingsOpen); 
+            tg?.HapticFeedback?.notificationOccurred?.('success'); 
+            console.log('Company profile saved successfully');
+        } catch (error) {
+            console.error('Error saving company profile:', error);
+            safeShowAlert('Ошибка при сохранении профиля компании');
+        }
+    };
     
     const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
