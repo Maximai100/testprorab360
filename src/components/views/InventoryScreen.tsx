@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
-import { IconPlus, IconTrash, IconSettings } from '../common/Icon';
+import { IconPlus, IconTrash, IconSettings, IconClipboard } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { ConsumableListItem } from '../ui/ConsumableListItem';
 
@@ -84,10 +84,11 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                             />
                                         ))
                                     ) : (
-                                        <>
-                                            <p className="no-results-message">Инструментов пока нет.</p>
+                                        <div className="empty-state-container">
+                                            <IconClipboard />
+                                            <p>Инструментов пока нет.</p>
                                             <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -145,7 +146,10 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                             />
                                         ))
                                     ) : (
-                                        <p className="no-results-message">Расходников пока нет.</p>
+                                        <div className="empty-state-container">
+                                            <IconClipboard />
+                                            <p>Расходников пока нет.</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>

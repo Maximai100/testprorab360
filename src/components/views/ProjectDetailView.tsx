@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 
 
@@ -130,8 +130,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                     onClick={() => handleLoadEstimate(est.id)}
                                 />
                             )) : (
-                                <div className="empty-list-message-with-button">
-                                    <p className="no-results-message">Смет для этого проекта пока нет. Создайте первую смету, чтобы начать работу!</p>
+                                <div className="empty-state-container">
+                                    <IconDocument />
+                                    <p>Смет для этого проекта пока нет.</p>
                                     <button onClick={handleAddNewEstimateForProject} className="btn btn-primary">+ Добавить смету</button>
                                 </div>
                             )}
@@ -163,8 +164,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 ))}
                             </div>
                         ) : (
-                            <div className="empty-list-message-with-button">
-                                <p className="no-results-message">Транзакций пока нет. Добавьте расходы или оплаты, чтобы отслеживать финансы проекта.</p>
+                            <div className="empty-state-container">
+                                <IconCreditCard />
+                                <p>Транзакций пока нет.</p>
                                 <button onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }} className="btn btn-primary">+ Добавить транзакцию</button>
                             </div>
                         )}
@@ -194,8 +196,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 ))}
                             </div>
                         ) : (
-                            <div className="empty-list-message-with-button">
-                                <p className="no-results-message">Этапы работ не добавлены. Создайте график, чтобы отслеживать прогресс.</p>
+                            <div className="empty-state-container">
+                                <IconCalendar />
+                                <p>Этапы работ не добавлены.</p>
                                 <button onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}} className="btn btn-primary">+ Добавить этап</button>
                             </div>
                         )}
@@ -216,8 +219,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 ))}
                             </div>
                         ) : (
-                            <div className="empty-list-message-with-button">
-                                <p className="no-results-message">Фотографий пока нет. Добавьте фотоотчеты, чтобы зафиксировать прогресс.</p>
+                            <div className="empty-state-container">
+                                <IconCamera />
+                                <p>Фотографий пока нет.</p>
                                 <button onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}} className="btn btn-primary">+ Добавить фото</button>
                             </div>
                         )}
@@ -247,8 +251,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 ))}
                             </div>
                         ) : (
-                            <div className="empty-list-message-with-button">
-                                <p className="no-results-message">Документов пока нет. Загрузите важные документы, связанные с проектом.</p>
+                            <div className="empty-state-container">
+                                <IconPaperclip />
+                                <p>Документов пока нет.</p>
                                 <button onClick={(e) => {e.preventDefault(); onOpenDocumentModal();}} className="btn btn-primary">+ Загрузить документ</button>
                             </div>
                         )}
