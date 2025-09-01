@@ -39,6 +39,7 @@ import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ReportsHubScreen } from './components/views/ReportsHubScreen';
 import { ProjectFinancialReportScreen } from './components/views/ProjectFinancialReportScreen';
+import { ClientReportScreen } from './components/views/ClientReportScreen';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
 
@@ -105,7 +106,7 @@ const App: React.FC = () => {
     }
 
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'projectFinancialReport' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
+    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'projectFinancialReport' | 'clientReport' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -245,7 +246,8 @@ const App: React.FC = () => {
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
-const [reportProject, setReportProject] = useState<Project | null>(null);
+  const [reportProject, setReportProject] = useState<Project | null>(null);
+  const [clientReportProject, setClientReportProject] = useState<Project | null>(null);
     const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
     const [isPhotoReportModalOpen, setIsPhotoReportModalOpen] = useState(false);
     const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
@@ -2033,11 +2035,17 @@ const getWorkStageStatusText = (status: string): string => {
                     onDelete={handleDeleteInventoryItem}
                 />;
             
-            case 'reports':
-                return <ReportsHubScreen onOpenProjectReport={(project) => {
-                    setReportProject(project);
-                    setActiveView('projectFinancialReport');
-                }} />;
+                            case 'reports':
+                    return <ReportsHubScreen 
+                        onOpenProjectReport={(project) => {
+                            setReportProject(project);
+                            setActiveView('projectFinancialReport');
+                        }}
+                        onOpenClientReport={(project) => {
+                            setClientReportProject(project);
+                            setActiveView('clientReport');
+                        }}
+                    />;
             case 'projectFinancialReport':
                 if (!reportProject) {
                     setActiveView('reports');
@@ -2047,6 +2055,20 @@ const getWorkStageStatusText = (status: string): string => {
                     project={reportProject}
                     estimates={estimates}
                     financeEntries={financeEntries}
+                    formatCurrency={formatCurrency}
+                    onBack={() => setActiveView('reports')}
+                />;
+            
+            case 'clientReport':
+                if (!clientReportProject) {
+                    setActiveView('reports');
+                    return null;
+                }
+                return <ClientReportScreen
+                    project={clientReportProject}
+                    estimates={estimates}
+                    financeEntries={financeEntries}
+                    workStages={workStages}
                     formatCurrency={formatCurrency}
                     onBack={() => setActiveView('reports')}
                 />;

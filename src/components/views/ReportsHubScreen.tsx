@@ -5,6 +5,7 @@ import { Project } from '../../types';
 
 interface ReportsHubScreenProps {
   onOpenProjectReport: (project: Project) => void;
+  onOpenClientReport: (project: Project) => void;
 }
 
 export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport }) => {
@@ -16,8 +17,10 @@ export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjec
   };
 
   const handleClientReportClick = () => {
-    // TODO: Implement navigation to client report selection
-    alert('Скоро здесь будет выбор проекта для отчета клиенту');
+    // Открываем модальное окно выбора проекта для клиентского отчета
+    // Пока используем временное решение - передаем пустой проект
+    // В будущем здесь будет модальное окно выбора
+    onOpenClientReport({} as Project);
   };
 
   const handleOverallReportClick = () => {
