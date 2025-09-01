@@ -1942,7 +1942,16 @@ const getWorkStageStatusText = (status: string): string => {
                     <IconProject/>
                     <span>Проекты</span>
                 </button>
-                <button onClick={() => setActiveView('estimate')} className={activeView === 'estimate' ? 'active' : ''}>
+                <button onClick={() => {
+                    if (activeView === 'estimate') {
+                        // Если уже в смете, создаем новую
+                        handleNewEstimate();
+                    } else {
+                        // Если переходим в смету из другого экрана, создаем новую
+                        setActiveView('estimate');
+                        handleNewEstimate();
+                    }
+                }} className={activeView === 'estimate' ? 'active' : ''}>
                     <IconDocument/>
                     <span>Смета</span>
                 </button>
