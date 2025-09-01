@@ -1315,8 +1315,9 @@ const getWorkStageStatusText = (status: string): string => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
-                // Если мы в проекте, привязываем смету к проекту
-                const projectIdForEstimate = activeView === 'projectDetail' ? activeProjectId : null;
+                // Привязываем смету к проекту только если мы находимся в проекте
+                // Если переходим из блока сметы (иконка внизу), то НЕ привязываем к проекту
+                const projectIdForEstimate = (activeView === 'projectDetail' && activeProjectId) ? activeProjectId : null;
                 populateForm(estimateToLoad, estimates, projectIdForEstimate);
                 closeModal(setIsEstimatesListOpen);
                 if (activeView === 'projectDetail') {
@@ -1344,8 +1345,8 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
-                    // Привязываем новую смету к проекту, если мы в проекте
-                    const projectIdForEstimate = activeView === 'projectDetail' ? activeProjectId : null;
+                    // Привязываем новую смету к проекту только если мы находимся в проекте
+                    const projectIdForEstimate = (activeView === 'projectDetail' && activeProjectId) ? activeProjectId : null;
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
