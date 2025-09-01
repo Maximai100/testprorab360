@@ -375,9 +375,13 @@ const App: React.FC = () => {
             setTax(estimate.tax || 0);
             if ('id' in estimate && estimate.id) {
                 setActiveEstimateId(estimate.id);
-                setCurrentEstimateProjectId(estimate.projectId || null);
+                // Если передан projectIdForNew, используем его для привязки сметы к проекту
+                // Это позволяет перепривязать смету к другому проекту
+                const finalProjectId = projectIdForNew || estimate.projectId || null;
+                setCurrentEstimateProjectId(finalProjectId);
                 console.log('populateForm: установлен activeEstimateId =', estimate.id);
-                console.log('populateForm: установлен currentEstimateProjectId =', estimate.projectId || null);
+                console.log('populateForm: установлен currentEstimateProjectId =', finalProjectId);
+                console.log('populateForm: projectIdForNew =', projectIdForNew, 'estimate.projectId =', estimate.projectId);
             } else {
                  setActiveEstimateId(null);
                  setCurrentEstimateProjectId(projectIdForNew);
@@ -1332,6 +1336,8 @@ const getWorkStageStatusText = (status: string): string => {
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
                 console.log('handleLoadEstimate: activeView =', activeView);
                 console.log('handleLoadEstimate: activeProjectId =', activeProjectId);
+                console.log('handleLoadEstimate: estimateToLoad.projectId =', estimateToLoad.projectId);
+                console.log('handleLoadEstimate: будет ли смета привязана к проекту?', !!projectIdForEstimate);
                 
                 populateForm(estimateToLoad, estimates, projectIdForEstimate);
                 closeModal(setIsEstimatesListOpen);
