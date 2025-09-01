@@ -2048,6 +2048,7 @@ const getWorkStageStatusText = (status: string): string => {
                             setActiveView('clientReport');
                         }}
                         onOpenOverallReport={() => {
+                            console.log('onOpenOverallReport вызван в App.tsx!');
                             setActiveView('overallFinancialReport');
                         }}
                     />;

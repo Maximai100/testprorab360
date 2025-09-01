@@ -24,6 +24,7 @@ export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjec
   };
 
   const handleOverallReportClick = () => {
+    console.log('handleOverallReportClick вызвана!');
     onOpenOverallReport();
   };
 
