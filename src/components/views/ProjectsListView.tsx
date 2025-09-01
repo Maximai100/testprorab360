@@ -1,6 +1,7 @@
 import React from 'react';
 import { ProjectsListViewProps, Project, ProjectStatus } from '../../types';
-import { IconPlus } from '../common/Icon';
+import { IconPlus, IconFolder } from '../common/Icon';
+import { ListItem } from '../ui/ListItem';
 
 export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
     handleOpenProjectModal, projectStatusFilter, setProjectStatusFilter, projectSearch, setProjectSearch,
@@ -26,11 +27,13 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
             </div>
             <div className="projects-list">
                 {filteredProjects.length > 0 ? filteredProjects.map((project: Project) => (
-                    <div key={project.id} className="card project-card" onClick={() => { setActiveProjectId(project.id); setActiveView('projectDetail'); }}>
-                        <strong>{project.name}</strong>
-                        <small>{project.client}</small>
-                        <small>{project.address}</small>
-                    </div>
+                    <ListItem
+                        key={project.id}
+                        icon={<IconFolder />}
+                        title={project.name}
+                        subtitle={`${project.client || 'Клиент не указан'} • ${project.address || 'Адрес не указан'}`}
+                        onClick={() => { setActiveProjectId(project.id); setActiveView('projectDetail'); }}
+                    />
                 )) : (
                     <div className="empty-list-message-with-button">
                         <p className="no-results-message">{projects.length > 0 ? 'По вашему запросу ничего не найдено.' : 'У вас пока нет проектов. Начните свой первый проект прямо сейчас!'}</p>

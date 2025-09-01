@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
-import { IconPlus, IconTrash } from '../common/Icon';
+import { IconPlus, IconTrash, IconSettings } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { ConsumableListItem } from '../ui/ConsumableListItem';
 
@@ -72,7 +72,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                         tools.map(tool => (
                                             <ListItem
                                               key={tool.id}
-                                              iconName="build" // Можешь выбрать любую подходящую иконку
+                                              icon={<IconSettings />}
                                               title={tool.name}
                                               amountText={
                                                 tool.location === 'on_project'

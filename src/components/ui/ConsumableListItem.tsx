@@ -2,7 +2,7 @@
 import React from 'react';
 import './ConsumableListItem.css';
 import { Consumable } from '../../types'; // Убедись, что путь к типам правильный
-import { Icon } from '../common/Icon';
+import { IconCart } from '../common/Icon';
 
 type ConsumableListItemProps = {
   consumable: Consumable;
@@ -32,7 +32,7 @@ export const ConsumableListItem: React.FC<ConsumableListItemProps> = ({
   return (
     <div className="c-list-item">
       <div className="c-list-item-icon-wrapper">
-        <Icon name="inventory_2" />
+        <IconCart />
       </div>
 
       <div className="c-list-item-details">

@@ -1,10 +1,10 @@
 
 import React from 'react';
 import './ListItem.css';
-import { Icon } from '../common/Icon'; // Убедись, что путь к Icon правильный
+
 
 type ListItemProps = {
-  iconName: string;
+  icon: React.ReactNode;
   iconBgColor?: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -16,7 +16,7 @@ type ListItemProps = {
 };
 
 export const ListItem: React.FC<ListItemProps> = ({
-  iconName,
+  ({ icon,
   iconBgColor,
   title,
   subtitle,
@@ -35,7 +35,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   return (
     <div className="list-item" onClick={onClick}>
       <div className="list-item-icon-wrapper" style={{ backgroundColor: iconBgColor }}>
-        <Icon name={iconName} />
+        {icon}
       </div>
 
       <div className="list-item-details">

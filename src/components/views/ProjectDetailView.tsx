@@ -87,7 +87,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                             {financials.cashFlowEntries.map((entry, index) => (
                                 <ListItem
                                     key={index}
-                                    iconName={entry.type === 'income' ? 'arrow_downward' : 'arrow_upward'}
+                                    icon={entry.type === 'income' ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} /> : <IconChevronRight style={{transform: 'rotate(90deg)'}} />}
                                     iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
                                     title={entry.description || (entry.type === 'income' ? 'Приход' : 'Расход')}
                                     subtitle={new Date(entry.date).toLocaleString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'})}
@@ -114,7 +114,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                             {projectEstimates.length > 0 ? projectEstimates.map(est => (
                                 <ListItem
                                     key={est.id}
-                                    iconName="document"
+                                    icon={<IconDocument />}
                                     title={`${est.number} - ${est.clientInfo || 'Без названия'}`}
                                     subtitle={
                                         <span>
@@ -146,7 +146,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 {projectFinances.map(f => (
                                     <ListItem
                                       key={f.id}
-                                      iconName={f.type === 'income' ? 'arrow_downward' : 'arrow_upward'}
+                                      icon={f.type === 'income' ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} /> : <IconChevronRight style={{transform: 'rotate(90deg)'}} />}
                                       title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
                                       subtitle={f.category}
                                       amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
@@ -174,7 +174,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 {projectWorkStages.map(stage => (
                                     <ListItem
                                         key={stage.id}
-                                        iconName="calendar"
+                                        icon={<IconCalendar />}
                                         title={stage.title}
                                         subtitle={`${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`}
                                         onClick={() => onOpenWorkStageModal(stage)}
@@ -223,7 +223,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 {projectDocuments.map(doc => (
                                     <ListItem
                                         key={doc.id}
-                                        iconName="paperclip"
+                                        icon={<IconPaperclip />}
                                         title={doc.name}
                                         subtitle={new Date(doc.date).toLocaleDateString('ru-RU')}
                                         actions={
