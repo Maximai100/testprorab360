@@ -7,23 +7,25 @@ interface ProjectSelectionModalProps {
   projects: Project[];
   onSelectProject: (project: Project) => void;
   onClose: () => void;
+  title: string;
 }
 
 export const ProjectSelectionModal: React.FC<ProjectSelectionModalProps> = ({
   projects,
   onSelectProject,
-  onClose
+  onClose,
+  title
 }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal-header">
-          <h2>Выберите проект для отчета</h2>
+          <h2>{title}</h2>
           <button onClick={onClose} className="close-btn" aria-label="Закрыть">
             <IconClose />
           </button>
         </div>
-        
+
         <div className="modal-body">
           {projects.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-s)' }}>

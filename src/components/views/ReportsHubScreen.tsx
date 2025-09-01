@@ -1,26 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ListItem } from '../ui/ListItem';
 import { IconTrendingUp, IconMessageSquare, IconDocument } from '../common/Icon';
 import { Project } from '../../types';
+import { ProjectSelectionModal } from '../modals/ProjectSelectionModal';
 
 interface ReportsHubScreenProps {
   onOpenProjectReport: (project: Project) => void;
   onOpenClientReport: (project: Project) => void;
+  projects: Project[];
 }
 
-export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport }) => {
+export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport, onOpenClientReport, projects }) => {
+  const [isProjectReportModalOpen, setIsProjectReportModalOpen] = useState(false);
+  const [isClientReportModalOpen, setIsClientReportModalOpen] = useState(false);
+
   const handleProjectReportClick = () => {
-    // Открываем модальное окно выбора проекта
-    // Пока используем временное решение - передаем пустой проект
-    // В будущем здесь будет модальное окно выбора
-    onOpenProjectReport({} as Project);
+    setIsProjectReportModalOpen(true);
   };
 
   const handleClientReportClick = () => {
-    // Открываем модальное окно выбора проекта для клиентского отчета
-    // Пока используем временное решение - передаем пустой проект
-    // В будущем здесь будет модальное окно выбора
-    onOpenClientReport({} as Project);
+    setIsClientReportModalOpen(true);
   };
 
   const handleOverallReportClick = () => {
@@ -53,6 +52,32 @@ export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjec
           onClick={handleOverallReportClick}
         />
       </main>
+
+      {/* Модальное окно выбора проекта для финансового отчета */}
+      {isProjectReportModalOpen && (
+        <ProjectSelectionModal
+          projects={projects}
+          title="Выберите проект для финансового отчета"
+          onSelectProject={(project) => {
+            onOpenProjectReport(project);
+            setIsProjectReportModalOpen(false);
+          }}
+          onClose={() => setIsProjectReportModalOpen(false)}
+        />
+      )}
+
+      {/* Модальное окно выбора проекта для клиентского отчета */}
+      {isClientReportModalOpen && (
+        <ProjectSelectionModal
+          projects={projects}
+          title="Выберите проект для отчета клиенту"
+          onSelectProject={(project) => {
+            onOpenClientReport(project);
+            setIsClientReportModalOpen(false);
+          }}
+          onClose={() => setIsClientReportModalOpen(false)}
+        />
+      )}
     </>
   );
 };

@@ -2037,6 +2037,7 @@ const getWorkStageStatusText = (status: string): string => {
             
                             case 'reports':
                     return <ReportsHubScreen 
+                        projects={projects}
                         onOpenProjectReport={(project) => {
                             setReportProject(project);
                             setActiveView('projectFinancialReport');
