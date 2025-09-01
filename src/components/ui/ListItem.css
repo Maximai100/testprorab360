@@ -80,3 +80,8 @@
   background-color: var(--color-danger);
   color: var(--color-text-primary);
 }
+
+.list-item-delete-button .icon-wrapper {
+  width: 24px;
+  height: 24px;
+}
