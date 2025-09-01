@@ -1337,21 +1337,25 @@ const getWorkStageStatusText = (status: string): string => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
                 // Привязываем смету к проекту если:
-                // 1. Есть активный проект в контексте (пользователь пришел из проекта)
-                // 2. ИЛИ мы находимся в проекте (activeView === 'projectDetail')
-                // НЕ привязываем только если нет активного проекта в контексте И мы в блоке сметы
+                // Логика привязки сметы к проекту:
+                // 1. Если есть активный проект в контексте (пользователь пришел из проекта) - привязываем
+                // 2. Если мы находимся в проекте (activeView === 'projectDetail') - привязываем
+                // 3. Если мы в блоке сметы И НЕТ активного проекта в контексте - НЕ привязываем
+                // 4. Если мы в блоке сметы И ЕСТЬ активный проект в контексте - привязываем (пользователь пришел из проекта)
                 let projectIdForEstimate = null;
                 
-                // Используем activeProjectId из ProjectContext (уже получен на уровне компонента)
-                // Если есть активный проект в контексте, значит пользователь пришел из проекта
                 if (contextProjectId || (activeView === 'projectDetail' && activeProjectId)) {
                     // Привязываем к проекту если:
                     // - Есть активный проект в контексте (пользователь пришел из проекта)
                     // - ИЛИ мы находимся в проекте
                     projectIdForEstimate = contextProjectId || activeProjectId;
                     console.log('handleLoadEstimate: привязываем к проекту, так как есть активный проект в контексте или находимся в проекте');
-                } else {
-                    console.log('handleLoadEstimate: НЕ привязываем к проекту, так как нет активного проекта в контексте');
+                } else if (activeView === 'estimate' && !contextProjectId) {
+                    // НЕ привязываем к проекту если:
+                    // - Мы в блоке сметы
+                    // - И НЕТ активного проекта в контексте (пользователь зашел напрямую в сметы)
+                    projectIdForEstimate = null;
+                    console.log('handleLoadEstimate: НЕ привязываем к проекту, так как зашли напрямую в блок сметы');
                 }
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
                 console.log('handleLoadEstimate: activeView =', activeView);
@@ -1405,16 +1409,16 @@ const getWorkStageStatusText = (status: string): string => {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
                     // Привязываем новую смету к проекту если:
-                    // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                    // НЕ привязываем если находимся в блоке сметы (activeView === 'estimate')
-                    let projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
+                    // 1. Есть активный проект в контексте (пользователь пришел из проекта)
+                    // 2. ИЛИ мы находимся в проекте (activeView === 'projectDetail')
+                    // НЕ привязываем если зашли напрямую в блок сметы
+                    let projectIdForEstimate = null;
                     
-                    // Дополнительная проверка: если мы в проекте, то привязываем
-                    if (activeView === 'projectDetail' && activeProjectId) {
-                        console.log('handleDeleteEstimate: привязываем к проекту, так как находимся в проекте');
-                        projectIdForEstimate = activeProjectId;
-                    } else if (activeView === 'estimate') {
-                        console.log('handleDeleteEstimate: НЕ привязываем к проекту, так как находимся в блоке смет');
+                    if (contextProjectId || (activeView === 'projectDetail' && activeProjectId)) {
+                        console.log('handleDeleteEstimate: привязываем к проекту, так как есть активный проект в контексте или находимся в проекте');
+                        projectIdForEstimate = contextProjectId || activeProjectId;
+                    } else if (activeView === 'estimate' && !contextProjectId) {
+                        console.log('handleDeleteEstimate: НЕ привязываем к проекту, так как зашли напрямую в блок сметы');
                         projectIdForEstimate = null;
                     }
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
