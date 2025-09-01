@@ -1071,6 +1071,10 @@ body.dark-theme .bottom-nav {
 .finance-item > .icon-wrapper, .finance-item .finance-receipt-thumb {
     flex-shrink: 0;
 }
+.finance-item > .icon-wrapper {
+    width: 24px;
+    height: 24px;
+}
 .finance-receipt-thumb {
     width: 40px;
     height: 40px;
@@ -1338,6 +1342,8 @@ body.dark-theme .bottom-nav {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 20px;
+    height: 20px;
 }
 .icon-wrapper svg {
     width: 100%;
