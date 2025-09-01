@@ -31,8 +31,13 @@ export const ListItem: React.FC<ListItemProps> = ({
 }) => {
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Останавливаем всплытие, чтобы не сработал onClick на всем элементе
+    console.log('ListItem: handleDeleteClick вызван');
+    console.log('ListItem: onDelete существует?', !!onDelete);
     if (onDelete) {
+      console.log('ListItem: вызываю onDelete');
       onDelete();
+    } else {
+      console.log('ListItem: onDelete не определен');
     }
   };
 

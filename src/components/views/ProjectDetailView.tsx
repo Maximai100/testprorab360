@@ -10,6 +10,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
     onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, financials, financeEntries
 }) => {
+    console.log('ProjectDetailView: handleDeleteProjectEstimate получен как пропс:', !!handleDeleteProjectEstimate);
+    console.log('ProjectDetailView: estimates:', estimates);
+    
     const projectEstimates = useMemo(() => estimates.filter(e => e.projectId === activeProject.id), [estimates, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
@@ -153,8 +156,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
                                     onDelete={() => {
-                                        console.log('onDelete вызван для сметы:', est.id);
-                                        handleDeleteProjectEstimate(est.id);
+                                        console.log('ProjectDetailView: onDelete вызван для сметы:', est.id);
+                                        console.log('ProjectDetailView: handleDeleteProjectEstimate существует?', !!handleDeleteProjectEstimate);
+                                        if (handleDeleteProjectEstimate) {
+                                            console.log('ProjectDetailView: вызываю handleDeleteProjectEstimate');
+                                            handleDeleteProjectEstimate(est.id);
+                                        } else {
+                                            console.log('ProjectDetailView: handleDeleteProjectEstimate не определен');
+                                        }
                                     }}
                                 />
                             )) : (
