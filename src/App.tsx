@@ -953,7 +953,7 @@ const App: React.FC = () => {
                 name: editingProject.name.trim(),
                 client: editingProject.client?.trim() || '',
                 address: editingProject.address?.trim() || '',
-                status: 'planned',
+                status: 'in_progress',
                 createdAt: now,
                 updatedAt: now,
             };
@@ -1144,7 +1144,15 @@ const App: React.FC = () => {
     // --- Inventory Management ---
     const handleAddInventoryItem = (item: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
         const now = new Date().toISOString();
-        const newItem: Tool = { ...item, id: generateUUID(), createdAt: now, updatedAt: now, location: 'on_base' };
+        const newItem: Tool = {
+            purchaseDate: null,
+            purchasePrice: 0,
+            projectId: null,
+            ...item,
+            id: generateUUID(),
+            createdAt: now,
+            updatedAt: now,
+        };
         const updatedItems = [newItem, ...inventoryItems];
         setInventoryItems(updatedItems);
         localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
