@@ -84,20 +84,27 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     </div>
                     <div className="project-section-body">
                         <div className="project-items-list">
-                            {financials.cashFlowEntries.map((entry, index) => (
-                                <ListItem
-                                    key={index}
-                                    icon={entry.type === 'income'
-                                        ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
-                                        : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
-                                    }
-                                    iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
-                                    title={entry.description || (entry.type === 'expense' ? 'Расход' : 'Приход')}
-                                    subtitle={new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
-                                    amountText={`${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount)}`}
-                                    amountColor={entry.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
-                                />
-                            ))}
+                            {financials.cashFlowEntries.length > 0 ? (
+                                financials.cashFlowEntries.map((entry, index) => (
+                                    <ListItem
+                                        key={index}
+                                        icon={entry.type === 'income'
+                                            ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
+                                            : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
+                                        }
+                                        iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
+                                        title={entry.description || (entry.type === 'expense' ? 'Расход' : 'Приход')}
+                                        subtitle={new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
+                                        amountText={`${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount)}`}
+                                        amountColor={entry.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                    />
+                                ))
+                            ) : (
+                                <div className="empty-state-container">
+                                    <IconTrendingUp />
+                                    <p>Движений по счету пока нет.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
