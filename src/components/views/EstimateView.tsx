@@ -15,12 +15,26 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
     <>
         <header className="estimate-header">
             {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>}
-            <h1 className={currentEstimateProjectId ? 'with-back-btn' : ''}>{clientInfo || 'Новая смета'}</h1>
+            <h1 className={currentEstimateProjectId ? 'with-back-btn' : ''}>
+                {currentEstimateProjectId ? 'Смета проекта' : (clientInfo || 'Новая смета')}
+            </h1>
             <div className="header-actions">
             </div>
         </header>
         <main>
-            <div className="card"><input type="text" value={clientInfo} onChange={(e) => { setClientInfo(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} className="client-info-input" placeholder="Имя клиента или адрес объекта" aria-label="Имя клиента или адрес объекта"/></div>
+            {!currentEstimateProjectId && (
+                <div className="card">
+                    <input 
+                        type="text" 
+                        value={clientInfo} 
+                        onChange={(e) => { setClientInfo(e.target.value); setIsDirty(true); }} 
+                        onFocus={handleInputFocus} 
+                        className="client-info-input" 
+                        placeholder="Имя клиента или адрес объекта" 
+                        aria-label="Имя клиента или адрес объекта"
+                    />
+                </div>
+            )}
             <div className="card estimate-meta"><div className="meta-field"><label htmlFor="estimateNumber">Номер сметы</label><input id="estimateNumber" type="text" value={estimateNumber} onChange={e => { setEstimateNumber(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div><div className="meta-field"><label htmlFor="estimateDate">Дата</label><input id="estimateDate" type="date" value={estimateDate} onChange={e => { setEstimateDate(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div></div>
             <div className="items-list">
                 {items.map((item: any, index: number) => (

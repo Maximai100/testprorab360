@@ -898,7 +898,18 @@ const createPrintableHTML = (): string => {
             <div class="estimate-title">
                 Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}
             </div>
-            ${clientInfo ? `<div class="client-info">Клиент / Объект: ${clientInfo}</div>` : ''}
+            ${(() => {
+                if (currentEstimateProjectId) {
+                    const project = projects.find(p => p.id === currentEstimateProjectId);
+                    if (project) {
+                        return `<div class="client-info">
+                            <div><strong>Клиент:</strong> ${project.client}</div>
+                            <div><strong>Адрес:</strong> ${project.address}</div>
+                        </div>`;
+                    }
+                }
+                return clientInfo ? `<div class="client-info">Клиент / Объект: ${clientInfo}</div>` : '';
+            })()}
         </div>
     </div>
     
