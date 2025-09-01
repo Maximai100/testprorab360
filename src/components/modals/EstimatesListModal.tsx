@@ -52,7 +52,7 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
                         }
                     </>)}
                 </div>
-                <div className="modal-footer"><button onClick={() => { onNewEstimate(); onClose(); }} className="btn btn-primary">Создать новую смету</button></div>
+
             </div>
         </div>
     );

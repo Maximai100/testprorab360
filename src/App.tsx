@@ -679,19 +679,19 @@ const App: React.FC = () => {
 // npm install @types/html2canvas
 
 // РЕШЕНИЕ 2: Простой PDF через print API браузера
-const handleExportPDF = useCallback(async () => {
-    setIsPdfLoading(true);
+    const handleExportPDF = useCallback(async () => {
+        setIsPdfLoading(true);
     tg?.HapticFeedback?.notificationOccurred?.('warning');
     
-    try {
+        try {
         console.log('Starting PDF export via print...');
-        
-        const validItems = getValidItems();
-        if (validItems.length === 0) {
-            safeShowAlert("Добавьте хотя бы одну позицию в смету.");
-            return;
-        }
 
+            const validItems = getValidItems();
+            if (validItems.length === 0) {
+                safeShowAlert("Добавьте хотя бы одну позицию в смету.");
+                return;
+            }
+        
         // Создаем HTML для печати
         const printContent = createPrintableHTML();
         
@@ -1018,7 +1018,7 @@ const handleExportWorkSchedulePDF = useCallback(async (project: Project, project
 
         safeShowAlert('Откроется диалог печати. Выберите "Сохранить как PDF"');
         
-    } catch (error: any) {
+        } catch (error: any) {
         console.error("Work schedule export failed:", error);
         
         // Фоллбэк на скачивание HTML файла
@@ -1315,7 +1315,9 @@ const getWorkStageStatusText = (status: string): string => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
-                populateForm(estimateToLoad, estimates);
+                // Если мы в проекте, привязываем смету к проекту
+                const projectIdForEstimate = activeView === 'projectDetail' ? activeProjectId : null;
+                populateForm(estimateToLoad, estimates, projectIdForEstimate);
                 closeModal(setIsEstimatesListOpen);
                 if (activeView === 'projectDetail') {
                     setActiveView('estimate');
@@ -1342,7 +1344,9 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
-                    populateForm(estimateToLoad, newEstimates);
+                    // Привязываем новую смету к проекту, если мы в проекте
+                    const projectIdForEstimate = activeView === 'projectDetail' ? activeProjectId : null;
+                    populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
             }
@@ -1975,7 +1979,7 @@ const getWorkStageStatusText = (status: string): string => {
                     {companyProfile.logo ? (
                         <img src={companyProfile.logo} alt="Логотип компании" className="app-logo" />
                     ) : (
-                        <img src="/logo.png" alt="Логотип" className="app-logo" />
+                    <img src="/logo.png" alt="Логотип" className="app-logo" />
                     )}
                     <h1>{companyProfile.name || 'Прораб'}</h1>
                 </div>
