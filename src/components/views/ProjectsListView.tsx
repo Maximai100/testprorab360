@@ -37,7 +37,7 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
                 )) : (
                     <div className="empty-state-container">
                         <IconFolder />
-                        <p>{projects.length > 0 ? 'По вашему запросу ничего не найдено.' : 'У вас пока нет проектов. Начните свой первый проект прямо сейчас!'}</p>
+                        <p>У вас пока нет проектов. Начните свой первый проект прямо сейчас!</p>
                         <button onClick={() => handleOpenProjectModal()} className="btn btn-primary">+ Создать новый проект</button>
                     </div>
                 )}

@@ -85,9 +85,9 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                         ))
                                     ) : (
                                         <div className="empty-state-container">
-                                            <IconClipboard />
-                                            <p>Инструментов пока нет.</p>
-                                            <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
+                                          <IconClipboard />
+                                          <p>Инструментов пока нет.</p>
+                                          <button onClick={onOpenAddToolModal} className="btn btn-primary">+ Добавить инструмент</button>
                                         </div>
                                     )}
                                 </div>
