@@ -1,6 +1,7 @@
 
 import React from 'react';
 import './ListItem.css';
+import { IconTrash } from '../common/Icon';
 
 
 type ListItemProps = {
@@ -16,7 +17,7 @@ type ListItemProps = {
 };
 
 export const ListItem: React.FC<ListItemProps> = ({
-  ({ icon,
+  icon,
   iconBgColor,
   title,
   subtitle,
@@ -24,6 +25,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   amountColor,
   onDelete,
   onClick,
+  actions,
 }) => {
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Останавливаем всплытие, чтобы не сработал onClick на всем элементе
@@ -55,7 +57,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             )}
             {onDelete && (
               <button className="list-item-delete-button" onClick={handleDeleteClick}>
-                <Icon name="delete" />
+                <IconTrash />
               </button>
             )}
           </>
