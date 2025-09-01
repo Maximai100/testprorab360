@@ -1,5 +1,4 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
-import { useProjectContext } from '../../context/ProjectContext';
+import React, { useMemo, useCallback, useState } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
 import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
@@ -11,16 +10,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
     onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries
 }) => {
-    const { setActiveProjectId: setContextActiveProjectId } = useProjectContext();
 
-    useEffect(() => {
-      if (activeProject) {
-        setContextActiveProjectId(activeProject.id);
-      }
-      return () => {
-        setContextActiveProjectId(null);
-      };
-    }, [activeProject, setContextActiveProjectId]);
 
     console.log('ProjectDetailView: handleDeleteProjectEstimate получен как пропс:', !!handleDeleteProjectEstimate);
     console.log('ProjectDetailView: estimates:', estimates);
@@ -64,7 +54,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     return (
         <>
             <header className="project-detail-header">
-                <button onClick={() => {setActiveView('projects'); setContextActiveProjectId(null);}} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>
+                <button onClick={() => {setActiveView('projects'); setActiveProjectId(null);}} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>
                 <h1>{activeProject.name}</h1>
                 <div className="header-actions">
                     <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать"><IconEdit/></button>
