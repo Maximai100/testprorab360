@@ -1,0 +1,79 @@
+
+/* Стили, похожие на ListItem для консистентности */
+.c-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-m);
+  background-color: var(--color-surface-1);
+  padding: var(--spacing-m);
+  border-radius: var(--border-radius-m);
+  width: 100%;
+}
+
+.c-list-item-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-surface-2);
+}
+
+.c-list-item-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.c-list-item-title {
+  font-size: var(--font-size-m);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Уникальные стили для контролов расходников */
+.c-list-item-controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-s);
+}
+
+.c-quantity-text {
+  font-size: var(--font-size-m);
+  color: var(--color-text-primary);
+  min-width: 60px; /* Минимальная ширина, чтобы блок не "прыгал" */
+  text-align: center;
+}
+
+.c-quantity-button, .c-delete-button {
+  background: var(--color-surface-2);
+  border: none;
+  color: var(--color-text-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: background-color 0.2s;
+}
+
+.c-quantity-button:hover {
+  background-color: var(--color-primary);
+}
+
+.c-delete-button {
+  margin-left: var(--spacing-s);
+}
+
+.c-delete-button:hover {
+  background-color: var(--color-danger);
+}
