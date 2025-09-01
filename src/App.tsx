@@ -1354,27 +1354,31 @@ const getWorkStageStatusText = (status: string): string => {
         });
     };
 
-    // Функция удаления сметы из проекта
+    // Функция удаления сметы из проекта (отвязка от проекта, не удаление)
     const handleDeleteProjectEstimate = (id: string) => {
-        safeShowConfirm("Вы уверены, что хотите удалить эту смету из проекта?", (ok) => {
+        safeShowConfirm("Вы уверены, что хотите отвязать эту смету от проекта?", (ok) => {
             if (ok) {
                 tg?.HapticFeedback?.notificationOccurred?.('warning');
-                const newEstimates = estimates.filter(e => e.id !== id);
+                
+                // Отвязываем смету от проекта, но не удаляем её полностью
+                const newEstimates = estimates.map(e => 
+                    e.id === id ? { ...e, projectId: null, updatedAt: new Date().toISOString() } : e
+                );
                 setEstimates(newEstimates);
                 
-                // Если удаляемая смета была активной, загружаем другую
+                // Если отвязываемая смета была активной, загружаем другую
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === activeProjectId) || newEstimates[0] || null;
                     if (estimateToLoad) {
                         populateForm(estimateToLoad, newEstimates, activeProjectId);
                     } else {
-                        // Если нет других смет, очищаем форму
+                        // Если нет других смет в проекте, очищаем форму
                         populateForm(null, newEstimates, activeProjectId);
                     }
                 }
                 
-                localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: activeEstimateId === id ? null : activeEstimateId }));
-                safeShowAlert('Смета удалена из проекта');
+                localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId }));
+                safeShowAlert('Смета отвязана от проекта');
             }
         });
     };
