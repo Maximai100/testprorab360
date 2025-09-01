@@ -38,6 +38,7 @@ import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ListItem } from './components/ui/ListItem';
+import { ProjectProvider } from './context/ProjectContext';
 
 const App: React.FC = () => {
     // Error boundary state
@@ -2088,7 +2089,8 @@ const getWorkStageStatusText = (status: string): string => {
     ]);
 
     return (
-        <div className="app-container" aria-hidden={isAnyModalOpen}>
+        <ProjectProvider>
+            <div className="app-container" aria-hidden={isAnyModalOpen}>
             <header className="app-header">
                 <div className="app-header-left">
                     {companyProfile.logo ? (
@@ -2165,7 +2167,8 @@ const getWorkStageStatusText = (status: string): string => {
             {isActModalOpen && activeProject && <ActGenerationModal onClose={() => closeModal(setIsActModalOpen)} project={activeProject} profile={companyProfile} totalAmount={actModalTotal} showAlert={safeShowAlert} />}
             {isAISuggestModalOpen && <AISuggestModal onClose={() => closeModal(setIsAISuggestModalOpen)} onAddItems={handleAddItemsFromAI} showAlert={safeShowAlert} />}
             {isAddToolModalOpen && <AddToolModal onClose={() => closeModal(setIsAddToolModalOpen)} onSave={handleAddInventoryItem} />}
-        </div>
+            </div>
+        </ProjectProvider>
     );
 }
 
