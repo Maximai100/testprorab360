@@ -3,7 +3,7 @@ import { WorkStageModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
 export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, onSave, showAlert }) => {
-    const [name, setName] = useState(stage?.name || '');
+    const [title, setTitle] = useState(stage?.title || '');
     const [startDate, setStartDate] = useState(stage?.startDate || new Date().toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(stage?.endDate || new Date().toISOString().split('T')[0]);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -21,7 +21,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
     }, []);
 
     const handleSave = () => {
-        if (!name.trim()) {
+        if (!title.trim()) {
             showAlert('Введите название этапа.');
             return;
         }
@@ -33,7 +33,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
             showAlert('Дата начала не может быть позже даты окончания.');
             return;
         }
-        onSave({ name: name.trim(), startDate, endDate });
+        onSave({ title: title.trim(), startDate, endDate });
     };
 
     return (
@@ -45,7 +45,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
                 </div>
                 <div className="modal-body">
                     <label>Название этапа</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Например, 'Черновые работы'" />
+                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например, 'Черновые работы'" />
                     <label>Дата начала</label>
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     <label>Дата окончания</label>

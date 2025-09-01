@@ -216,20 +216,23 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     <div className="project-section-body">
                         {projectWorkStages.length > 0 ? (
                             <div className="project-items-list">
-                                {projectWorkStages.map(stage => (
-                                    <ListItem
-                                        key={stage.id}
-                                        icon={<IconCalendar />}
-                                        title={stage.title}
-                                        subtitle={
-                                            (stage.startDate && stage.endDate)
-                                                ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
-                                                : 'Даты не указаны'
-                                        }
-                                        onClick={() => onOpenWorkStageModal(stage)}
-                                        onDelete={() => onDeleteWorkStage(stage.id)}
-                                    />
-                                ))}
+                                {projectWorkStages.map(stage => {
+                                    console.log('Stage data:', stage); // Отладочная информация
+                                    return (
+                                        <ListItem
+                                            key={stage.id}
+                                            icon={<IconCalendar />}
+                                            title={stage.title || 'Название не указано'}
+                                            subtitle={
+                                                (stage.startDate && stage.endDate)
+                                                    ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
+                                                    : 'Даты не указаны'
+                                            }
+                                            onClick={() => onOpenWorkStageModal(stage)}
+                                            onDelete={() => onDeleteWorkStage(stage.id)}
+                                        />
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="empty-state-container">
