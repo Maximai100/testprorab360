@@ -679,7 +679,7 @@ const App: React.FC = () => {
 // РЕШЕНИЕ 2: Простой PDF через print API браузера
 const handleExportPDF = useCallback(async () => {
     setIsPdfLoading(true);
-    tg?.HapticFeedback.notificationOccurred('warning');
+    tg?.HapticFeedback?.notificationOccurred?.('warning');
     
     try {
         console.log('Starting PDF export via print...');
@@ -1014,7 +1014,7 @@ const createPrintableHTML = (): string => {
     const handleDeleteEstimate = (id: string) => {
         safeShowConfirm("Вы уверены, что хотите удалить эту смету?", (ok) => {
             if (ok) {
-                tg?.HapticFeedback.notificationOccurred('warning');
+                tg?.HapticFeedback?.notificationOccurred?.('warning');
                 const newEstimates = estimates.filter(e => e.id !== id);
                 setEstimates(newEstimates);
                 let newActiveId = activeEstimateId;
