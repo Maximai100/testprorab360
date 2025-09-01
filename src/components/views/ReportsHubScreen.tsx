@@ -1,11 +1,18 @@
 import React from 'react';
 import { ListItem } from '../ui/ListItem';
 import { IconTrendingUp, IconMessageSquare, IconDocument } from '../common/Icon';
+import { Project } from '../../types';
 
-export const ReportsHubScreen: React.FC = () => {
+interface ReportsHubScreenProps {
+  onOpenProjectReport: (project: Project) => void;
+}
+
+export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport }) => {
   const handleProjectReportClick = () => {
-    // TODO: Implement navigation to project report selection
-    alert('Скоро здесь будет выбор проекта для отчета');
+    // Открываем модальное окно выбора проекта
+    // Пока используем временное решение - передаем пустой проект
+    // В будущем здесь будет модальное окно выбора
+    onOpenProjectReport({} as Project);
   };
 
   const handleClientReportClick = () => {
