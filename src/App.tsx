@@ -264,7 +264,7 @@ const App: React.FC = () => {
     const [draggingItem, setDraggingItem] = useState<number | null>(null);
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
     // Состояние для отслеживания контекста перехода в "Мои документы"
-    const [cameFromProject, setCameFromProject] = useState(false);
+
 
     const lastFocusedElement = useRef<HTMLElement | null>(null);
     const activeModalName = useRef<string | null>(null);
@@ -1335,9 +1335,8 @@ const getWorkStageStatusText = (status: string): string => {
             if (estimateToLoad) { 
                 // Привязываем смету к проекту если:
                 // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
                 // НЕ привязываем если находимся в блоке сметы (activeView === 'estimate')
-                let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                let projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
                 
                 // Дополнительная проверка: если мы в проекте, то привязываем
                 if (activeView === 'projectDetail' && activeProjectId) {
@@ -1353,7 +1352,6 @@ const getWorkStageStatusText = (status: string): string => {
                 console.log('handleLoadEstimate: estimateToLoad.projectId =', estimateToLoad.projectId);
                 console.log('handleLoadEstimate: будет ли смета привязана к проекту?', !!projectIdForEstimate);
                 console.log('handleLoadEstimate: контекст перехода - из проекта или из блока сметы?', activeView === 'projectDetail' ? 'ИЗ ПРОЕКТА' : 'ИЗ БЛОКА СМЕТЫ');
-                console.log('handleLoadEstimate: cameFromProject =', cameFromProject);
                 
                 // Если смета привязывается к проекту, обновляем её в базе данных
                 if (projectIdForEstimate && estimateToLoad.projectId !== projectIdForEstimate) {
@@ -1401,9 +1399,8 @@ const getWorkStageStatusText = (status: string): string => {
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
                     // Привязываем новую смету к проекту если:
                     // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                    // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
                     // НЕ привязываем если находимся в блоке сметы (activeView === 'estimate')
-                    let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
+                    let projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
                     
                     // Дополнительная проверка: если мы в проекте, то привязываем
                     if (activeView === 'projectDetail' && activeProjectId) {
@@ -1414,7 +1411,7 @@ const getWorkStageStatusText = (status: string): string => {
                         projectIdForEstimate = null;
                     }
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
-                    console.log('handleDeleteEstimate: cameFromProject =', cameFromProject);
+
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
@@ -1956,8 +1953,6 @@ const getWorkStageStatusText = (status: string): string => {
                     onProjectScratchpadChange={handleProjectScratchpadChange}
                     onExportWorkSchedulePDF={handleExportWorkSchedulePDF}
                     onOpenEstimatesListModal={() => {
-                        console.log('ProjectDetailView: устанавливаем cameFromProject = true');
-                        setCameFromProject(true);
                         openModal(setIsEstimatesListOpen, 'estimatesList');
                     }}
                 />;
@@ -2038,8 +2033,6 @@ const getWorkStageStatusText = (status: string): string => {
                     themeMode={themeMode}
                     onOpenLibraryModal={() => openModal(setIsLibraryOpen, 'library')}
                     onOpenEstimatesListModal={() => {
-                        console.log('EstimateView: устанавливаем cameFromProject = false');
-                        setCameFromProject(false);
                         openModal(setIsEstimatesListOpen, 'estimatesList');
                     }}
                     onOpenSettingsModal={() => openModal(setIsSettingsOpen, 'settings')}
@@ -2109,8 +2102,6 @@ const getWorkStageStatusText = (status: string): string => {
                     <button onClick={handleThemeChange} className="header-btn" title={`Тема: ${themeMode}`}>{themeIcon()}</button>
                     <button onClick={() => openModal(setIsLibraryOpen, 'library')} className="header-btn"><IconBook/></button>
                     <button onClick={() => {
-                        console.log('Header: устанавливаем cameFromProject = false');
-                        setCameFromProject(false);
                         openModal(setIsEstimatesListOpen, 'estimatesList');
                     }} className="header-btn"><IconFolder/></button>
                     <button onClick={() => openModal(setIsSettingsOpen, 'settings')} className="header-btn"><IconSettings/></button>
@@ -2134,7 +2125,6 @@ const getWorkStageStatusText = (status: string): string => {
                     } else {
                         // Если переходим в смету из другого экрана, создаем новую
                         // При переходе в блок сметы сбрасываем привязку к проекту и активный проект
-                        setCameFromProject(false);
                         setActiveProjectId(null); // Сбрасываем активный проект при переходе в блок смет
                         setActiveView('estimate');
                         handleNewEstimate();
@@ -2161,7 +2151,6 @@ const getWorkStageStatusText = (status: string): string => {
             {isSettingsOpen && <SettingsModal onClose={() => closeModal(setIsSettingsOpen)} profile={companyProfile} onProfileChange={handleProfileChange} onLogoChange={handleLogoChange} onRemoveLogo={removeLogo} onSave={handleSaveProfile} onBackup={handleBackup} onRestore={handleRestore} onInputFocus={handleInputFocus} />}
             {isEstimatesListOpen && <EstimatesListModal onClose={() => {
                 closeModal(setIsEstimatesListOpen);
-                setCameFromProject(false);
             }} estimates={estimates} templates={templates} activeEstimateId={activeEstimateId} statusMap={statusMap} formatCurrency={formatCurrency} onLoadEstimate={handleLoadEstimate} onDeleteEstimate={handleDeleteEstimate} onStatusChange={handleStatusChange} onSaveAsTemplate={handleSaveAsTemplate} onDeleteTemplate={handleDeleteTemplate} onNewEstimate={handleNewEstimate} onInputFocus={handleInputFocus} />}
             {isLibraryOpen && <LibraryModal onClose={() => closeModal(setIsLibraryOpen)} libraryItems={libraryItems} onLibraryItemsChange={setLibraryItems} onAddItemToEstimate={handleAddFromLibrary} formatCurrency={formatCurrency} onInputFocus={handleInputFocus} showConfirm={safeShowConfirm} showAlert={safeShowAlert} />}
             {isProjectModalOpen && <NewProjectModal project={editingProject} onClose={() => closeModal(setIsProjectModalOpen)} onProjectChange={setEditingProject} onSave={handleSaveProject} onInputFocus={handleInputFocus} />}
