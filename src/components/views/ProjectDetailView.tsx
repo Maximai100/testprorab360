@@ -119,14 +119,20 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     <div className="project-section-body">
                         <div className="project-items-list">
                             {projectEstimates.length > 0 ? projectEstimates.map(est => (
-                                <div key={est.id} className="list-item" onClick={() => handleLoadEstimate(est.id)}>
-                                    <IconDocument />
-                                    <div className="list-item-info">
-                                        <strong>{est.number} - {est.clientInfo || 'Без названия'}</strong>
-                                        <span>{formatCurrency(calculateEstimateTotal(est))} <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color }}>{statusMap[est.status].text}</span></span>
-                                    </div>
-                                    <span className="list-item-arrow"><IconChevronRight/></span>
-                                </div>
+                                <ListItem
+                                    key={est.id}
+                                    iconName="document"
+                                    title={`${est.number} - ${est.clientInfo || 'Без названия'}`}
+                                    subtitle={
+                                        <span>
+                                            {formatCurrency(calculateEstimateTotal(est))}{' '}
+                                            <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color }}>
+                                                {statusMap[est.status].text}
+                                            </span>
+                                        </span>
+                                    }
+                                    onClick={() => handleLoadEstimate(est.id)}
+                                />
                             )) : (
                                 <div className="empty-list-message-with-button">
                                     <p className="no-results-message">Смет для этого проекта пока нет. Создайте первую смету, чтобы начать работу!</p>
@@ -173,16 +179,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         {projectWorkStages.length > 0 ? (
                             <div className="project-items-list">
                                 {projectWorkStages.map(stage => (
-                                    <div key={stage.id} className="list-item">
-                                        <IconCalendar />
-                                        <div className="list-item-info" onClick={() => onOpenWorkStageModal(stage)}>
-                                            <strong>{stage.title}</strong>
-                                            <span>{new Date(stage.startDate).toLocaleDateString('ru-RU')} - {new Date(stage.endDate).toLocaleDateString('ru-RU')}</span>
-                                        </div>
-                                        <div className="list-item-actions">
-                                            <button onClick={() => onDeleteWorkStage(stage.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
-                                        </div>
-                                    </div>
+                                    <ListItem
+                                        key={stage.id}
+                                        iconName="calendar"
+                                        title={stage.title}
+                                        subtitle={`${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`}
+                                        onClick={() => onOpenWorkStageModal(stage)}
+                                        onDelete={() => onDeleteWorkStage(stage.id)}
+                                    />
                                 ))}
                             </div>
                         ) : (
