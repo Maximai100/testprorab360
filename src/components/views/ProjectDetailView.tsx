@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 
 
@@ -8,7 +8,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject, handleDeleteProjectEstimate,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, financials, financeEntries
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries
 }) => {
     console.log('ProjectDetailView: handleDeleteProjectEstimate получен как пропс:', !!handleDeleteProjectEstimate);
     console.log('ProjectDetailView: estimates:', estimates);
@@ -146,7 +146,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                 <div className="card project-section">
                      <div className="project-section-header">
                         <h3>Сметы ({projectEstimates.length})</h3>
-                        <button className="add-in-header-btn" onClick={handleAddNewEstimateForProject}><IconPlus/></button>
+                        <div className="header-actions">
+                            <button className="add-in-header-btn" onClick={handleAddNewEstimateForProject}><IconPlus/></button>
+                            <button className="add-in-header-btn" onClick={onOpenEstimatesListModal}><IconFolder/></button>
+                        </div>
                     </div>
                     <div className="project-section-body">
                         <div className="project-items-list">
