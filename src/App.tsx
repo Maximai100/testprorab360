@@ -680,10 +680,12 @@ const App: React.FC = () => {
         if (isDirty) {
             safeShowConfirm('У вас есть несохраненные изменения. Вы уверены, что хотите создать новую смету?', (ok) => {
                 if (ok) {
+                    // При создании новой сметы в блоке сметы сбрасываем привязку к проекту
                     populateForm(template || null, estimates, null);
                 }
             });
         } else {
+             // При создании новой сметы в блоке сметы сбрасываем привязку к проекту
              populateForm(template || null, estimates, null);
         }
     }
@@ -1329,11 +1331,11 @@ const getWorkStageStatusText = (status: string): string => {
         const load = () => {
             const estimateToLoad = estimates.find(e => e.id === id); 
             if (estimateToLoad) { 
-                // Привязываем смету к проекту ТОЛЬКО если:
+                // Привязываем смету к проекту если:
                 // 1. Мы находимся в проекте (activeView === 'projectDetail')
-                // 2. ИЛИ мы перешли в "Мои документы" из проекта (activeView === 'projectDetail' был до перехода)
+                // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId И мы не в блоке сметы)
                 // НЕ привязываем если переходим из блока сметы (activeView === 'estimate')
-                const projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
+                const projectIdForEstimate = (activeView === 'projectDetail' || (activeProjectId && activeView !== 'estimate')) ? activeProjectId : null;
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
                 console.log('handleLoadEstimate: activeView =', activeView);
                 console.log('handleLoadEstimate: activeProjectId =', activeProjectId);
@@ -1385,10 +1387,11 @@ const getWorkStageStatusText = (status: string): string => {
                 if (activeEstimateId === id) {
                     const estimateToLoad = newEstimates.find(e => e.projectId === currentEstimateProjectId) || newEstimates[0] || null;
                     newActiveId = estimateToLoad ? estimateToLoad.id : null;
-                    // Привязываем новую смету к проекту ТОЛЬКО если:
+                    // Привязываем новую смету к проекту если:
                     // 1. Мы находимся в проекте (activeView === 'projectDetail')
+                    // 2. ИЛИ мы перешли в "Мои документы" из проекта (есть activeProjectId И мы не в блоке сметы)
                     // НЕ привязываем если переходим из блока сметы (activeView === 'estimate')
-                    const projectIdForEstimate = (activeView === 'projectDetail') ? activeProjectId : null;
+                    const projectIdForEstimate = (activeView === 'projectDetail' || (activeProjectId && activeView !== 'estimate')) ? activeProjectId : null;
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
@@ -1556,11 +1559,13 @@ const getWorkStageStatusText = (status: string): string => {
         if (isDirty) {
             safeShowConfirm('У вас есть несохраненные изменения. Создать новую смету для этого проекта?', (ok) => {
                 if (ok) {
+                    // При создании сметы для проекта привязываем её к проекту
                     populateForm(null, estimates, activeProjectId);
                     setActiveView('estimate');
                 }
             });
         } else {
+            // При создании сметы для проекта привязываем её к проекту
             populateForm(null, estimates, activeProjectId);
             setActiveView('estimate');
         }
@@ -2093,6 +2098,7 @@ const getWorkStageStatusText = (status: string): string => {
                         handleNewEstimate();
                     } else {
                         // Если переходим в смету из другого экрана, создаем новую
+                        // При переходе в блок сметы сбрасываем привязку к проекту
                         setActiveView('estimate');
                         handleNewEstimate();
                     }
