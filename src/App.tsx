@@ -37,6 +37,7 @@ import { ReportsView } from './components/views/ReportsView';
 import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
+import { ReportsHubScreen } from './components/views/ReportsHubScreen';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
 
@@ -2031,13 +2032,7 @@ const getWorkStageStatusText = (status: string): string => {
                 />;
             
             case 'reports':
-                return <ReportsView
-                    projects={projects}
-                    estimates={estimates}
-                    financeEntries={financeEntries}
-                    formatCurrency={formatCurrency}
-                    setActiveView={setActiveView}
-                />;
+                return <ReportsHubScreen />;
             case 'scratchpad':
                 return <ScratchpadView
                     content={scratchpad}
