@@ -1969,16 +1969,4 @@ input[type=number] { -moz-appearance: textfield; }
 
 .expense-color {
     color: #dc3545; /* Красный для расхода */
-}  text-align: right;
-    width: 100%;
-    margin-top: 4px;
-}
-
-/* Цвета для прихода/расхода */
-.income-color {
-    color: #28a745; /* Зеленый для прихода */
-}
-
-.expense-color {
-    color: #dc3545; /* Красный для расхода */
 }
