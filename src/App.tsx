@@ -1378,6 +1378,12 @@ const getWorkStageStatusText = (status: string): string => {
                     if (updatedEstimate) {
                         populateForm(updatedEstimate, updatedEstimates, projectIdForEstimate);
                     }
+                } else if (!projectIdForEstimate && estimateToLoad.projectId) {
+                    // Если смета НЕ привязывается к проекту, но в базе данных у неё есть projectId
+                    // Создаем временную копию сметы без projectId для редактирования
+                    console.log('handleLoadEstimate: создаем временную копию сметы без projectId для редактирования');
+                    const tempEstimate = { ...estimateToLoad, projectId: null };
+                    populateForm(tempEstimate, estimates, null);
                 } else {
                     populateForm(estimateToLoad, estimates, projectIdForEstimate);
                 }
