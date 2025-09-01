@@ -1336,15 +1336,15 @@ const getWorkStageStatusText = (status: string): string => {
                 // Привязываем смету к проекту если:
                 // 1. Мы находимся в проекте (activeView === 'projectDetail')
                 // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
-                // 3. ИЛИ у нас есть активный проект (activeProjectId) - это означает, что мы в контексте проекта
-                let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject || activeProjectId) ? activeProjectId : null;
+                // НЕ привязываем если находимся в блоке сметы (activeView === 'estimate')
+                let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
                 
-                // Дополнительная проверка: если у нас есть активный проект, то привязываем
-                if (activeProjectId) {
-                    console.log('handleLoadEstimate: привязываем к проекту, так как у нас есть activeProjectId:', activeProjectId);
+                // Дополнительная проверка: если мы в проекте, то привязываем
+                if (activeView === 'projectDetail' && activeProjectId) {
+                    console.log('handleLoadEstimate: привязываем к проекту, так как находимся в проекте');
                     projectIdForEstimate = activeProjectId;
-                } else if (activeView === 'estimate' && !cameFromProject && !activeProjectId) {
-                    console.log('handleLoadEstimate: НЕ привязываем к проекту, так как находимся в блоке сметы без активного проекта');
+                } else if (activeView === 'estimate') {
+                    console.log('handleLoadEstimate: НЕ привязываем к проекту, так как находимся в блоке смет');
                     projectIdForEstimate = null;
                 }
                 console.log('handleLoadEstimate: projectIdForEstimate =', projectIdForEstimate);
@@ -1402,15 +1402,15 @@ const getWorkStageStatusText = (status: string): string => {
                     // Привязываем новую смету к проекту если:
                     // 1. Мы находимся в проекте (activeView === 'projectDetail')
                     // 2. ИЛИ мы перешли в "Мои документы" из проекта (cameFromProject === true)
-                    // 3. ИЛИ у нас есть активный проект (activeProjectId) - это означает, что мы в контексте проекта
-                    let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject || activeProjectId) ? activeProjectId : null;
+                    // НЕ привязываем если находимся в блоке сметы (activeView === 'estimate')
+                    let projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
                     
-                    // Дополнительная проверка: если у нас есть активный проект, то привязываем
-                    if (activeProjectId) {
-                        console.log('handleDeleteEstimate: привязываем к проекту, так как у нас есть activeProjectId:', activeProjectId);
+                    // Дополнительная проверка: если мы в проекте, то привязываем
+                    if (activeView === 'projectDetail' && activeProjectId) {
+                        console.log('handleDeleteEstimate: привязываем к проекту, так как находимся в проекте');
                         projectIdForEstimate = activeProjectId;
-                    } else if (activeView === 'estimate' && !cameFromProject && !activeProjectId) {
-                        console.log('handleDeleteEstimate: НЕ привязываем к проекту, так как находимся в блоке сметы без активного проекта');
+                    } else if (activeView === 'estimate') {
+                        console.log('handleDeleteEstimate: НЕ привязываем к проекту, так как находимся в блоке смет');
                         projectIdForEstimate = null;
                     }
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
@@ -2133,8 +2133,9 @@ const getWorkStageStatusText = (status: string): string => {
                         handleNewEstimate();
                     } else {
                         // Если переходим в смету из другого экрана, создаем новую
-                        // При переходе в блок сметы сбрасываем привязку к проекту
+                        // При переходе в блок сметы сбрасываем привязку к проекту и активный проект
                         setCameFromProject(false);
+                        setActiveProjectId(null); // Сбрасываем активный проект при переходе в блок смет
                         setActiveView('estimate');
                         handleNewEstimate();
                     }
