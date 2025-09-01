@@ -945,6 +945,8 @@ const createPrintableHTML = (): string => {
 const handleExportWorkSchedulePDF = useCallback(async (project: Project, projectWorkStages: WorkStage[]) => {
     try {
         console.log('Starting work schedule PDF export...');
+        console.log('Project:', project);
+        console.log('Work stages:', projectWorkStages);
         
         if (projectWorkStages.length === 0) {
             safeShowAlert("Нет этапов работ для экспорта.");
@@ -1139,19 +1141,31 @@ const createWorkScheduleHTML = (project: Project, workStages: WorkStage[]): stri
             ${sortedStages.map((stage, index) => `
                 <tr>
                     <td class="number-col">${index + 1}</td>
-                    <td class="title-col">${stage.title}</td>
+                    <td class="title-col">${stage.title || 'Название не указано'}</td>
                     <td class="dates-col">
-                        ${stage.startDate ? new Date(stage.startDate).toLocaleDateString('ru-RU') : 'Не указано'}
-                        ${stage.endDate ? ` - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}` : ''}
+                        ${stage.startDate ? (() => {
+                            try {
+                                return new Date(stage.startDate).toLocaleDateString('ru-RU');
+                            } catch {
+                                return 'Неверная дата';
+                            }
+                        })() : 'Не указано'}
+                        ${stage.endDate ? (() => {
+                            try {
+                                return ` - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`;
+                            } catch {
+                                return ' - Неверная дата';
+                            }
+                        })() : ''}
                     </td>
-                    <td class="status-col status-${stage.status}">
-                        ${getWorkStageStatusText(stage.status)}
+                    <td class="status-col status-${stage.status || 'planned'}">
+                        ${getWorkStageStatusText(stage.status || 'planned')}
                     </td>
                     <td class="progress-col">
                         <div class="progress-bar">
-                            <div class="progress-fill ${stage.status === 'completed' ? 'progress-completed' : ''}" style="width: ${stage.progress}%"></div>
+                            <div class="progress-fill ${(stage.status || 'planned') === 'completed' ? 'progress-completed' : ''}" style="width: ${stage.progress || 0}%"></div>
                         </div>
-                        <div style="margin-top: 2px; font-size: 9px;">${stage.progress}%</div>
+                        <div style="margin-top: 2px; font-size: 9px;">${stage.progress || 0}%</div>
                     </td>
                 </tr>
             `).join('')}
