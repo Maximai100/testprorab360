@@ -25,11 +25,14 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
 
     const { activeProjectId } = useProjectContext();
 
-    const handleSelectEstimate = (estimateTemplate) => {
+    const handleSelectTemplate = (template) => {
+      // Создаем новую смету из шаблона
       const newEstimate = { 
-        ...estimateTemplate, 
+        ...template, 
         id: crypto.randomUUID(), // Создаем новый уникальный ID
-        projectId: activeProjectId // Привязываем ID проекта из контекста (будет null, если мы не в проекте)
+        projectId: activeProjectId, // Привязываем ID проекта из контекста (будет null, если мы не в проекте)
+        date: new Date().toISOString().split('T')[0], // Устанавливаем текущую дату
+        status: 'draft' // Устанавливаем статус "черновик"
       };
       onNewEstimate(newEstimate); // Вызываем родительскую функцию с подготовленной сметой
     };
@@ -59,7 +62,7 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
                          {filteredTemplates.length === 0 ? <p className="no-results-message">{templates.length > 0 ? 'Ничего не найдено.' : 'Шаблонов нет.'}</p> :
                             filteredTemplates.map(t => ( <div key={t.lastModified} className="list-item">
                                 <div className="list-item-info"><strong>Шаблон от {new Date(t.lastModified).toLocaleDateString('ru-RU')}</strong><span>{t.items.length} поз., Итого: {formatCurrency(t.items.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span></div>
-                                <div className="list-item-actions"><button onClick={() => { handleSelectEstimate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
+                                <div className="list-item-actions"><button onClick={() => { handleSelectTemplate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
                             </div>))
                         }
                     </>)}
