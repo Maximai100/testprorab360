@@ -39,6 +39,7 @@ import { ReportsView } from './components/views/ReportsView';
 import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
+import { ListItem } from './components/ui/ListItem';
 
 const App: React.FC = () => {
     // Error boundary state

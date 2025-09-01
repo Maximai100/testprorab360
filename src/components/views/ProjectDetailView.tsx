@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
 import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp } from '../common/Icon';
+import { ListItem } from '../ui/ListItem';
 
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: ProjectFinancials, onProjectScratchpadChange: (projectId: string, content: string) => void, financeEntries: FinanceEntry[] }> = ({
@@ -144,14 +145,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         {projectFinances.length > 0 ? (
                             <div className="project-items-list">
                                 {projectFinances.map(f => (
-                                    <div key={f.id} className="list-item finance-item">
-                                        {f.receiptImage ? <img src={f.receiptImage} alt="чек" className="finance-receipt-thumb"/> : <IconCreditCard />}
-                                        <div className="list-item-info">
-                                            <strong>{f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}</strong>
-                                            <span className={f.type === 'expense' ? 'expense-value' : 'payment-value'}>{formatCurrency(f.amount)}</span>
-                                        </div>
-                                        <button onClick={() => onDeleteFinanceEntry(f.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
-                                    </div>
+                                    <ListItem
+                                      key={f.id}
+                                      iconName={f.type === 'income' ? 'arrow_downward' : 'arrow_upward'}
+                                      title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
+                                      subtitle={f.category}
+                                      amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
+                                      amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                      onDelete={() => onDeleteFinanceEntry(f.id)}
+                                    />
                                 ))}
                             </div>
                         ) : (
