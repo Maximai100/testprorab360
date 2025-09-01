@@ -263,6 +263,7 @@ const App: React.FC = () => {
     const [isPdfLoading, setIsPdfLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [draggingItem, setDraggingItem] = useState<number | null>(null);
+    const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
     const lastFocusedElement = useRef<HTMLElement | null>(null);
     const activeModalName = useRef<string | null>(null);
@@ -675,66 +676,202 @@ const App: React.FC = () => {
     const handleExportPDF = useCallback(async () => {
         setIsPdfLoading(true);
         tg?.HapticFeedback.notificationOccurred('warning');
+        
         try {
-            console.log('Starting export...');
+            console.log('Starting PDF export...');
             
-            // Простой экспорт через создание текстового файла
             const validItems = getValidItems();
             if (validItems.length === 0) {
                 safeShowAlert("Добавьте хотя бы одну позицию в смету.");
                 return;
             }
+
+            // Динамический импорт jsPDF для избежания проблем с модулями
+            const { jsPDF } = await import('jspdf');
             
-            console.log('Creating export content...');
+            // Импорт автотаблицы
+            const autoTable = (await import('jspdf-autotable')).default;
             
-            // Создаем содержимое для экспорта
-            let exportContent = '';
-            exportContent += `${companyProfile.name || 'Смета'}\n`;
-            exportContent += `${companyProfile.details || ''}\n\n`;
-            exportContent += `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}\n`;
-            exportContent += `Клиент / Объект: ${clientInfo}\n\n`;
-            exportContent += '№ | Наименование | Кол-во | Ед.изм. | Цена | Сумма\n';
-            exportContent += '---|--------------|--------|---------|------|-------\n';
+            console.log('Libraries loaded, creating PDF...');
             
-            validItems.forEach((item, index) => {
-                exportContent += `${index + 1} | ${item.name} | ${item.quantity} | ${item.unit || 'шт.'} | ${formatCurrency(item.price)} | ${formatCurrency(item.quantity * item.price)}\n`;
+            // Создаем новый PDF документ
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
             });
+
+            // Настройка шрифта для поддержки русского языка
+            doc.setFont('helvetica');
             
-            exportContent += '\n';
-            exportContent += `Подытог: ${formatCurrency(calculation.subtotal)}\n`;
+            let yPosition = 20;
+
+            // Заголовок компании
+            if (companyProfile.name) {
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyProfile.name, 20, yPosition);
+                yPosition += 10;
+            }
+
+            if (companyProfile.details) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                const detailsLines = doc.splitTextToSize(companyProfile.details, 170);
+                doc.text(detailsLines, 20, yPosition);
+                yPosition += detailsLines.length * 4 + 5;
+            }
+
+            // Заголовок сметы
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            const estimateTitle = `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}`;
+            doc.text(estimateTitle, 20, yPosition);
+            yPosition += 8;
+
+            // Информация о клиенте
+            if (clientInfo) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Клиент / Объект: ${clientInfo}`, 20, yPosition);
+                yPosition += 10;
+            }
+
+            // Подготовка данных для таблицы
+            const tableData = validItems.map((item, index) => [
+                (index + 1).toString(),
+                item.name,
+                item.quantity.toString(),
+                item.unit || 'шт.',
+                formatCurrency(item.price),
+                formatCurrency(item.quantity * item.price)
+            ]);
+
+            // Создание таблицы
+            (doc as any).autoTable({
+                startY: yPosition,
+                head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
+                body: tableData,
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                },
+                headStyles: {
+                    fillColor: [50, 50, 50],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 15 },
+                    1: { cellWidth: 70 },
+                    2: { halign: 'center', cellWidth: 20 },
+                    3: { halign: 'center', cellWidth: 20 },
+                    4: { halign: 'right', cellWidth: 25 },
+                    5: { halign: 'right', cellWidth: 30 }
+                },
+                margin: { left: 20, right: 20 }
+            });
+
+            // Получаем позицию после таблицы
+            const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+            // Итоговые расчеты
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            let summaryY = finalY;
+            const rightAlign = 190;
+            const labelAlign = 120;
+
+            // Подытог
+            doc.text('Подытог:', labelAlign, summaryY);
+            doc.text(formatCurrency(calculation.subtotal), rightAlign, summaryY, { align: 'right' });
+            summaryY += 6;
+
+            // Скидка
             if (calculation.discountAmount > 0) {
-                exportContent += `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}): -${formatCurrency(calculation.discountAmount)}\n`;
+                const discountLabel = `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}):`;
+                doc.text(discountLabel, labelAlign, summaryY);
+                doc.text(`-${formatCurrency(calculation.discountAmount)}`, rightAlign, summaryY, { align: 'right' });
+                summaryY += 6;
             }
+
+            // Налог
             if (calculation.taxAmount > 0) {
-                exportContent += `Налог (${tax}%): +${formatCurrency(calculation.taxAmount)}\n`;
+                doc.text(`Налог (${tax}%):`, labelAlign, summaryY);
+                doc.text(`+${formatCurrency(calculation.taxAmount)}`, rightAlign, summaryY, { align: 'right' });
+                summaryY += 6;
             }
-            exportContent += `Итого: ${formatCurrency(calculation.grandTotal)}\n`;
+
+            // Итого
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text('ИТОГО:', labelAlign, summaryY);
+            doc.text(formatCurrency(calculation.grandTotal), rightAlign, summaryY, { align: 'right' });
+
+            // Добавляем дату создания
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const currentDate = new Date().toLocaleDateString('ru-RU');
+            doc.text(`Документ создан: ${currentDate}`, 20, 280);
+
+            console.log('PDF created, saving...');
+
+            // Сохраняем PDF
+            doc.save(`смета-${estimateNumber}.pdf`);
             
-            console.log('Export content created, creating blob...');
-            
-            // Создаем blob и скачиваем
-            const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `смета-${estimateNumber}.txt`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            console.log('File downloaded successfully');
-            safeShowAlert('Смета экспортирована в текстовый файл');
+            console.log('PDF saved successfully');
+            safeShowAlert('PDF смета успешно создана и скачана!');
             
         } catch (error: any) {
-            console.error("Export failed:", error);
+            console.error("PDF Export failed:", error);
             console.error("Error details:", {
                 name: error.name,
                 message: error.message,
-                stack: error.stack,
-                cause: error.cause
+                stack: error.stack
             });
-            safeShowAlert(`Не удалось экспортировать смету: ${error.message}`);
+            
+            // Фоллбэк на текстовый экспорт
+            console.log('Falling back to text export...');
+            try {
+                const validItems = getValidItems();
+                let exportContent = '';
+                exportContent += `${companyProfile.name || 'Смета'}\n`;
+                exportContent += `${companyProfile.details || ''}\n\n`;
+                exportContent += `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}\n`;
+                exportContent += `Клиент / Объект: ${clientInfo}\n\n`;
+                exportContent += '№ | Наименование | Кол-во | Ед.изм. | Цена | Сумма\n';
+                exportContent += '---|--------------|--------|---------|------|-------\n';
+                
+                validItems.forEach((item, index) => {
+                    exportContent += `${index + 1} | ${item.name} | ${item.quantity} | ${item.unit || 'шт.'} | ${formatCurrency(item.price)} | ${formatCurrency(item.quantity * item.price)}\n`;
+                });
+                
+                exportContent += '\n';
+                exportContent += `Подытог: ${formatCurrency(calculation.subtotal)}\n`;
+                if (calculation.discountAmount > 0) {
+                    exportContent += `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}): -${formatCurrency(calculation.discountAmount)}\n`;
+                }
+                if (calculation.taxAmount > 0) {
+                    exportContent += `Налог (${tax}%): +${formatCurrency(calculation.taxAmount)}\n`;
+                }
+                exportContent += `Итого: ${formatCurrency(calculation.grandTotal)}\n`;
+                
+                const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `смета-${estimateNumber}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                safeShowAlert('PDF не удалось создать, экспортирован текстовый файл');
+            } catch (fallbackError) {
+                console.error('Fallback export also failed:', fallbackError);
+                safeShowAlert(`Не удалось экспортировать смету: ${error.message}`);
+            }
         } finally {
             setIsPdfLoading(false);
         }
@@ -1425,7 +1562,7 @@ const App: React.FC = () => {
                     isSaving={isSaving}
                     handleExportPDF={handleExportPDF}
                     handleShare={handleShare}
-                    handleNewEstimate={handleNewEstimate}
+                    onNewEstimate={handleNewEstimate}
                 />;
         }
     };
