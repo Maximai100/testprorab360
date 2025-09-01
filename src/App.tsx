@@ -38,7 +38,7 @@ import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ListItem } from './components/ui/ListItem';
-import { ProjectProvider } from './context/ProjectContext';
+import { ProjectProvider, useProjectContext } from './context/ProjectContext';
 
 const App: React.FC = () => {
     // Error boundary state
@@ -266,6 +266,8 @@ const App: React.FC = () => {
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
     // Состояние для отслеживания контекста перехода в "Мои документы"
 
+    // Получаем функцию управления контекстом проекта
+    const { setActiveProjectId: setContextActiveProjectId } = useProjectContext();
 
     const lastFocusedElement = useRef<HTMLElement | null>(null);
     const activeModalName = useRef<string | null>(null);
@@ -1889,6 +1891,13 @@ const getWorkStageStatusText = (status: string): string => {
         return themeMode === 'light' ? <IconSun /> : <IconMoon />;
     }, [themeMode]);
 
+    // Функция для выбора проекта с установкой контекста
+    const handleSelectProject = useCallback((projectId: string) => {
+        setActiveProjectId(projectId); // старое состояние
+        setContextActiveProjectId(projectId); // устанавливаем контекст
+        setActiveView('projectDetail');
+    }, [setActiveProjectId, setContextActiveProjectId]);
+
     const renderView = () => {
         switch (activeView) {
             case 'workspace':
@@ -1913,7 +1922,7 @@ const getWorkStageStatusText = (status: string): string => {
                     handleInputFocus={handleInputFocus}
                     filteredProjects={filteredProjects}
                     projects={projects}
-                    setActiveProjectId={setActiveProjectId}
+                    setActiveProjectId={handleSelectProject}
                     setActiveView={setActiveView}
                 />;
             case 'projectDetail':
@@ -1933,7 +1942,7 @@ const getWorkStageStatusText = (status: string): string => {
                     formatCurrency={formatCurrency}
                     statusMap={statusMap}
                     setActiveView={setActiveView}
-                    setActiveProjectId={setActiveProjectId}
+                    setActiveProjectId={handleSelectProject}
                     handleOpenProjectModal={handleOpenProjectModal}
                     handleDeleteProject={handleDeleteProject}
                     handleLoadEstimate={handleLoadEstimate}
@@ -2128,6 +2137,7 @@ const getWorkStageStatusText = (status: string): string => {
                         // Если переходим в смету из другого экрана, создаем новую
                         // При переходе в блок сметы сбрасываем привязку к проекту и активный проект
                         setActiveProjectId(null); // Сбрасываем активный проект при переходе в блок смет
+                        setContextActiveProjectId(null); // очищаем контекст
                         setActiveView('estimate');
                         handleNewEstimate();
                     }
