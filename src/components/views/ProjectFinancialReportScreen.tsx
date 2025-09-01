@@ -177,32 +177,123 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
           </h3>
           
           <div style={{ display: 'grid', gap: 'var(--spacing-m)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <div className="metric-card">
-              <div className="metric-label">Общая сумма смет</div>
-              <div className="metric-value">{formatCurrency(totalEstimatesAmount)}</div>
-            </div>
-            
-            <div className="metric-card">
-              <div className="metric-label">Всего доходов</div>
-              <div className="metric-value income">{formatCurrency(totalIncome)}</div>
-            </div>
-            
-            <div className="metric-card">
-              <div className="metric-label">Всего расходов</div>
-              <div className="metric-value expense">{formatCurrency(totalExpenses)}</div>
-            </div>
-            
-            <div className="metric-card">
-              <div className="metric-label">Итоговая прибыль</div>
-              <div className={`metric-value ${profit >= 0 ? 'income' : 'expense'}`}>
-                {formatCurrency(profit)}
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(totalEstimatesAmount)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Общая сумма смет
               </div>
             </div>
             
-            <div className="metric-card">
-              <div className="metric-label">Рентабельность</div>
-              <div className={`metric-value ${profitability >= 0 ? 'income' : 'expense'}`}>
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: 'var(--color-primary)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(totalIncome)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Всего доходов
+              </div>
+            </div>
+            
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: 'var(--color-danger)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(totalExpenses)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Всего расходов
+              </div>
+            </div>
+            
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(profit)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Итоговая прибыль
+              </div>
+            </div>
+            
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: profitability >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
                 {profitability.toFixed(1)}%
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Рентабельность
               </div>
             </div>
           </div>

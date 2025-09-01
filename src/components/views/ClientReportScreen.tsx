@@ -102,21 +102,76 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
           </h3>
 
           <div style={{ display: 'grid', gap: 'var(--spacing-m)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <div className="metric-card">
-              <div className="metric-label">Итоговая сумма по смете</div>
-              <div className="metric-value">{formatCurrency(totalEstimateAmount)}</div>
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(totalEstimateAmount)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Итоговая сумма по смете
+              </div>
             </div>
 
-            <div className="metric-card">
-              <div className="metric-label">Оплачено клиентом</div>
-              <div className="metric-value income">{formatCurrency(totalPaidByClient)}</div>
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: 'var(--color-primary)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
+                {formatCurrency(totalPaidByClient)}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Оплачено клиентом
+              </div>
             </div>
 
-            <div className="metric-card">
-              <div className="metric-label">Остаток к оплате</div>
-              <div className={`metric-value ${remainingToPay > 0 ? 'expense' : 'income'}`}>
+            <div style={{
+              backgroundColor: 'var(--color-surface-2)',
+              borderRadius: 'var(--border-radius-m)',
+              padding: 'var(--spacing-l)',
+              textAlign: 'center',
+              border: '1px solid var(--color-separator)'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-xxl)',
+                fontWeight: '700',
+                color: remainingToPay > 0 ? 'var(--color-danger)' : 'var(--color-success)',
+                marginBottom: 'var(--spacing-s)'
+              }}>
                 {formatCurrency(Math.abs(remainingToPay))}
                 {remainingToPay > 0 ? ' (к оплате)' : ' (оплачено полностью)'}
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-s)',
+                color: 'var(--color-text-secondary)',
+                fontWeight: '500'
+              }}>
+                Остаток к оплате
               </div>
             </div>
           </div>
