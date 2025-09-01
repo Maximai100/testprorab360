@@ -83,24 +83,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <h3>Кэшфлоу</h3>
                     </div>
                     <div className="project-section-body">
-                        <div className="cashflow-list">
+                        <div className="project-items-list">
                             {financials.cashFlowEntries.map((entry, index) => (
-                                <div key={index} className="cashflow-item">
-                                    <div className="cashflow-date">
-                                        {new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
-                                    </div>
-                                    <div className="cashflow-type">
-                                        <span className={entry.type === 'income' ? 'income-color' : 'expense-color'}>
-                                            {entry.type === 'income' ? 'Приход' : 'Расход'}
-                                        </span>
-                                    </div>
-                                    <div className="cashflow-amount-details">
-                                        <span className={`amount ${entry.type === 'income' ? 'income-color' : 'expense-color'}`}>
-                                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
-                                        </span>
-                                        <span className="description">({entry.description || 'Без описания'})</span>
-                                    </div>
-                                </div>
+                                <ListItem
+                                    key={index}
+                                    iconName={entry.type === 'income' ? 'arrow_downward' : 'arrow_upward'}
+                                    iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
+                                    title={entry.description || (entry.type === 'income' ? 'Приход' : 'Расход')}
+                                    subtitle={new Date(entry.date).toLocaleString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'})}
+                                    amountText={`${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount)}`}
+                                    amountColor={entry.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                />
                             ))}
                         </div>
                     </div>
@@ -228,17 +221,18 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         {projectDocuments.length > 0 ? (
                              <div className="project-items-list">
                                 {projectDocuments.map(doc => (
-                                    <div key={doc.id} className="list-item document-item">
-                                        <IconPaperclip />
-                                        <div className="list-item-info">
-                                            <strong>{doc.name}</strong>
-                                            <span>{new Date(doc.date).toLocaleDateString('ru-RU')}</span>
-                                        </div>
-                                        <div className="list-item-actions">
-                                            <a href={doc.fileUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
-                                            <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
-                                        </div>
-                                    </div>
+                                    <ListItem
+                                        key={doc.id}
+                                        iconName="paperclip"
+                                        title={doc.name}
+                                        subtitle={new Date(doc.date).toLocaleDateString('ru-RU')}
+                                        actions={
+                                            <>
+                                                <a href={doc.fileUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
+                                                <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
+                                            </>
+                                        }
+                                    />
                                 ))}
                             </div>
                         ) : (

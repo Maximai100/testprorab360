@@ -30,7 +30,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave }) =
             // Or show an alert
             return;
         }
-        onSave({ name, location: 'На базе', condition });
+        onSave({ name, location: 'on_base', condition });
         onClose();
     };
 

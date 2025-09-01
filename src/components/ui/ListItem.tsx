@@ -12,6 +12,7 @@ type ListItemProps = {
   amountColor?: string;
   onDelete?: () => void;
   onClick?: () => void;
+  actions?: React.ReactNode;
 };
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -43,15 +44,21 @@ export const ListItem: React.FC<ListItemProps> = ({
       </div>
 
       <div className="list-item-actions">
-        {amountText && (
-          <span className="list-item-amount" style={{ color: amountColor }}>
-            {amountText}
-          </span>
-        )}
-        {onDelete && (
-          <button className="list-item-delete-button" onClick={handleDeleteClick}>
-            <Icon name="delete" />
-          </button>
+        {actions ? (
+          actions
+        ) : (
+          <>
+            {amountText && (
+              <span className="list-item-amount" style={{ color: amountColor }}>
+                {amountText}
+              </span>
+            )}
+            {onDelete && (
+              <button className="list-item-delete-button" onClick={handleDeleteClick}>
+                <Icon name="delete" />
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

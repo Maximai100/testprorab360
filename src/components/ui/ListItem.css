@@ -24,6 +24,7 @@
   height: 40px;
   border-radius: 50%;
   background-color: var(--color-surface-2); /* Цвет фона по умолчанию */
+  color: var(--color-text-primary);
 }
 
 .list-item-details {
