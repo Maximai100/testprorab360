@@ -770,10 +770,22 @@ const createPrintableHTML = (): string => {
         }
         
         .header {
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 20px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
+        }
+        
+        .header-left {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .header-right {
+            flex: 1;
+            text-align: right;
         }
         
         .logo-container {
@@ -801,13 +813,14 @@ const createPrintableHTML = (): string => {
         .estimate-title {
             font-size: 16px;
             font-weight: bold;
-            margin: 15px 0;
-            text-align: left;
+            margin: 0 0 15px 0;
+            text-align: right;
         }
         
         .client-info {
-            margin-bottom: 20px;
+            margin-bottom: 0;
             font-size: 11px;
+            text-align: right;
         }
         
         table {
@@ -876,16 +889,18 @@ const createPrintableHTML = (): string => {
 </head>
 <body>
     <div class="header">
-        ${companyProfile.logo ? `<div class="logo-container"><img src="${companyProfile.logo}" alt="Логотип компании" class="company-logo" /></div>` : ''}
-        ${companyProfile.name ? `<div class="company-name">${companyProfile.name}</div>` : ''}
-        ${companyProfile.details ? `<div class="company-details">${companyProfile.details}</div>` : ''}
+        <div class="header-left">
+            ${companyProfile.logo ? `<div class="logo-container"><img src="${companyProfile.logo}" alt="Логотип компании" class="company-logo" /></div>` : ''}
+            ${companyProfile.name ? `<div class="company-name">${companyProfile.name}</div>` : ''}
+            ${companyProfile.details ? `<div class="company-details">${companyProfile.details}</div>` : ''}
+        </div>
+        <div class="header-right">
+            <div class="estimate-title">
+                Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}
+            </div>
+            ${clientInfo ? `<div class="client-info">Клиент / Объект: ${clientInfo}</div>` : ''}
+        </div>
     </div>
-    
-    <div class="estimate-title">
-        Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}
-    </div>
-    
-    ${clientInfo ? `<div class="client-info">Клиент / Объект: ${clientInfo}</div>` : ''}
     
     <table>
         <thead>
