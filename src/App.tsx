@@ -1356,14 +1356,21 @@ const getWorkStageStatusText = (status: string): string => {
 
     // Функция удаления сметы из проекта (отвязка от проекта, не удаление)
     const handleDeleteProjectEstimate = (id: string) => {
+        console.log('handleDeleteProjectEstimate вызвана с id:', id);
+        console.log('Текущие сметы:', estimates);
+        console.log('activeProjectId:', activeProjectId);
+        
         safeShowConfirm("Вы уверены, что хотите отвязать эту смету от проекта?", (ok) => {
             if (ok) {
+                console.log('Пользователь подтвердил удаление сметы из проекта');
                 tg?.HapticFeedback?.notificationOccurred?.('warning');
                 
                 // Отвязываем смету от проекта, но не удаляем её полностью
                 const newEstimates = estimates.map(e => 
                     e.id === id ? { ...e, projectId: null, updatedAt: new Date().toISOString() } : e
                 );
+                console.log('Новые сметы после отвязки:', newEstimates);
+                
                 setEstimates(newEstimates);
                 
                 // Если отвязываемая смета была активной, загружаем другую
@@ -1379,6 +1386,9 @@ const getWorkStageStatusText = (status: string): string => {
                 
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId }));
                 safeShowAlert('Смета отвязана от проекта');
+                console.log('Смета успешно отвязана от проекта');
+            } else {
+                console.log('Пользователь отменил удаление сметы из проекта');
             }
         });
     };

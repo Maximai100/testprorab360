@@ -152,7 +152,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                         </span>
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
-                                    onDelete={() => handleDeleteProjectEstimate(est.id)}
+                                    onDelete={() => {
+                                        console.log('onDelete вызван для сметы:', est.id);
+                                        handleDeleteProjectEstimate(est.id);
+                                    }}
                                 />
                             )) : (
                                 <div className="empty-state-container">
