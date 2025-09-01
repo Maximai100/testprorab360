@@ -1344,6 +1344,7 @@ const getWorkStageStatusText = (status: string): string => {
                 console.log('handleLoadEstimate: estimateToLoad.projectId =', estimateToLoad.projectId);
                 console.log('handleLoadEstimate: будет ли смета привязана к проекту?', !!projectIdForEstimate);
                 console.log('handleLoadEstimate: контекст перехода - из проекта или из блока сметы?', activeView === 'projectDetail' ? 'ИЗ ПРОЕКТА' : 'ИЗ БЛОКА СМЕТЫ');
+                console.log('handleLoadEstimate: cameFromProject =', cameFromProject);
                 
                 // Если смета привязывается к проекту, обновляем её в базе данных
                 if (projectIdForEstimate && estimateToLoad.projectId !== projectIdForEstimate) {
@@ -1395,6 +1396,7 @@ const getWorkStageStatusText = (status: string): string => {
                     // НЕ привязываем если переходим из блока сметы (cameFromProject === false)
                     const projectIdForEstimate = (activeView === 'projectDetail' || cameFromProject) ? activeProjectId : null;
                     console.log('handleDeleteEstimate: projectIdForEstimate =', projectIdForEstimate);
+                    console.log('handleDeleteEstimate: cameFromProject =', cameFromProject);
                     populateForm(estimateToLoad, newEstimates, projectIdForEstimate);
                 }
                 localStorage.setItem('estimatesData', JSON.stringify({ estimates: newEstimates, activeEstimateId: newActiveId }));
@@ -1936,6 +1938,7 @@ const getWorkStageStatusText = (status: string): string => {
                     onProjectScratchpadChange={handleProjectScratchpadChange}
                     onExportWorkSchedulePDF={handleExportWorkSchedulePDF}
                     onOpenEstimatesListModal={() => {
+                        console.log('ProjectDetailView: устанавливаем cameFromProject = true');
                         setCameFromProject(true);
                         openModal(setIsEstimatesListOpen, 'estimatesList');
                     }}
@@ -2016,7 +2019,11 @@ const getWorkStageStatusText = (status: string): string => {
                     themeIcon={themeIcon}
                     themeMode={themeMode}
                     onOpenLibraryModal={() => openModal(setIsLibraryOpen, 'library')}
-                    onOpenEstimatesListModal={() => openModal(setIsEstimatesListOpen, 'estimatesList')}
+                    onOpenEstimatesListModal={() => {
+                        console.log('EstimateView: устанавливаем cameFromProject = false');
+                        setCameFromProject(false);
+                        openModal(setIsEstimatesListOpen, 'estimatesList');
+                    }}
                     onOpenSettingsModal={() => openModal(setIsSettingsOpen, 'settings')}
                     onOpenAISuggestModal={() => openModal(setIsAISuggestModalOpen, 'aiSuggest')}
                     estimateNumber={estimateNumber}
@@ -2084,6 +2091,7 @@ const getWorkStageStatusText = (status: string): string => {
                     <button onClick={handleThemeChange} className="header-btn" title={`Тема: ${themeMode}`}>{themeIcon()}</button>
                     <button onClick={() => openModal(setIsLibraryOpen, 'library')} className="header-btn"><IconBook/></button>
                     <button onClick={() => {
+                        console.log('Header: устанавливаем cameFromProject = false');
                         setCameFromProject(false);
                         openModal(setIsEstimatesListOpen, 'estimatesList');
                     }} className="header-btn"><IconFolder/></button>
