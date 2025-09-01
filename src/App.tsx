@@ -776,6 +776,16 @@ const createPrintableHTML = (): string => {
             padding-bottom: 10px;
         }
         
+        .logo-container {
+            margin-bottom: 15px;
+        }
+        
+        .company-logo {
+            max-width: 100px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+        
         .company-name {
             font-size: 18px;
             font-weight: bold;
@@ -865,6 +875,7 @@ const createPrintableHTML = (): string => {
 </head>
 <body>
     <div class="header">
+        ${companyProfile.logo ? `<div class="logo-container"><img src="${companyProfile.logo}" alt="Логотип компании" class="company-logo" /></div>` : ''}
         ${companyProfile.name ? `<div class="company-name">${companyProfile.name}</div>` : ''}
         ${companyProfile.details ? `<div class="company-details">${companyProfile.details}</div>` : ''}
     </div>
@@ -1934,7 +1945,11 @@ const getWorkStageStatusText = (status: string): string => {
         <div className="app-container" aria-hidden={isAnyModalOpen}>
             <header className="app-header">
                 <div className="app-header-left">
-                    <img src="/logo.png" alt="Логотип" className="app-logo" />
+                    {companyProfile.logo ? (
+                        <img src={companyProfile.logo} alt="Логотип компании" className="app-logo" />
+                    ) : (
+                        <img src="/logo.png" alt="Логотип" className="app-logo" />
+                    )}
                     <h1>Прораб</h1>
                 </div>
                 <div className="app-header-right">
