@@ -1,12 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { WorkStageModalProps } from '../../types';
+import { WorkStageModalProps, WorkStageStatus } from '../../types';
 import { IconClose } from '../common/Icon';
 
 export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, onSave, showAlert }) => {
     const [title, setTitle] = useState(stage?.title || '');
     const [startDate, setStartDate] = useState(stage?.startDate || new Date().toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(stage?.endDate || new Date().toISOString().split('T')[0]);
+    const [status, setStatus] = useState<WorkStageStatus>(stage?.status || 'planned');
+    const [progress, setProgress] = useState(stage?.progress || 0);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    // Автоматически обновляем статус при достижении 100% прогресса
+    useEffect(() => {
+        if (progress === 100 && status !== 'completed') {
+            setStatus('completed');
+        }
+    }, [progress, status]);
 
     useEffect(() => {
         if (modalRef.current) {
@@ -33,7 +42,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
             showAlert('Дата начала не может быть позже даты окончания.');
             return;
         }
-        onSave({ title: title.trim(), startDate, endDate });
+        onSave({ title: title.trim(), startDate, endDate, status, progress });
     };
 
     return (
@@ -50,6 +59,33 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     <label>Дата окончания</label>
                     <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    
+                    <label>Статус этапа</label>
+                    <select value={status} onChange={(e) => setStatus(e.target.value as WorkStageStatus)}>
+                        <option value="planned">Запланирован</option>
+                        <option value="in_progress">В работе</option>
+                        <option value="completed">Завершен</option>
+                    </select>
+                    
+                    <label>Прогресс выполнения</label>
+                    <div className="progress-input-container">
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={progress} 
+                            onChange={(e) => setProgress(Number(e.target.value))}
+                            className="progress-slider"
+                        />
+                        <span className="progress-value">{progress}%</span>
+                    </div>
+                    
+                    {/* Автоматическое обновление статуса при 100% прогрессе */}
+                    {progress === 100 && status !== 'completed' && (
+                        <div className="auto-status-update">
+                            <small>💡 Прогресс 100% - статус автоматически изменится на "Завершен"</small>
+                        </div>
+                    )}
                 </div>
                 <div className="modal-footer">
                     <button onClick={handleSave} className="btn btn-primary">Сохранить</button>

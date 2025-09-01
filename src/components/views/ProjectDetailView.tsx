@@ -26,6 +26,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
         return totalAfterDiscount + taxAmount;
     }, []);
 
+    // Вспомогательная функция для статусов этапов работ
+    const getWorkStageStatusText = useCallback((status: string): string => {
+        const statusMap: Record<string, string> = {
+            'planned': 'Запланирован',
+            'in_progress': 'В работе',
+            'completed': 'Завершен'
+        };
+        return statusMap[status] || status;
+    }, []);
+
 
     return (
         <>
@@ -224,9 +234,22 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                             icon={<IconCalendar />}
                                             title={stage.title || 'Название не указано'}
                                             subtitle={
-                                                (stage.startDate && stage.endDate)
-                                                    ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
-                                                    : 'Даты не указаны'
+                                                <div className="work-stage-details">
+                                                    <div className="work-stage-dates">
+                                                        {(stage.startDate && stage.endDate)
+                                                            ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
+                                                            : 'Даты не указаны'
+                                                        }
+                                                    </div>
+                                                    <div className="work-stage-status">
+                                                        <span className={`status-badge status-${stage.status || 'planned'}`}>
+                                                            {getWorkStageStatusText(stage.status || 'planned')}
+                                                        </span>
+                                                        <span className="progress-indicator">
+                                                            {stage.progress || 0}%
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             }
                                             onClick={() => onOpenWorkStageModal(stage)}
                                             onDelete={() => onDeleteWorkStage(stage.id)}
