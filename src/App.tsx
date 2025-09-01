@@ -676,145 +676,65 @@ const App: React.FC = () => {
         setIsPdfLoading(true);
         tg?.HapticFeedback.notificationOccurred('warning');
         try {
-            console.log('Starting PDF export...');
+            console.log('Starting export...');
             
-            // Динамический импорт jsPDF
-            console.log('Importing jsPDF...');
-            const { jsPDF } = await import('jspdf');
-            console.log('jsPDF imported successfully');
-            
-            console.log('Importing jspdf-autotable...');
-            await import('jspdf-autotable');
-            console.log('jspdf-autotable imported successfully');
-            
-                        const doc = new jsPDF();
-            console.log('jsPDF instance created successfully');
-            
-            // Проверяем, что autoTable доступен
-            if (!(doc as any).autoTable) {
-                throw new Error('autoTable plugin not loaded');
-            }
-            console.log('autoTable plugin is available');
-            
+            // Простой экспорт через создание текстового файла
             const validItems = getValidItems();
             if (validItems.length === 0) {
                 safeShowAlert("Добавьте хотя бы одну позицию в смету.");
                 return;
             }
-        
-            doc.setFont('helvetica');
-        
-            let y = 15;
-            const pageMargin = 15;
-            const pageWidth = doc.internal.pageSize.getWidth();
-        
-            if (companyProfile.logo) {
-                try {
-                    doc.addImage(companyProfile.logo, 'JPEG', pageMargin, y, 30, 30);
-                } catch (e) { console.error("Could not add logo to PDF:", e); }
-            }
             
-            doc.setFontSize(20);
-            doc.text(companyProfile.name || 'Смета', pageWidth - pageMargin, y + 5, { align: 'right' });
-            doc.setFontSize(10);
-            doc.text(companyProfile.details || '', pageWidth - pageMargin, y + 15, { align: 'right', maxWidth: 80 });
-            y += 45;
-        
-            doc.setFontSize(16);
-            doc.text(`Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}`, pageMargin, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.text(`Клиент / Объект: ${clientInfo}`, pageMargin, y);
-            y += 15;
+            console.log('Creating export content...');
             
-            const tableData = validItems.map((item, index) => [
-                index + 1,
-                item.name,
-                item.quantity,
-                item.unit || 'шт.',
-                formatCurrency(item.price),
-                formatCurrency(item.quantity * item.price),
-            ]);
-        
-            (doc as any).autoTable({
-                startY: y,
-                head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
-                body: tableData,
-                theme: 'grid',
-                headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'helvetica' },
-                bodyStyles: { font: 'helvetica' },
-                didDrawPage: (data: any) => y = data.cursor.y,
+            // Создаем содержимое для экспорта
+            let exportContent = '';
+            exportContent += `${companyProfile.name || 'Смета'}\n`;
+            exportContent += `${companyProfile.details || ''}\n\n`;
+            exportContent += `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}\n`;
+            exportContent += `Клиент / Объект: ${clientInfo}\n\n`;
+            exportContent += '№ | Наименование | Кол-во | Ед.изм. | Цена | Сумма\n';
+            exportContent += '---|--------------|--------|---------|------|-------\n';
+            
+            validItems.forEach((item, index) => {
+                exportContent += `${index + 1} | ${item.name} | ${item.quantity} | ${item.unit || 'шт.'} | ${formatCurrency(item.price)} | ${formatCurrency(item.quantity * item.price)}\n`;
             });
             
-            y = (doc as any).autoTable.previous.finalY + 15;
-        
-            const totalsX = pageWidth - pageMargin;
-            doc.setFontSize(12);
-            doc.text(`Подытог: ${formatCurrency(calculation.subtotal)}`, totalsX, y, { align: 'right' });
-            y += 7;
+            exportContent += '\n';
+            exportContent += `Подытог: ${formatCurrency(calculation.subtotal)}\n`;
             if (calculation.discountAmount > 0) {
-                doc.text(`Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}): -${formatCurrency(calculation.discountAmount)}`, totalsX, y, { align: 'right' });
-                y += 7;
+                exportContent += `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}): -${formatCurrency(calculation.discountAmount)}\n`;
             }
             if (calculation.taxAmount > 0) {
-                doc.text(`Налог (${tax}%): +${formatCurrency(calculation.taxAmount)}`, totalsX, y, { align: 'right' });
-                y += 7;
+                exportContent += `Налог (${tax}%): +${formatCurrency(calculation.taxAmount)}\n`;
             }
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Итого: ${formatCurrency(calculation.grandTotal)}`, totalsX, y + 2, { align: 'right' });
-            doc.setFont('helvetica', 'normal');
+            exportContent += `Итого: ${formatCurrency(calculation.grandTotal)}\n`;
             
-            const images = validItems.filter(item => item.image);
-            if (images.length > 0) {
-                doc.addPage();
-                let imageY = 15;
-                doc.setFontSize(16);
-                doc.text('Прикрепленные изображения', pageMargin, imageY);
-                imageY += 10;
-                
-                for (const item of images) {
-                    if (!item.image) continue;
-                    doc.setFontSize(10);
-                    doc.text(`Позиция #${validItems.findIndex(i => i.id === item.id) + 1}: ${item.name}`, pageMargin, imageY);
-                    imageY += 5;
-                    try {
-                        const imgProps = doc.getImageProperties(item.image);
-                        const aspect = imgProps.width / imgProps.height;
-                        const maxWidth = pageWidth - pageMargin * 2;
-                        const maxHeight = 80;
-                        let imgWidth = maxWidth;
-                        let imgHeight = imgWidth / aspect;
-                        if (imgHeight > maxHeight) {
-                            imgHeight = maxHeight;
-                            imgWidth = imgHeight * aspect;
-                        }
-                        if (imageY + imgHeight > doc.internal.pageSize.getHeight() - pageMargin) {
-                            doc.addPage();
-                            imageY = pageMargin;
-                        }
-                        doc.addImage(item.image, 'JPEG', pageMargin, imageY, imgWidth, imgHeight);
-                        imageY += imgHeight + 10;
-                    } catch (e) {
-                        console.error("Could not add item image to PDF:", e);
-                        doc.setTextColor(150);
-                        doc.text('Не удалось загрузить изображение.', pageMargin, imageY);
-                        doc.setTextColor(0);
-                        imageY += 10;
-                    }
-                }
-            }
-        
-            doc.save(`смета-${estimateNumber}.pdf`);
+            console.log('Export content created, creating blob...');
+            
+            // Создаем blob и скачиваем
+            const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `смета-${estimateNumber}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log('File downloaded successfully');
+            safeShowAlert('Смета экспортирована в текстовый файл');
+            
         } catch (error: any) {
-            console.error("PDF Export failed:", error);
+            console.error("Export failed:", error);
             console.error("Error details:", {
                 name: error.name,
                 message: error.message,
                 stack: error.stack,
                 cause: error.cause
             });
-            safeShowAlert(`Не удалось создать PDF: ${error.message}`);
+            safeShowAlert(`Не удалось экспортировать смету: ${error.message}`);
         } finally {
             setIsPdfLoading(false);
         }
