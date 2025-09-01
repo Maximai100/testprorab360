@@ -40,6 +40,7 @@ import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ReportsHubScreen } from './components/views/ReportsHubScreen';
 import { ProjectFinancialReportScreen } from './components/views/ProjectFinancialReportScreen';
 import { ClientReportScreen } from './components/views/ClientReportScreen';
+import { OverallFinancialReportScreen } from './components/views/OverallFinancialReportScreen';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
 
@@ -106,7 +107,7 @@ const App: React.FC = () => {
     }
 
     // --- App Navigation State ---
-    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'projectFinancialReport' | 'clientReport' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
+    const [activeView, setActiveView] = useState<'workspace' | 'estimate' | 'projects' | 'projectDetail' | 'inventory' | 'reports' | 'projectFinancialReport' | 'clientReport' | 'overallFinancialReport' | 'scratchpad' | 'projectTasks' | 'allTasks' | 'inventoryList' | 'toolDetails'>('workspace');
 
     // --- Data State ---
     const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -2046,6 +2047,9 @@ const getWorkStageStatusText = (status: string): string => {
                             setClientReportProject(project);
                             setActiveView('clientReport');
                         }}
+                        onOpenOverallReport={() => {
+                            setActiveView('overallFinancialReport');
+                        }}
                     />;
             case 'projectFinancialReport':
                 if (!reportProject) {
@@ -2070,6 +2074,15 @@ const getWorkStageStatusText = (status: string): string => {
                     estimates={estimates}
                     financeEntries={financeEntries}
                     workStages={workStages}
+                    formatCurrency={formatCurrency}
+                    onBack={() => setActiveView('reports')}
+                />;
+            
+            case 'overallFinancialReport':
+                return <OverallFinancialReportScreen
+                    projects={projects}
+                    estimates={estimates}
+                    financeEntries={financeEntries}
                     formatCurrency={formatCurrency}
                     onBack={() => setActiveView('reports')}
                 />;

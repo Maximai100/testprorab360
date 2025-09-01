@@ -7,10 +7,11 @@ import { ProjectSelectionModal } from '../modals/ProjectSelectionModal';
 interface ReportsHubScreenProps {
   onOpenProjectReport: (project: Project) => void;
   onOpenClientReport: (project: Project) => void;
+  onOpenOverallReport: () => void;
   projects: Project[];
 }
 
-export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport, onOpenClientReport, projects }) => {
+export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjectReport, onOpenClientReport, onOpenOverallReport, projects }) => {
   const [isProjectReportModalOpen, setIsProjectReportModalOpen] = useState(false);
   const [isClientReportModalOpen, setIsClientReportModalOpen] = useState(false);
 
@@ -23,8 +24,7 @@ export const ReportsHubScreen: React.FC<ReportsHubScreenProps> = ({ onOpenProjec
   };
 
   const handleOverallReportClick = () => {
-    // TODO: Implement navigation to overall report screen
-    alert('Скоро здесь будет общий финансовый отчет');
+    onOpenOverallReport();
   };
 
   return (
