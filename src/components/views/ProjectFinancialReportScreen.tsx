@@ -2,6 +2,7 @@ import React from 'react';
 import { Project, FinanceEntry } from '../../types';
 import { ListItem } from '../ui/ListItem';
 import { IconTrendingUp, IconCreditCard, IconChevronRight } from '../common/Icon';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface ProjectFinancialReportScreenProps {
   project: Project;
@@ -48,6 +49,21 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
       acc[category] = (acc[category] || 0) + entry.amount;
       return acc;
     }, {} as Record<string, number>);
+
+  // Подготавливаем данные для круговой диаграммы
+  const pieChartData = Object.entries(expensesByCategory).map(([category, amount]) => ({
+    name: category,
+    value: amount
+  }));
+
+  // Цвета для секторов диаграммы (из дизайн-токенов)
+  const chartColors = [
+    'var(--color-danger)',           // Красный для расходов
+    'var(--color-primary)',          // Синий
+    'var(--color-success)',          // Зеленый
+    'var(--color-text-secondary)',   // Серый
+    'var(--color-surface-2)',        // Темно-серый
+  ];
 
   return (
     <>
@@ -108,19 +124,59 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
           </h3>
           
           {Object.keys(expensesByCategory).length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-s)' }}>
-              {Object.entries(expensesByCategory)
-                .sort(([,a], [,b]) => b - a) // Сортируем по убыванию
-                .map(([category, amount]) => (
-                  <ListItem
-                    key={category}
-                    icon={<IconCreditCard />}
-                    title={category}
-                    amountText={formatCurrency(amount)}
-                    amountColor="var(--color-error)"
+            <>
+              {/* Круговая диаграмма расходов */}
+              <div style={{ marginBottom: 'var(--spacing-l)', display: 'flex', justifyContent: 'center' }}>
+                <PieChart width={300} height={250}>
+                  <Pie
+                    data={pieChartData}
+                    cx={150}
+                    cy={125}
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={chartColors[index % chartColors.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), 'Сумма']}
+                    labelFormatter={(label: string) => `Категория: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'var(--color-surface-1)',
+                      border: '1px solid var(--color-separator)',
+                      borderRadius: 'var(--border-radius-s)',
+                      color: 'var(--color-text-primary)'
+                    }}
                   />
-                ))}
-            </div>
+                  <Legend 
+                    formatter={(value: string) => (
+                      <span style={{ color: 'var(--color-text-primary)' }}>{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </div>
+
+              {/* Список расходов по категориям */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-s)' }}>
+                {Object.entries(expensesByCategory)
+                  .sort(([,a], [,b]) => b - a) // Сортируем по убыванию
+                  .map(([category, amount]) => (
+                    <ListItem
+                      key={category}
+                      icon={<IconCreditCard />}
+                      title={category}
+                      amountText={formatCurrency(amount)}
+                      amountColor="var(--color-danger)"
+                    />
+                  ))}
+              </div>
+            </>
           ) : (
             <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: 'var(--spacing-l)' }}>
               Расходы не найдены
