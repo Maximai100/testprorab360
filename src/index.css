@@ -899,6 +899,35 @@ body.dark-theme .bottom-nav {
     align-items: center;
     padding: 16px 16px 12px 16px;
 }
+
+.project-section-header.collapsible-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.project-section-header.collapsible-header:hover {
+    background-color: var(--color-surface-2);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.project-section-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-section-body.collapsed {
+    display: none;
+}
+
+.collapsed-indicator {
+    text-align: center;
+    padding: 12px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 8px;
+}
 .project-section-header h3 {
     font-size: 18px;
     font-weight: 600;

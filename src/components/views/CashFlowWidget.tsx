@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ProjectFinancials } from '../../types';
+import { IconChevronRight, IconChevronDown } from '../common/Icon';
 
 interface CashFlowWidgetProps {
     financials: ProjectFinancials;
@@ -7,15 +8,30 @@ interface CashFlowWidgetProps {
 }
 
 export const CashFlowWidget: React.FC<CashFlowWidgetProps> = ({ financials, formatCurrency }) => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    const toggleCollapse = () => {
+        setIsCollapsed(!isCollapsed);
+    };
+
+    const displayedEntries = isCollapsed 
+        ? financials.cashFlowEntries.slice(0, 3) 
+        : financials.cashFlowEntries;
+
+    const hasMoreEntries = isCollapsed && financials.cashFlowEntries.length > 3;
+
     return (
         <div className="card project-section">
-            <div className="project-section-header">
+            <div className="project-section-header collapsible-header" onClick={toggleCollapse}>
                 <h3>Кэшфлоу</h3>
+                <div className="header-actions">
+                    {isCollapsed ? <IconChevronRight /> : <IconChevronDown />}
+                </div>
             </div>
-            <div className="project-section-body">
+            <div className={`project-section-body ${isCollapsed ? 'collapsed' : ''}`}>
                 {financials.cashFlowEntries.length > 0 ? (
                     <div className="cashflow-list">
-                        {financials.cashFlowEntries.map((entry, index) => (
+                        {displayedEntries.map((entry, index) => (
                             <div key={index} className="cashflow-item">
                                 <div className="cashflow-date">
                                     {new Date(entry.date).toLocaleDateString('ru-RU', { 
@@ -38,6 +54,11 @@ export const CashFlowWidget: React.FC<CashFlowWidgetProps> = ({ financials, form
                                 </div>
                             </div>
                         ))}
+                        {hasMoreEntries && (
+                            <div className="collapsed-indicator">
+                                <span>... и еще {financials.cashFlowEntries.length - 3} транзакций</span>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="empty-list-message">

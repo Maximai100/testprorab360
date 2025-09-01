@@ -1,6 +1,6 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 
 
@@ -15,6 +15,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
     const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
+    
+    const [isFinancesCollapsed, setIsFinancesCollapsed] = useState(false);
     
     const calculateEstimateTotal = useCallback((estimate: Estimate) => {
         const subtotal = estimate.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
@@ -147,14 +149,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     </div>
                 </div>
                 <div className="card project-section">
-                    <div className="project-section-header">
+                    <div className="project-section-header collapsible-header" onClick={() => setIsFinancesCollapsed(!isFinancesCollapsed)}>
                         <h3>Финансы ({projectFinances.length})</h3>
-                        <button className="add-in-header-btn" onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }}><IconPlus/></button>
+                        <div className="header-actions">
+                            <button className="add-in-header-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenFinanceModal(); }}><IconPlus/></button>
+                            {isFinancesCollapsed ? <IconChevronRight /> : <IconChevronDown />}
+                        </div>
                     </div>
-                    <div className="project-section-body">
+                    <div className={`project-section-body ${isFinancesCollapsed ? 'collapsed' : ''}`}>
                         {projectFinances.length > 0 ? (
                             <div className="project-items-list">
-                                {projectFinances.map(f => (
+                                {(isFinancesCollapsed ? projectFinances.slice(0, 3) : projectFinances).map(f => (
                                     <ListItem
                                       key={f.id}
                                       icon={f.type === 'income'
@@ -169,6 +174,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                       onDelete={() => onDeleteFinanceEntry(f.id)}
                                     />
                                 ))}
+                                {isFinancesCollapsed && projectFinances.length > 3 && (
+                                    <div className="collapsed-indicator">
+                                        <span>... и еще {projectFinances.length - 3} транзакций</span>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="empty-state-container">
