@@ -1805,6 +1805,7 @@ const getWorkStageStatusText = (status: string): string => {
                     onAddTask={handleAddTask}
                     onUpdateTask={handleUpdateTask}
                     onToggleTask={handleToggleTask}
+                    onBack={() => setActiveView('projectDetail')}
                 />;
             case 'inventoryList':
                 return <InventoryScreen 

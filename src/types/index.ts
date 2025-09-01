@@ -24,6 +24,7 @@ export interface ProjectTasksScreenProps {
     onAddTask: (title: string, projectId: string | null) => void;
     onUpdateTask: (task: Task) => void;
     onToggleTask: (id: string) => void;
+    onBack?: () => void;
 }
 
 export interface InventoryScreenProps {

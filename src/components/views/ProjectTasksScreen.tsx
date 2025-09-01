@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Task, Project, ProjectTasksScreenProps } from '../../types';
-import { IconPlus, IconFilter } from '../common/Icon';
+import { IconPlus, IconFilter, IconChevronRight } from '../common/Icon';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
 import { formatDueDate } from '../../utils';
 import { TaskFilterModal } from '../modals/TaskFilterModal';
@@ -30,7 +30,7 @@ const TaskItem: React.FC<{ task: Task, projectName: string, onToggle: (id: strin
     </li>
 );
 
-export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, projects, projectId, onAddTask, onUpdateTask, onToggleTask }) => {
+export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, projects, projectId, onAddTask, onUpdateTask, onToggleTask, onBack }) => {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
@@ -115,7 +115,14 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
     return (
         <>
             <header className="projects-list-header">
-                <h1>{projectId ? 'Задачи проекта' : 'Все задачи'}</h1>
+                <div className="header-left">
+                    {projectId && onBack && (
+                        <button onClick={onBack} className="back-btn" aria-label="Назад">
+                            <IconChevronRight style={{transform: 'rotate(180deg)'}} />
+                        </button>
+                    )}
+                    <h1>{projectId ? 'Задачи проекта' : 'Все задачи'}</h1>
+                </div>
                 <div className="header-actions">
                     <button onClick={() => setIsFilterModalOpen(true)} className="header-btn" aria-label="Фильтр"><IconFilter /></button>
                     <button onClick={() => setIsAddTaskModalOpen(true)} className="header-btn" aria-label="Новая задача"><IconPlus /></button>
