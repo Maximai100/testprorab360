@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Estimate, EstimatesListModalProps, EstimateStatus } from '../../types';
 import { IconClose, IconClipboard, IconTrash } from '../common/Icon';
+import { useProjectContext } from '../../context/ProjectContext';
 
 export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose, estimates, templates, activeEstimateId, statusMap, formatCurrency, onLoadEstimate, onDeleteEstimate, onStatusChange, onSaveAsTemplate, onDeleteTemplate, onNewEstimate, onInputFocus }) => {
     const [activeTab, setActiveTab] = useState<'estimates' | 'templates'>('estimates');
@@ -21,6 +22,17 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
 
     const filteredEstimates = useMemo(() => estimates.filter(e => e.number.toLowerCase().includes(estimatesSearch.toLowerCase()) || e.clientInfo?.toLowerCase().includes(estimatesSearch.toLowerCase())), [estimates, estimatesSearch]);
     const filteredTemplates = useMemo(() => templates.map((t, i) => ({ ...t, index: i })).filter(t => t.items.some(item => item.name.toLowerCase().includes(estimatesSearch.toLowerCase()))), [templates, estimatesSearch]);
+
+    const { activeProjectId } = useProjectContext();
+
+    const handleSelectEstimate = (estimateTemplate) => {
+      const newEstimate = { 
+        ...estimateTemplate, 
+        id: crypto.randomUUID(), // Создаем новый уникальный ID
+        projectId: activeProjectId // Привязываем ID проекта из контекста (будет null, если мы не в проекте)
+      };
+      onNewEstimate(newEstimate); // Вызываем родительскую функцию с подготовленной сметой
+    };
 
     return (
         <div className="modal-overlay" onClick={() => { onClose(); setEstimatesSearch(''); }}>
@@ -47,7 +59,7 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
                          {filteredTemplates.length === 0 ? <p className="no-results-message">{templates.length > 0 ? 'Ничего не найдено.' : 'Шаблонов нет.'}</p> :
                             filteredTemplates.map(t => ( <div key={t.lastModified} className="list-item">
                                 <div className="list-item-info"><strong>Шаблон от {new Date(t.lastModified).toLocaleDateString('ru-RU')}</strong><span>{t.items.length} поз., Итого: {formatCurrency(t.items.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span></div>
-                                <div className="list-item-actions"><button onClick={() => { onNewEstimate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
+                                <div className="list-item-actions"><button onClick={() => { handleSelectEstimate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
                             </div>))
                         }
                     </>)}
