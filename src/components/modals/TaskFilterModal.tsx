@@ -4,7 +4,7 @@ import { IconClose } from '../common/Icon';
 interface TaskFilterModalProps {
     onClose: () => void;
     onApplyFilters: (filters: { projectId: string | null; tag: string | null; }) => void;
-    availableProjects: string[];
+    availableProjects: { id: string; name: string; }[];
     availableTags: string[];
     currentFilters: { projectId: string | null; tag: string | null; };
 }
@@ -47,7 +47,7 @@ export const TaskFilterModal: React.FC<TaskFilterModalProps> = ({
                             onChange={e => setSelectedProjectId(e.target.value || null)}
                         >
                             <option value="">Все проекты</option>
-                            {availableProjects.map(pId => <option key={pId} value={pId}>{pId}</option>)}
+                            {availableProjects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
                         </select>
                     </div>
                     <div className="meta-field">

@@ -49,7 +49,13 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
         setEditingTask(null);
     };
 
-    const availableProjects = useMemo(() => [...new Set(tasks.map(t => t.projectId?.toString()).filter(Boolean) as string[])], [tasks]);
+    const availableProjects = useMemo(() => {
+        const projectIds = [...new Set(tasks.map(t => t.projectId).filter(Boolean))];
+        return projectIds.map(projectId => {
+            const project = projects.find(p => p.id === projectId);
+            return { id: projectId!, name: project?.name || `Проект ${projectId}` };
+        });
+    }, [tasks, projects]);
     const availableTags = useMemo(() => [...new Set(tasks.flatMap(t => t.tags || []))], [tasks]);
 
     const filteredTasks = useMemo(() => {
