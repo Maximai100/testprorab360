@@ -1951,7 +1951,7 @@ const getWorkStageStatusText = (status: string): string => {
                     ) : (
                         <img src="/logo.png" alt="Логотип" className="app-logo" />
                     )}
-                    <h1>Прораб</h1>
+                    <h1>{companyProfile.name || 'Прораб'}</h1>
                 </div>
                 <div className="app-header-right">
                     <button onClick={handleThemeChange} className="header-btn" title={`Тема: ${themeMode}`}>{themeIcon()}</button>
