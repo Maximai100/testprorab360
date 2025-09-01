@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { GoogleGenAI } from '@google/genai';
-// Динамический импорт jsPDF для совместимости с браузером
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
     PhotoReport, Document, WorkStage, Note, InventoryItem, InventoryNote, Task, Tool, Consumable, SettingsModalProps, EstimatesListModalProps, LibraryModalProps, 
@@ -673,209 +672,274 @@ const App: React.FC = () => {
         }
     }
     
-    const handleExportPDF = useCallback(async () => {
-        setIsPdfLoading(true);
-        tg?.HapticFeedback.notificationOccurred('warning');
+    // РЕШЕНИЕ 1: Установить альтернативные библиотеки
+// npm install html2canvas
+// npm install @types/html2canvas
+
+// РЕШЕНИЕ 2: Простой PDF через print API браузера
+const handleExportPDF = useCallback(async () => {
+    setIsPdfLoading(true);
+    tg?.HapticFeedback.notificationOccurred('warning');
+    
+    try {
+        console.log('Starting PDF export via print...');
         
-        try {
-            console.log('Starting PDF export...');
-            
-            const validItems = getValidItems();
-            if (validItems.length === 0) {
-                safeShowAlert("Добавьте хотя бы одну позицию в смету.");
-                return;
-            }
-
-            // Динамический импорт jsPDF для избежания проблем с модулями
-            const { jsPDF } = await import('jspdf');
-            
-            // Импорт автотаблицы
-            const autoTable = (await import('jspdf-autotable')).default;
-            
-            console.log('Libraries loaded, creating PDF...');
-            
-            // Создаем новый PDF документ
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-
-            // Настройка шрифта для поддержки русского языка
-            doc.setFont('helvetica');
-            
-            let yPosition = 20;
-
-            // Заголовок компании
-            if (companyProfile.name) {
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.text(companyProfile.name, 20, yPosition);
-                yPosition += 10;
-            }
-
-            if (companyProfile.details) {
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                const detailsLines = doc.splitTextToSize(companyProfile.details, 170);
-                doc.text(detailsLines, 20, yPosition);
-                yPosition += detailsLines.length * 4 + 5;
-            }
-
-            // Заголовок сметы
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            const estimateTitle = `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}`;
-            doc.text(estimateTitle, 20, yPosition);
-            yPosition += 8;
-
-            // Информация о клиенте
-            if (clientInfo) {
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Клиент / Объект: ${clientInfo}`, 20, yPosition);
-                yPosition += 10;
-            }
-
-            // Подготовка данных для таблицы
-            const tableData = validItems.map((item, index) => [
-                (index + 1).toString(),
-                item.name,
-                item.quantity.toString(),
-                item.unit || 'шт.',
-                formatCurrency(item.price),
-                formatCurrency(item.quantity * item.price)
-            ]);
-
-            // Создание таблицы
-            (doc as any).autoTable({
-                startY: yPosition,
-                head: [['№', 'Наименование', 'Кол-во', 'Ед.изм.', 'Цена', 'Сумма']],
-                body: tableData,
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 3,
-                },
-                headStyles: {
-                    fillColor: [50, 50, 50],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                columnStyles: {
-                    0: { halign: 'center', cellWidth: 15 },
-                    1: { cellWidth: 70 },
-                    2: { halign: 'center', cellWidth: 20 },
-                    3: { halign: 'center', cellWidth: 20 },
-                    4: { halign: 'right', cellWidth: 25 },
-                    5: { halign: 'right', cellWidth: 30 }
-                },
-                margin: { left: 20, right: 20 }
-            });
-
-            // Получаем позицию после таблицы
-            const finalY = (doc as any).lastAutoTable.finalY + 10;
-
-            // Итоговые расчеты
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            
-            let summaryY = finalY;
-            const rightAlign = 190;
-            const labelAlign = 120;
-
-            // Подытог
-            doc.text('Подытог:', labelAlign, summaryY);
-            doc.text(formatCurrency(calculation.subtotal), rightAlign, summaryY, { align: 'right' });
-            summaryY += 6;
-
-            // Скидка
-            if (calculation.discountAmount > 0) {
-                const discountLabel = `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}):`;
-                doc.text(discountLabel, labelAlign, summaryY);
-                doc.text(`-${formatCurrency(calculation.discountAmount)}`, rightAlign, summaryY, { align: 'right' });
-                summaryY += 6;
-            }
-
-            // Налог
-            if (calculation.taxAmount > 0) {
-                doc.text(`Налог (${tax}%):`, labelAlign, summaryY);
-                doc.text(`+${formatCurrency(calculation.taxAmount)}`, rightAlign, summaryY, { align: 'right' });
-                summaryY += 6;
-            }
-
-            // Итого
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.text('ИТОГО:', labelAlign, summaryY);
-            doc.text(formatCurrency(calculation.grandTotal), rightAlign, summaryY, { align: 'right' });
-
-            // Добавляем дату создания
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            const currentDate = new Date().toLocaleDateString('ru-RU');
-            doc.text(`Документ создан: ${currentDate}`, 20, 280);
-
-            console.log('PDF created, saving...');
-
-            // Сохраняем PDF
-            doc.save(`смета-${estimateNumber}.pdf`);
-            
-            console.log('PDF saved successfully');
-            safeShowAlert('PDF смета успешно создана и скачана!');
-            
-        } catch (error: any) {
-            console.error("PDF Export failed:", error);
-            console.error("Error details:", {
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-            });
-            
-            // Фоллбэк на текстовый экспорт
-            console.log('Falling back to text export...');
-            try {
-                const validItems = getValidItems();
-                let exportContent = '';
-                exportContent += `${companyProfile.name || 'Смета'}\n`;
-                exportContent += `${companyProfile.details || ''}\n\n`;
-                exportContent += `Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}\n`;
-                exportContent += `Клиент / Объект: ${clientInfo}\n\n`;
-                exportContent += '№ | Наименование | Кол-во | Ед.изм. | Цена | Сумма\n';
-                exportContent += '---|--------------|--------|---------|------|-------\n';
-                
-                validItems.forEach((item, index) => {
-                    exportContent += `${index + 1} | ${item.name} | ${item.quantity} | ${item.unit || 'шт.'} | ${formatCurrency(item.price)} | ${formatCurrency(item.quantity * item.price)}\n`;
-                });
-                
-                exportContent += '\n';
-                exportContent += `Подытог: ${formatCurrency(calculation.subtotal)}\n`;
-                if (calculation.discountAmount > 0) {
-                    exportContent += `Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}): -${formatCurrency(calculation.discountAmount)}\n`;
-                }
-                if (calculation.taxAmount > 0) {
-                    exportContent += `Налог (${tax}%): +${formatCurrency(calculation.taxAmount)}\n`;
-                }
-                exportContent += `Итого: ${formatCurrency(calculation.grandTotal)}\n`;
-                
-                const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `смета-${estimateNumber}.txt`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                safeShowAlert('PDF не удалось создать, экспортирован текстовый файл');
-            } catch (fallbackError) {
-                console.error('Fallback export also failed:', fallbackError);
-                safeShowAlert(`Не удалось экспортировать смету: ${error.message}`);
-            }
-        } finally {
-            setIsPdfLoading(false);
+        const validItems = getValidItems();
+        if (validItems.length === 0) {
+            safeShowAlert("Добавьте хотя бы одну позицию в смету.");
+            return;
         }
-    }, [getValidItems, clientInfo, companyProfile, estimateNumber, estimateDate, formatCurrency, calculation, discount, discountType, tax]);
+
+        // Создаем HTML для печати
+        const printContent = createPrintableHTML();
+        
+        // Создаем новое окно для печати
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            throw new Error('Не удалось открыть окно для печати');
+        }
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Ждем загрузки содержимого
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print();
+                // Закрываем окно после печати
+                setTimeout(() => {
+                    printWindow.close();
+                }, 1000);
+            }, 500);
+        };
+
+        safeShowAlert('Откроется диалог печати. Выберите "Сохранить как PDF"');
+        
+    } catch (error: any) {
+        console.error("Print export failed:", error);
+        
+        // Фоллбэк на скачивание HTML файла
+        try {
+            const htmlContent = createPrintableHTML();
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `смета-${estimateNumber}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            safeShowAlert('Скачан HTML файл. Откройте его в браузере и распечатайте в PDF');
+        } catch (fallbackError) {
+            console.error('HTML export also failed:', fallbackError);
+            safeShowAlert(`Не удалось экспортировать смету: ${error.message}`);
+        }
+    } finally {
+        setIsPdfLoading(false);
+    }
+}, [getValidItems, clientInfo, companyProfile, estimateNumber, estimateDate, formatCurrency, calculation, discount, discountType, tax]);
+
+// Функция создания HTML для печати
+const createPrintableHTML = (): string => {
+    const validItems = getValidItems();
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Смета № ${estimateNumber}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10mm;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .company-details {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .estimate-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .client-info {
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #333;
+            padding: 6px;
+            text-align: left;
+            font-size: 10px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .number-col { width: 5%; text-align: center; }
+        .name-col { width: 45%; }
+        .qty-col { width: 10%; text-align: center; }
+        .unit-col { width: 10%; text-align: center; }
+        .price-col { width: 15%; text-align: right; }
+        .total-col { width: 15%; text-align: right; }
+        
+        .totals {
+            margin-top: 20px;
+            float: right;
+            width: 300px;
+        }
+        
+        .totals table {
+            margin-bottom: 0;
+        }
+        
+        .totals td {
+            border: none;
+            border-bottom: 1px solid #ccc;
+            padding: 4px 8px;
+        }
+        
+        .grand-total {
+            font-weight: bold;
+            font-size: 12px;
+            border-top: 2px solid #333 !important;
+        }
+        
+        .footer {
+            clear: both;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        @page {
+            margin: 15mm;
+            size: A4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        ${companyProfile.name ? `<div class="company-name">${companyProfile.name}</div>` : ''}
+        ${companyProfile.details ? `<div class="company-details">${companyProfile.details}</div>` : ''}
+    </div>
+    
+    <div class="estimate-title">
+        Смета № ${estimateNumber} от ${new Date(estimateDate).toLocaleDateString('ru-RU')}
+    </div>
+    
+    ${clientInfo ? `<div class="client-info">Клиент / Объект: ${clientInfo}</div>` : ''}
+    
+    <table>
+        <thead>
+            <tr>
+                <th class="number-col">№</th>
+                <th class="name-col">Наименование</th>
+                <th class="qty-col">Кол-во</th>
+                <th class="unit-col">Ед.изм.</th>
+                <th class="price-col">Цена</th>
+                <th class="total-col">Сумма</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${validItems.map((item, index) => `
+                <tr>
+                    <td class="number-col">${index + 1}</td>
+                    <td class="name-col">${item.name}</td>
+                    <td class="qty-col">${item.quantity}</td>
+                    <td class="unit-col">${item.unit || 'шт.'}</td>
+                    <td class="price-col">${formatCurrency(item.price)}</td>
+                    <td class="total-col">${formatCurrency(item.quantity * item.price)}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+    
+    <div class="totals">
+        <table>
+            <tr>
+                <td>Подытог:</td>
+                <td style="text-align: right;">${formatCurrency(calculation.subtotal)}</td>
+            </tr>
+            ${calculation.discountAmount > 0 ? `
+                <tr>
+                    <td>Скидка (${discountType === 'percent' ? `${discount}%` : formatCurrency(discount)}):</td>
+                    <td style="text-align:  right;">-${formatCurrency(calculation.discountAmount)}</td>
+                </tr>
+            ` : ''}
+            ${calculation.taxAmount > 0 ? `
+                <tr>
+                    <td>Налог (${tax}%):</td>
+                    <td style="text-align: right;">+${formatCurrency(calculation.taxAmount)}</td>
+                </tr>
+            ` : ''}
+            <tr class="grand-total">
+                <td><strong>ИТОГО:</strong></td>
+                <td style="text-align: right;"><strong>${formatCurrency(calculation.grandTotal)}</strong></td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="footer">
+        Документ создан: ${new Date().toLocaleDateString('ru-RU')} | Смета за 5 минут
+    </div>
+    
+    <script>
+        // Автоматически печатаем при загрузке (только если это новое окно)
+        if (window.opener) {
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>`;
+};
 
     const handleShare = useCallback(() => {
         try {
