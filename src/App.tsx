@@ -770,7 +770,7 @@ const createPrintableHTML = (): string => {
         }
         
         .header {
-            text-align: center;
+            text-align: left;
             margin-bottom: 20px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
@@ -802,6 +802,7 @@ const createPrintableHTML = (): string => {
             font-size: 16px;
             font-weight: bold;
             margin: 15px 0;
+            text-align: left;
         }
         
         .client-info {
