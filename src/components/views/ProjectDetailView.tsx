@@ -83,17 +83,24 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <h3>Кэшфлоу</h3>
                     </div>
                     <div className="project-section-body">
-                        <div className="project-items-list">
+                        <div className="cashflow-list">
                             {financials.cashFlowEntries.map((entry, index) => (
-                                <ListItem
-                                    key={index}
-                                    icon={entry.type === 'income' ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} /> : <IconChevronRight style={{transform: 'rotate(90deg)'}} />}
-                                    iconBgColor={entry.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
-                                    title={entry.description || (entry.type === 'income' ? 'Приход' : 'Расход')}
-                                    subtitle={new Date(entry.date).toLocaleString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'})}
-                                    amountText={`${entry.type === 'income' ? '+' : '-'}${formatCurrency(entry.amount)}`}
-                                    amountColor={entry.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
-                                />
+                                <div key={index} className="cashflow-item">
+                                    <div className="cashflow-date">
+                                        {new Date(entry.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '')}
+                                    </div>
+                                    <div className="cashflow-type">
+                                        <span className={entry.type === 'income' ? 'income-color' : 'expense-color'}>
+                                            {entry.type === 'income' ? 'Приход' : 'Расход'}
+                                        </span>
+                                    </div>
+                                    <div className="cashflow-amount-details">
+                                        <span className={`amount ${entry.type === 'income' ? 'income-color' : 'expense-color'}`}>
+                                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
+                                        </span>
+                                        <span className="description">({entry.description || 'Без описания'})</span>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -171,18 +178,20 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         {projectWorkStages.length > 0 ? (
                             <div className="project-items-list">
                                 {projectWorkStages.map(stage => (
-                                    <ListItem
-                                        key={stage.id}
-                                        icon={<IconCalendar />}
-                                        title={stage.title}
-                                        subtitle={
-                                            (stage.startDate && stage.endDate)
-                                                ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
-                                                : 'Даты не указаны'
-                                        }
-                                        onClick={() => onOpenWorkStageModal(stage)}
-                                        onDelete={() => onDeleteWorkStage(stage.id)}
-                                    />
+                                    <div key={stage.id} className="list-item">
+                                        <IconCalendar />
+                                        <div className="list-item-info" onClick={() => onOpenWorkStageModal(stage)}>
+                                            <strong>{stage.title}</strong>
+                                            <span>
+                                                {(stage.startDate && stage.endDate)
+                                                    ? `${new Date(stage.startDate).toLocaleDateString('ru-RU')} - ${new Date(stage.endDate).toLocaleDateString('ru-RU')}`
+                                                    : 'Даты не указаны'}
+                                            </span>
+                                        </div>
+                                        <div className="list-item-actions">
+                                            <button onClick={() => onDeleteWorkStage(stage.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         ) : (

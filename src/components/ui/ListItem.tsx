@@ -7,6 +7,7 @@ import { IconTrash } from '../common/Icon';
 type ListItemProps = {
   icon: React.ReactNode;
   iconBgColor?: string;
+  iconWrapperClassName?: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   amountText?: string;
@@ -19,6 +20,7 @@ type ListItemProps = {
 export const ListItem: React.FC<ListItemProps> = ({
   icon,
   iconBgColor,
+  iconWrapperClassName,
   title,
   subtitle,
   amountText,
@@ -36,7 +38,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 
   return (
     <div className="list-item" onClick={onClick}>
-      <div className="list-item-icon-wrapper" style={{ backgroundColor: iconBgColor }}>
+      <div className={`list-item-icon-wrapper ${iconWrapperClassName || ''}`} style={{ backgroundColor: iconBgColor }}>
         {icon}
       </div>
 
