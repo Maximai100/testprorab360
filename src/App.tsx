@@ -43,6 +43,9 @@ import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
+import AuthScreen from './components/views/AuthScreen';
+import { supabase } from './supabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 // Import new hooks
 import { useAppState } from './hooks/useAppState';
@@ -54,6 +57,9 @@ const App: React.FC = () => {
     // Error boundary state
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    
+    // Supabase auth session
+    const [session, setSession] = useState<Session | null>(null);
 
     // Error handler
     const handleError = (error: Error) => {
@@ -72,6 +78,68 @@ const App: React.FC = () => {
 
         window.addEventListener('error', handleGlobalError);
         return () => window.removeEventListener('error', handleGlobalError);
+    }, []);
+
+    // Subscribe to Supabase auth changes
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            if (session) {
+                // Загрузка проектов пользователя
+                (async () => {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (error) {
+                        console.error('Error fetching projects:', error);
+                    } else if (data) {
+                        const mapped = data.map((row: any) => ({
+                            id: row.id,
+                            name: row.name,
+                            client: row.client || '',
+                            address: row.address || '',
+                            status: row.status,
+                            createdAt: row.created_at,
+                            updatedAt: row.updated_at,
+                        }));
+                        setProjects(mapped);
+                    }
+                })();
+            }
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            if (session) {
+                (async () => {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (error) {
+                        console.error('Error fetching projects:', error);
+                    } else if (data) {
+                        const mapped = data.map((row: any) => ({
+                            id: row.id,
+                            name: row.name,
+                            client: row.client || '',
+                            address: row.address || '',
+                            status: row.status,
+                            createdAt: row.created_at,
+                            updatedAt: row.updated_at,
+                        }));
+                        setProjects(mapped);
+                    }
+                })();
+            } else {
+                setProjects([]);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Show error screen if there's an error
@@ -116,6 +184,9 @@ const App: React.FC = () => {
     const appState = useAppState();
     const estimatesHook = useEstimates();
     const projectsHook = useProjects();
+
+    // Проекты (хранятся в Supabase)
+    const [projects, setProjects] = useState<Project[]>([]);
 
     // Additional state that's not yet moved to hooks
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
@@ -208,8 +279,9 @@ const App: React.FC = () => {
 
     // Get active project
     const activeProject = useMemo(() => {
-        return projectsHook.getProjectById(appState.activeProjectId || '') || null;
-    }, [appState.activeProjectId, projectsHook.projects]);
+        const id = appState.activeProjectId || '';
+        return projects.find(p => p.id === id) || null;
+    }, [appState.activeProjectId, projects]);
 
     // Get project financials
     const projectFinancials = useMemo(() => {
@@ -219,7 +291,7 @@ const App: React.FC = () => {
 
     // Filtered projects
     const filteredProjects = useMemo(() => {
-        return projectsHook.projects.filter(project => {
+        return projects.filter(project => {
             const matchesStatus = project.status === appState.projectStatusFilter;
             const matchesSearch = !appState.projectSearch || 
                 project.name.toLowerCase().includes(appState.projectSearch.toLowerCase()) ||
@@ -227,7 +299,7 @@ const App: React.FC = () => {
                 project.address.toLowerCase().includes(appState.projectSearch.toLowerCase());
             return matchesStatus && matchesSearch;
         });
-    }, [projectsHook.projects, appState.projectStatusFilter, appState.projectSearch]);
+    }, [projects, appState.projectStatusFilter, appState.projectSearch]);
 
     // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
@@ -275,27 +347,106 @@ const App: React.FC = () => {
         appState.openModal('newProject', project);
     }, [appState]);
 
+    // Supabase: create project
+    const handleCreateProject = useCallback(async (newProjectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const insertPayload = [{
+            name: newProjectData.name,
+            client: newProjectData.client,
+            address: newProjectData.address,
+            status: newProjectData.status ?? 'planned',
+            user_id: user.id,
+        }];
+
+        const { data, error } = await supabase
+            .from('projects')
+            .insert(insertPayload)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error creating project:', error);
+            return null;
+        }
+
+        // Map DB row -> frontend type
+        const created: Project = {
+            id: data.id,
+            name: data.name,
+            client: data.client || '',
+            address: data.address || '',
+            status: data.status,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+        };
+        setProjects(prev => [created, ...prev]);
+        return created;
+    }, []);
+
+    // Supabase: update project
+    const handleUpdateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+        const payload: any = {};
+        if (typeof updates.name !== 'undefined') payload.name = updates.name;
+        if (typeof updates.client !== 'undefined') payload.client = updates.client;
+        if (typeof updates.address !== 'undefined') payload.address = updates.address;
+        if (typeof updates.status !== 'undefined') payload.status = updates.status;
+
+        const { data, error } = await supabase
+            .from('projects')
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) {
+            console.error('Error updating project:', error);
+            return;
+        }
+        const updated: Project = {
+            id: data.id,
+            name: data.name,
+            client: data.client || '',
+            address: data.address || '',
+            status: data.status,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+        };
+        setProjects(prev => prev.map(p => (p.id === id ? updated : p)));
+    }, []);
+
+    // Supabase: delete project
+    const handleDeleteProjectSupabase = useCallback(async (id: string) => {
+        const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (error) {
+            console.error('Error deleting project:', error);
+            return;
+        }
+        setProjects(prev => prev.filter(p => p.id !== id));
+    }, []);
+
     const handleSaveProject = useCallback(() => {
         if (appState.selectedProject) {
             if (appState.selectedProject.id) {
-                projectsHook.updateProject(appState.selectedProject.id, appState.selectedProject);
+                handleUpdateProject(appState.selectedProject.id, appState.selectedProject);
             } else {
-                projectsHook.createProject(appState.selectedProject as Omit<Project, 'id' | 'createdAt' | 'updatedAt'>);
+                const base = appState.selectedProject as Omit<Project, 'id' | 'createdAt' | 'updatedAt'>;
+                handleCreateProject({ ...base, status: base.status ?? 'planned' });
             }
         }
         appState.closeModal('newProject');
-    }, [appState, projectsHook]);
+    }, [appState, handleCreateProject, handleUpdateProject]);
 
     const handleDeleteProject = useCallback((id: string) => {
         safeShowConfirm('Вы уверены, что хотите удалить этот проект? Все связанные данные будут удалены.', (ok) => {
             if (ok) {
-                projectsHook.deleteProject(id);
+                handleDeleteProjectSupabase(id);
                 if (appState.activeProjectId === id) {
                     appState.goBack();
                 }
             }
         });
-    }, [projectsHook, appState]);
+    }, [appState, handleDeleteProjectSupabase]);
 
     // Finance handlers
     const handleAddFinanceEntry = useCallback((entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
@@ -701,7 +852,7 @@ const App: React.FC = () => {
                         setProjectSearch={appState.setProjectSearch}
                         handleInputFocus={handleInputFocus}
                         filteredProjects={filteredProjects}
-                        projects={projectsHook.projects}
+                        projects={projects}
                         setActiveProjectId={appState.setActiveProjectId}
                         setActiveView={appState.setActiveView}
                     />
@@ -753,7 +904,7 @@ const App: React.FC = () => {
                 return (
                     <InventoryScreen
                         tools={inventoryItems}
-                        projects={projectsHook.projects}
+                        projects={projects}
                         consumables={projectsHook.consumables}
                         onToolClick={(tool) => {
                             appState.setSelectedTool(tool);
@@ -770,7 +921,7 @@ const App: React.FC = () => {
             case 'reports':
                 return (
                     <ReportsHubScreen 
-                        projects={projectsHook.projects}
+                        projects={projects}
                         onOpenProjectReport={(project) => {
                             setReportProject(project);
                             appState.navigateToView('projectFinancialReport');
@@ -820,7 +971,7 @@ const App: React.FC = () => {
             case 'overallFinancialReport':
                 return (
                     <OverallFinancialReportScreen
-                        projects={projectsHook.projects}
+                        projects={projects}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectsHook.financeEntries}
                         formatCurrency={formatCurrency}
@@ -866,6 +1017,13 @@ const App: React.FC = () => {
 
     return (
         <div className="app-container">
+            {/* Auth gate */}
+            {!session ? (
+                <main>
+                    <AuthScreen />
+                </main>
+            ) : (
+            <>
             {/* Global Header */}
             <header className="app-header">
                 <div className="app-header-left">
@@ -1118,6 +1276,8 @@ const App: React.FC = () => {
                         />
                     </div>
                 </div>
+            )}
+            </>
             )}
         </div>
     );
