@@ -787,6 +787,19 @@ const App: React.FC = () => {
                     />
                 );
             
+            case 'allTasks':
+                return (
+                    <ProjectTasksScreen
+                        tasks={projectsHook.tasks}
+                        projects={projectsHook.projects}
+                        projectId={null}
+                        onAddTask={handleAddTask}
+                        onUpdateTask={handleUpdateTask}
+                        onToggleTask={handleToggleTask}
+                        onBack={appState.goBack}
+                    />
+                );
+            
             default:
                 return (
                     <WorkspaceView
@@ -841,16 +854,35 @@ const App: React.FC = () => {
                 </button>
                 <button 
                     onClick={() => appState.navigateToView('projects')} 
-                    className={appState.activeView === 'projects' ? 'active' : ''}
+                    className={appState.activeView.startsWith('project') ? 'active' : ''}
                 >
                     <IconProject />
                     <span>Проекты</span>
                 </button>
                 <button 
-                    onClick={() => appState.navigateToView('inventory')} 
-                    className={appState.activeView === 'inventory' ? 'active' : ''}
+                    onClick={() => {
+                        if (appState.activeView === 'estimate') {
+                            // Если уже в смете, создаем новую
+                            handleNewEstimate();
+                        } else {
+                            // Если переходим в смету из другого экрана, создаем новую
+                            // При переходе в блок сметы сбрасываем привязку к проекту и активный проект
+                            appState.setActiveProjectId(null); // Сбрасываем активный проект при переходе в блок смет
+                            setContextActiveProjectId(null); // очищаем контекст
+                            appState.navigateToView('estimate');
+                            handleNewEstimate();
+                        }
+                    }} 
+                    className={appState.activeView === 'estimate' ? 'active' : ''}
                 >
-                    <IconFolder />
+                    <IconDocument />
+                    <span>Смета</span>
+                </button>
+                <button 
+                    onClick={() => appState.navigateToView('inventory')} 
+                    className={appState.activeView.startsWith('inventory') || appState.activeView === 'toolDetails' ? 'active' : ''}
+                >
+                    <IconClipboard />
                     <span>Инвентарь</span>
                 </button>
                 <button 
@@ -859,6 +891,13 @@ const App: React.FC = () => {
                 >
                     <IconTrendingUp />
                     <span>Отчеты</span>
+                </button>
+                <button 
+                    onClick={() => appState.navigateToView('allTasks')} 
+                    className={appState.activeView === 'allTasks' ? 'active' : ''}
+                >
+                    <IconCheckSquare />
+                    <span>Задачи</span>
                 </button>
             </nav>
 

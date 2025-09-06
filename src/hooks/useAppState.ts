@@ -15,6 +15,7 @@ export const useAppState = () => {
     const [isDirty, setIsDirty] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isPdfLoading, setIsPdfLoading] = useState(false);
+    const [draggingItem, setDraggingItem] = useState<number | null>(null);
     
     // Modal states
     const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -257,6 +258,7 @@ export const useAppState = () => {
         isDirty,
         isSaving,
         isPdfLoading,
+        draggingItem,
         projectSearch,
         projectStatusFilter,
         
@@ -294,6 +296,7 @@ export const useAppState = () => {
         setProjectStatusFilter,
         setIsDirty,
         setLoading,
+        setDraggingItem,
         
         // Navigation
         navigateToView,
