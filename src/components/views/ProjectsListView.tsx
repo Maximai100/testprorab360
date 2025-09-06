@@ -17,11 +17,11 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
         <main>
             <div className="project-filters">
                 <div className="toggle-switch">
-                    <button onClick={() => setProjectStatusFilter('planned')} className={projectStatusFilter === 'planned' ? 'active' : ''}>Планируются</button>
-                    <button onClick={() => setProjectStatusFilter('in_progress')} className={projectStatusFilter === 'in_progress' ? 'active' : ''}>В работе</button>
-                    <button onClick={() => setProjectStatusFilter('on_hold')} className={projectStatusFilter === 'on_hold' ? 'active' : ''}>На паузе</button>
-                    <button onClick={() => setProjectStatusFilter('completed')} className={projectStatusFilter === 'completed' ? 'active' : ''}>Завершены</button>
-                    <button onClick={() => setProjectStatusFilter('cancelled')} className={projectStatusFilter === 'cancelled' ? 'active' : ''}>Отменены</button>
+                    <button onClick={() => setProjectStatusFilter('planned')} className={projectStatusFilter === 'planned' ? 'active' : ''} title="Планируются">План</button>
+                    <button onClick={() => setProjectStatusFilter('in_progress')} className={projectStatusFilter === 'in_progress' ? 'active' : ''} title="В работе">Работа</button>
+                    <button onClick={() => setProjectStatusFilter('on_hold')} className={projectStatusFilter === 'on_hold' ? 'active' : ''} title="На паузе">Пауза</button>
+                    <button onClick={() => setProjectStatusFilter('completed')} className={projectStatusFilter === 'completed' ? 'active' : ''} title="Завершены">Готово</button>
+                    <button onClick={() => setProjectStatusFilter('cancelled')} className={projectStatusFilter === 'cancelled' ? 'active' : ''} title="Отменены">Отмена</button>
                 </div>
                 <input type="search" placeholder="Поиск по проектам..." value={projectSearch} onChange={e => setProjectSearch(e.target.value)} onFocus={handleInputFocus} />
             </div>
