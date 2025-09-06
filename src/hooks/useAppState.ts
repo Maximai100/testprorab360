@@ -297,6 +297,7 @@ export const useAppState = () => {
         setIsDirty,
         setLoading,
         setDraggingItem,
+        setSelectedProject,
         
         // Navigation
         navigateToView,

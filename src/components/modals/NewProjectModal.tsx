@@ -26,14 +26,32 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ project, onClo
             </div>
             <div className="modal-body">
                 <label>Название проекта</label>
-                <input type="text" value={project?.name || ''} onChange={(e) => onProjectChange(p => ({...p!, name: e.target.value}))} onFocus={onInputFocus} placeholder="Название или тип работ" />
+                <input
+                  type="text"
+                  value={project?.name || ''}
+                  onChange={(e) => onProjectChange({ ...(project || { name: '', client: '', address: '', status: 'planned' }), name: e.target.value })}
+                  onFocus={onInputFocus}
+                  placeholder="Название или тип работ"
+                />
                 <label>Клиент</label>
-                <input type="text" value={project?.client || ''} onChange={(e) => onProjectChange(p => ({...p!, client: e.target.value}))} onFocus={onInputFocus} placeholder="Имя клиента" />
+                <input
+                  type="text"
+                  value={project?.client || ''}
+                  onChange={(e) => onProjectChange({ ...(project || { name: '', client: '', address: '', status: 'planned' }), client: e.target.value })}
+                  onFocus={onInputFocus}
+                  placeholder="Имя клиента"
+                />
                 <label>Адрес объекта</label>
-                <textarea value={project?.address || ''} onChange={(e) => onProjectChange(p => ({...p!, address: e.target.value}))} onFocus={onInputFocus} placeholder="Адрес" rows={2} />
+                <textarea
+                  value={project?.address || ''}
+                  onChange={(e) => onProjectChange({ ...(project || { name: '', client: '', address: '', status: 'planned' }), address: e.target.value })}
+                  onFocus={onInputFocus}
+                  placeholder="Адрес"
+                  rows={2}
+                />
                 {project?.id && <>
                     <label>Статус</label>
-                    <select value={project.status} onChange={(e) => onProjectChange(p => ({...p!, status: e.target.value as Project['status']}))}>
+                    <select value={project.status} onChange={(e) => onProjectChange({ ...(project as Project), status: e.target.value as Project['status'] })}>
                         <option value="planned">Запланирован</option>
                         <option value="in_progress">В работе</option>
                         <option value="on_hold">Приостановлен</option>

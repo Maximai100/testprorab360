@@ -382,6 +382,9 @@ const App: React.FC = () => {
             updatedAt: data.updated_at,
         };
         setProjects(prev => [created, ...prev]);
+        // Перейти к созданному проекту
+        appState.setActiveProjectId(created.id);
+        appState.setActiveView('projectDetail');
         return created;
     }, []);
 
