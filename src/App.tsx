@@ -34,13 +34,13 @@ import { ProjectDetailView } from './components/views/ProjectDetailView';
 import { InventoryScreen } from './components/views/InventoryScreen';
 import { ToolDetailsScreen } from './components/views/ToolDetailsScreen';
 import { ReportsView } from './components/views/ReportsView';
-import { WorkspaceView } from './components/views/WorkspaceView';
-import { ScratchpadView } from './components/views/ScratchpadView';
-import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ReportsHubScreen } from './components/views/ReportsHubScreen';
 import { ProjectFinancialReportScreen } from './components/views/ProjectFinancialReportScreen';
 import { ClientReportScreen } from './components/views/ClientReportScreen';
 import { OverallFinancialReportScreen } from './components/views/OverallFinancialReportScreen';
+import { WorkspaceView } from './components/views/WorkspaceView';
+import { ScratchpadView } from './components/views/ScratchpadView';
+import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
 
@@ -769,12 +769,62 @@ const App: React.FC = () => {
             
             case 'reports':
                 return (
-                    <ReportsView
+                    <ReportsHubScreen 
+                        projects={projectsHook.projects}
+                        onOpenProjectReport={(project) => {
+                            setReportProject(project);
+                            appState.navigateToView('projectFinancialReport');
+                        }}
+                        onOpenClientReport={(project) => {
+                            setClientReportProject(project);
+                            appState.navigateToView('clientReport');
+                        }}
+                        onOpenOverallReport={() => {
+                            console.log('onOpenOverallReport вызван в App.tsx!');
+                            appState.navigateToView('overallFinancialReport');
+                        }}
+                    />
+                );
+            
+            case 'projectFinancialReport':
+                if (!reportProject) {
+                    appState.navigateToView('reports');
+                    return null;
+                }
+                return (
+                    <ProjectFinancialReportScreen
+                        project={reportProject}
+                        estimates={estimatesHook.estimates}
+                        financeEntries={projectsHook.financeEntries}
+                        formatCurrency={formatCurrency}
+                        onBack={() => appState.navigateToView('reports')}
+                    />
+                );
+            
+            case 'clientReport':
+                if (!clientReportProject) {
+                    appState.navigateToView('reports');
+                    return null;
+                }
+                return (
+                    <ClientReportScreen
+                        project={clientReportProject}
+                        estimates={estimatesHook.estimates}
+                        financeEntries={projectsHook.financeEntries}
+                        workStages={projectsHook.workStages}
+                        formatCurrency={formatCurrency}
+                        onBack={() => appState.navigateToView('reports')}
+                    />
+                );
+            
+            case 'overallFinancialReport':
+                return (
+                    <OverallFinancialReportScreen
                         projects={projectsHook.projects}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectsHook.financeEntries}
                         formatCurrency={formatCurrency}
-                        setActiveView={appState.setActiveView}
+                        onBack={() => appState.navigateToView('reports')}
                     />
                 );
             
