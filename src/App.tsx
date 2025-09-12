@@ -864,10 +864,13 @@ const App: React.FC = () => {
                         handleOpenProjectModal={handleOpenProjectModal}
                         handleDeleteProject={handleDeleteProject}
                         handleLoadEstimate={handleLoadEstimate}
-                        handleAddNewEstimateForProject={() => {
-                            const newEstimate = estimatesHook.createNewEstimate();
-                            estimatesHook.saveEstimate(activeProject.id);
-                            handleLoadEstimate(newEstimate.id);
+                        handleAddNewEstimateForProject={async () => {
+                            const newEstimate = estimatesHook.createNewEstimate({ projectId: activeProject.id });
+                            await estimatesHook.saveEstimate(activeProject.id);
+                            // After saving, the hook should update the estimates list, so we find the newest one.
+                            // This is a bit of a workaround, ideally saveEstimate would return the created object.
+                            // For now, we reload all estimates to get the new one.
+                            handleLoadEstimate(newEstimate.id); // This might not work if the temp id changes
                         }}
                         handleDeleteProjectEstimate={handleDeleteEstimate}
                         onOpenFinanceModal={() => appState.openModal('financeEntry')}

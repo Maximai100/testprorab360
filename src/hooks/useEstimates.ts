@@ -1,13 +1,58 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Estimate, Item, LibraryItem, CalculationResults } from '../types';
-import { dataService, dataUtils } from '../services/storageService';
+import { Estimate, Item, LibraryItem, CalculationResults, EstimateStatus } from '../types';
+import { supabase } from '../supabaseClient';
 import { generateNewEstimateNumber } from '../utils';
 
-export const useEstimates = () => {
+// Helper to map database estimate to frontend type
+const mapEstimateFromDb = (dbEstimate: any): Estimate => {
+    return {
+        id: dbEstimate.id,
+        user_id: dbEstimate.user_id,
+        projectId: dbEstimate.project_id,
+        number: dbEstimate.number,
+        clientInfo: dbEstimate.client_info,
+        date: dbEstimate.date,
+        status: dbEstimate.status,
+        discount: dbEstimate.discount,
+        discountType: dbEstimate.discount_type,
+        tax: dbEstimate.tax,
+        createdAt: dbEstimate.created_at,
+        updatedAt: dbEstimate.updated_at,
+        items: dbEstimate.estimate_items ? dbEstimate.estimate_items.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            unit: item.unit,
+            image: item.image_url, // Note: field name difference
+            type: item.type,
+        })) : [],
+    };
+};
+
+// Helper to map frontend estimate to database type
+const mapEstimateToDb = (estimate: Partial<Estimate>) => {
+    return {
+        id: estimate.id,
+        user_id: estimate.user_id,
+        project_id: estimate.projectId,
+        number: estimate.number,
+        client_info: estimate.clientInfo,
+        date: estimate.date,
+        status: estimate.status,
+        discount: estimate.discount,
+        discount_type: estimate.discountType,
+        tax: estimate.tax,
+    };
+};
+
+
+export const useEstimates = (session: any) => {
     const [estimates, setEstimates] = useState<Estimate[]>([]);
     const [templates, setTemplates] = useState<Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[]>([]);
+    const [loading, setLoading] = useState(true);
     
-    // Current estimate state
+    // Current estimate state (for the editor)
     const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
     const [clientInfo, setClientInfo] = useState('');
     const [estimateNumber, setEstimateNumber] = useState('');
@@ -16,22 +61,29 @@ export const useEstimates = () => {
     const [discount, setDiscount] = useState(0);
     const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent');
     const [tax, setTax] = useState(0);
-    
-    // Load data from storage
+
+    // Load all estimates for the user
+    const fetchEstimates = useCallback(async () => {
+        if (!session?.user) return;
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('estimates')
+            .select('*, estimate_items(*)')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching estimates:', error);
+        } else {
+            setEstimates(data.map(mapEstimateFromDb));
+        }
+        setLoading(false);
+    }, [session]);
+
     useEffect(() => {
-        setEstimates(dataService.getEstimates());
-        setTemplates(dataService.getEstimateTemplates());
-    }, []);
-    
-    // Save data to storage when it changes
-    useEffect(() => {
-        dataService.setEstimates(estimates);
-    }, [estimates]);
-    
-    useEffect(() => {
-        dataService.setEstimateTemplates(templates);
-    }, [templates]);
-    
+        fetchEstimates();
+    }, [fetchEstimates]);
+
     // Calculate estimate totals
     const calculation = useMemo((): CalculationResults => {
         const materialsTotal = items
@@ -61,123 +113,190 @@ export const useEstimates = () => {
             grandTotal
         };
     }, [items, discount, discountType, tax]);
-    
-    // Load estimate by ID
+
+    // Load a specific estimate into the editor
     const loadEstimate = useCallback((id: string) => {
         const estimate = estimates.find(e => e.id === id);
         if (estimate) {
             setCurrentEstimate(estimate);
             setClientInfo(estimate.clientInfo);
             setEstimateNumber(estimate.number);
-            setEstimateDate(estimate.date);
+            setEstimateDate(new Date(estimate.date).toISOString().split('T')[0]);
             setItems(estimate.items);
             setDiscount(estimate.discount);
             setDiscountType(estimate.discountType);
             setTax(estimate.tax);
         }
     }, [estimates]);
-    
-    // Create new estimate
-    const createNewEstimate = useCallback((template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        const newEstimate = dataUtils.createEntity({
-            clientInfo: '',
+
+    // Set up a new blank estimate in the editor
+    const createNewEstimate = useCallback((template?: Partial<Estimate>) => {
+        const newNumber = generateNewEstimateNumber(estimates);
+        const newEstimate: Estimate = {
+            id: `temp-${Date.now()}`, // Temporary ID
+            user_id: session.user.id,
+            projectId: template?.projectId || null,
+            clientInfo: template?.clientInfo || '',
             items: template?.items || [],
             discount: template?.discount || 0,
             discountType: template?.discountType || 'percent',
             tax: template?.tax || 0,
-            number: generateNewEstimateNumber(estimates),
-            date: new Date().toISOString().split('T')[0],
-            status: 'draft' as const,
-            projectId: null
-        });
+            number: newNumber,
+            date: new Date().toISOString(),
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
         
         setCurrentEstimate(newEstimate);
         setClientInfo(newEstimate.clientInfo);
         setEstimateNumber(newEstimate.number);
-        setEstimateDate(newEstimate.date);
+        setEstimateDate(new Date(newEstimate.date).toISOString().split('T')[0]);
         setItems(newEstimate.items);
         setDiscount(newEstimate.discount);
         setDiscountType(newEstimate.discountType);
         setTax(newEstimate.tax);
         
         return newEstimate;
-    }, [estimates]);
-    
-    // Save current estimate
-    const saveEstimate = useCallback((projectId?: string | null) => {
-        if (!currentEstimate) return;
-        
-        const updatedEstimate = dataUtils.updateTimestamps({
-            ...currentEstimate,
-            clientInfo,
+    }, [estimates, session]);
+
+    // Save estimate (handles both create and update)
+    const saveEstimate = useCallback(async (projectId?: string | null) => {
+        if (!currentEstimate || !session?.user) return;
+
+        const isNewEstimate = currentEstimate.id.startsWith('temp-');
+
+        const estimateDataForDb = {
+            ...mapEstimateToDb(currentEstimate),
+            client_info: clientInfo,
             number: estimateNumber,
             date: estimateDate,
-            items,
-            discount,
-            discountType,
-            tax,
-            projectId: projectId || currentEstimate.projectId
-        });
+            discount: discount,
+            discount_type: discountType,
+            tax: tax,
+            project_id: projectId !== undefined ? projectId : currentEstimate.projectId,
+            user_id: session.user.id,
+        };
         
-        setEstimates(prev => {
-            const existingIndex = prev.findIndex(e => e.id === updatedEstimate.id);
-            if (existingIndex >= 0) {
-                const newEstimates = [...prev];
-                newEstimates[existingIndex] = updatedEstimate;
-                return newEstimates;
-            } else {
-                return [...prev, updatedEstimate];
+        if (isNewEstimate) {
+            // CREATE
+            const { data: newEstimateDb, error: estimateError } = await supabase
+                .from('estimates')
+                .insert(estimateDataForDb)
+                .select('*, estimate_items(*)')
+                .single();
+
+            if (estimateError) {
+                console.error("Error creating estimate:", estimateError);
+                return;
             }
-        });
-        
-        setCurrentEstimate(updatedEstimate);
-    }, [currentEstimate, clientInfo, estimateNumber, estimateDate, items, discount, discountType, tax]);
-    
+
+            const itemsWithEstimateId = items.map(item => ({
+                ...item,
+                estimate_id: newEstimateDb.id,
+                image_url: item.image,
+            }));
+            
+            const { error: itemsError } = await supabase
+                .from('estimate_items')
+                .insert(itemsWithEstimateId);
+
+            if (itemsError) {
+                console.error("Error creating estimate items:", itemsError);
+                // Optionally, delete the estimate that was just created
+                await supabase.from('estimates').delete().eq('id', newEstimateDb.id);
+                return;
+            }
+            
+            const finalEstimate = mapEstimateFromDb(newEstimateDb);
+            finalEstimate.items = items; // ensure items are in state
+            setEstimates(prev => [finalEstimate, ...prev]);
+            setCurrentEstimate(finalEstimate);
+
+        } else {
+            // UPDATE
+            const { data: updatedEstimateDb, error: estimateError } = await supabase
+                .from('estimates')
+                .update(estimateDataForDb)
+                .eq('id', currentEstimate.id)
+                .select()
+                .single();
+
+            if (estimateError) {
+                console.error("Error updating estimate:", estimateError);
+                return;
+            }
+
+            // Easiest way: delete all old items and insert new ones
+            const { error: deleteError } = await supabase
+                .from('estimate_items')
+                .delete()
+                .eq('estimate_id', currentEstimate.id);
+
+            if (deleteError) {
+                console.error("Error deleting old items:", deleteError);
+                return;
+            }
+
+            const itemsWithEstimateId = items.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                unit: item.unit,
+                image_url: item.image,
+                type: item.type,
+                estimate_id: currentEstimate.id,
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('estimate_items')
+                .insert(itemsWithEstimateId);
+            
+            if (itemsError) {
+                console.error("Error inserting new items:", itemsError);
+                return;
+            }
+
+            const finalEstimate = { ...currentEstimate, ...mapEstimateFromDb(updatedEstimateDb), items };
+            setEstimates(prev => prev.map(e => e.id === finalEstimate.id ? finalEstimate : e));
+            setCurrentEstimate(finalEstimate);
+        }
+    }, [currentEstimate, clientInfo, estimateNumber, estimateDate, items, discount, discountType, tax, session]);
+
     // Delete estimate
-    const deleteEstimate = useCallback((id: string) => {
-        setEstimates(prev => prev.filter(e => e.id !== id));
-        if (currentEstimate?.id === id) {
-            setCurrentEstimate(null);
-            setClientInfo('');
-            setEstimateNumber('');
-            setEstimateDate('');
-            setItems([]);
-            setDiscount(0);
-            setDiscountType('percent');
-            setTax(0);
+    const deleteEstimate = useCallback(async (id: string) => {
+        const { error } = await supabase.from('estimates').delete().eq('id', id);
+        if (error) {
+            console.error("Error deleting estimate:", error);
+        } else {
+            setEstimates(prev => prev.filter(e => e.id !== id));
+            if (currentEstimate?.id === id) {
+                setCurrentEstimate(null);
+            }
         }
     }, [currentEstimate]);
-    
+
     // Update estimate status
-    const updateEstimateStatus = useCallback((id: string, status: Estimate['status']) => {
-        setEstimates(prev => prev.map(e => 
-            e.id === id ? dataUtils.updateTimestamps({ ...e, status }) : e
-        ));
-    }, []);
-    
-    // Save as template
-    const saveAsTemplate = useCallback((id: string) => {
-        const estimate = estimates.find(e => e.id === id);
-        if (estimate) {
-            const template = {
-                items: estimate.items,
-                discount: estimate.discount,
-                discountType: estimate.discountType,
-                tax: estimate.tax
-            };
-            setTemplates(prev => [...prev, template]);
+    const updateEstimateStatus = useCallback(async (id: string, status: EstimateStatus) => {
+        const { data, error } = await supabase
+            .from('estimates')
+            .update({ status })
+            .eq('id', id)
+            .select()
+            .single();
+        
+        if (error) {
+            console.error("Error updating status:", error);
+        } else {
+            const updatedEstimate = mapEstimateFromDb(data);
+            setEstimates(prev => prev.map(e => e.id === id ? { ...e, ...updatedEstimate } : e));
         }
-    }, [estimates]);
-    
-    // Delete template
-    const deleteTemplate = useCallback((index: number) => {
-        setTemplates(prev => prev.filter((_, i) => i !== index));
     }, []);
-    
-    // Item management
+
+    // Item management (operates on local state, saved via saveEstimate)
     const addItem = useCallback(() => {
         const newItem: Item = {
-            id: dataUtils.generateId(),
+            id: `temp-item-${Date.now()}`,
             name: '',
             quantity: 1,
             price: 0,
@@ -200,7 +319,7 @@ export const useEstimates = () => {
     
     const addItemFromLibrary = useCallback((libraryItem: LibraryItem) => {
         const newItem: Item = {
-            id: dataUtils.generateId(),
+            id: `temp-item-${Date.now()}`,
             name: libraryItem.name,
             quantity: 1,
             price: libraryItem.price,
@@ -214,7 +333,7 @@ export const useEstimates = () => {
     const addItemsFromAI = useCallback((aiItems: Omit<Item, 'id' | 'image' | 'type'>[]) => {
         const newItems: Item[] = aiItems.map(item => ({
             ...item,
-            id: dataUtils.generateId(),
+            id: `temp-item-${Date.now()}`,
             image: null,
             type: 'work'
         }));
@@ -227,7 +346,6 @@ export const useEstimates = () => {
         ));
     }, []);
     
-    // Drag and drop for items
     const reorderItems = useCallback((dragIndex: number, hoverIndex: number) => {
         setItems(prev => {
             const newItems = [...prev];
@@ -238,20 +356,18 @@ export const useEstimates = () => {
         });
     }, []);
     
-    // Get estimates by project
     const getEstimatesByProject = useCallback((projectId: string) => {
         return estimates.filter(e => e.projectId === projectId);
     }, [estimates]);
     
-    // Get current estimate project ID
     const getCurrentEstimateProjectId = useCallback(() => {
         return currentEstimate?.projectId || null;
     }, [currentEstimate]);
     
     return {
-        // State
         estimates,
         templates,
+        loading,
         currentEstimate,
         clientInfo,
         estimateNumber,
@@ -261,25 +377,19 @@ export const useEstimates = () => {
         discountType,
         tax,
         calculation,
-        
-        // Actions
         setClientInfo,
         setEstimateNumber,
         setEstimateDate,
         setDiscount,
         setDiscountType,
         setTax,
-        
-        // Estimate management
         loadEstimate,
         createNewEstimate,
         saveEstimate,
         deleteEstimate,
         updateEstimateStatus,
-        saveAsTemplate,
-        deleteTemplate,
-        
-        // Item management
+        saveAsTemplate: () => {}, // Placeholder, templates not in DB yet
+        deleteTemplate: () => {}, // Placeholder
         addItem,
         updateItem,
         removeItem,
@@ -287,8 +397,6 @@ export const useEstimates = () => {
         addItemsFromAI,
         updateItemImage,
         reorderItems,
-        
-        // Utilities
         getEstimatesByProject,
         getCurrentEstimateProjectId
     };
