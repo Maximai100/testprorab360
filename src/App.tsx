@@ -1259,7 +1259,7 @@ const App: React.FC = () => {
     );
 };
 
-export default App;>Блокнот</h2>
+export default App;
                             <button onClick={() => appState.closeModal('scratchpad')} className="close-btn">
                                 <IconClose />
                             </button>
