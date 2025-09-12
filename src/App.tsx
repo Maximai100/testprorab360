@@ -103,13 +103,15 @@ const App: React.FC = () => {
                 setProjects(mapped);
             }
         };
-        
-        supabase.auth.getSession().then(({ data: { session } }) => {
+
+        const checkInitialSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
             if (session) {
                 fetchProjects();
             }
-        });
+        };
+        checkInitialSession();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
