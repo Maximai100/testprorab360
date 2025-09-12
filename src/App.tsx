@@ -82,56 +82,39 @@ const App: React.FC = () => {
 
     // Subscribe to Supabase auth changes
     useEffect(() => {
+        const fetchProjects = async () => {
+            const { data: projects, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching projects:', error);
+            } else if (projects) {
+                const mapped = projects.map((row: any) => ({
+                    id: row.id,
+                    name: row.name,
+                    client: row.client || '',
+                    address: row.address || '',
+                    status: row.status,
+                    createdAt: row.created_at,
+                    updatedAt: row.updated_at,
+                }));
+                setProjects(mapped);
+            }
+        };
+        
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             if (session) {
-                // Загрузка проектов пользователя
-                (async () => {
-                    const { data, error } = await supabase
-                        .from('projects')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-                    if (error) {
-                        console.error('Error fetching projects:', error);
-                    } else if (data) {
-                        const mapped = data.map((row: any) => ({
-                            id: row.id,
-                            name: row.name,
-                            client: row.client || '',
-                            address: row.address || '',
-                            status: row.status,
-                            createdAt: row.created_at,
-                            updatedAt: row.updated_at,
-                        }));
-                        setProjects(mapped);
-                    }
-                })();
+                fetchProjects();
             }
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             if (session) {
-                (async () => {
-                    const { data, error } = await supabase
-                        .from('projects')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-                    if (error) {
-                        console.error('Error fetching projects:', error);
-                    } else if (data) {
-                        const mapped = data.map((row: any) => ({
-                            id: row.id,
-                            name: row.name,
-                            client: row.client || '',
-                            address: row.address || '',
-                            status: row.status,
-                            createdAt: row.created_at,
-                            updatedAt: row.updated_at,
-                        }));
-                        setProjects(mapped);
-                    }
-                })();
+                fetchProjects();
             } else {
                 setProjects([]);
             }
