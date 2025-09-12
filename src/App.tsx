@@ -864,14 +864,7 @@ const App: React.FC = () => {
                         handleOpenProjectModal={handleOpenProjectModal}
                         handleDeleteProject={handleDeleteProject}
                         handleLoadEstimate={handleLoadEstimate}
-                        handleAddNewEstimateForProject={async () => {
-                            const newEstimate = estimatesHook.createNewEstimate({ projectId: activeProject.id });
-                            await estimatesHook.saveEstimate(activeProject.id);
-                            // After saving, the hook should update the estimates list, so we find the newest one.
-                            // This is a bit of a workaround, ideally saveEstimate would return the created object.
-                            // For now, we reload all estimates to get the new one.
-                            handleLoadEstimate(newEstimate.id); // This might not work if the temp id changes
-                        }}
+                        handleAddNewEstimateForProject={handleAddNewEstimateInProject}
                         handleDeleteProjectEstimate={handleDeleteEstimate}
                         onOpenFinanceModal={() => appState.openModal('financeEntry')}
                         onDeleteFinanceEntry={handleDeleteFinanceEntry}
@@ -1060,17 +1053,9 @@ const App: React.FC = () => {
                 </button>
                 <button 
                     onClick={() => {
-                        if (appState.activeView === 'estimate') {
-                            // Если уже в смете, создаем новую
-                            handleNewEstimate();
-                        } else {
-                            // Если переходим в смету из другого экрана, создаем новую
-                            // При переходе в блок сметы сбрасываем привязку к проекту и активный проект
-                            appState.setActiveProjectId(null); // Сбрасываем активный проект при переходе в блок смет
-                            setContextActiveProjectId(null); // очищаем контекст
-                            appState.navigateToView('estimate');
-                            handleNewEstimate();
-                        }
+                        appState.setActiveProjectId(null);
+                        setContextActiveProjectId(null);
+                        handleNewEstimate();
                     }} 
                     className={appState.activeView === 'estimate' ? 'active' : ''}
                 >
@@ -1256,6 +1241,25 @@ const App: React.FC = () => {
                     <div className="modal-content scratchpad-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Блокнот</h2>
+                            <button onClick={() => appState.closeModal('scratchpad')} className="close-btn">
+                                <IconClose />
+                            </button>
+                        </div>
+                        <textarea
+                            value={projectsHook.scratchpad}
+                            onChange={(e) => projectsHook.setScratchpad(e.target.value)}
+                            placeholder="Ваши заметки..."
+                        />
+                    </div>
+                </div>
+            )}
+            </>
+            )}
+        </div>
+    );
+};
+
+export default App;>Блокнот</h2>
                             <button onClick={() => appState.closeModal('scratchpad')} className="close-btn">
                                 <IconClose />
                             </button>

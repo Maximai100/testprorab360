@@ -184,7 +184,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 <div className="empty-state-container">
                                     <IconDocument />
                                     <p>Смет для этого проекта пока нет.</p>
-                                    <button onClick={handleAddNewEstimateForProject} className="btn btn-primary">+ Добавить смету</button>
+                                    <button onClick={() => handleAddNewEstimateForProject(activeProject.id)} className="btn btn-primary">+ Добавить смету</button>
                                 </div>
                             )}
                         </div>
