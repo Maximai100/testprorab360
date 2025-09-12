@@ -149,7 +149,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                      <div className="project-section-header">
                         <h3>Сметы ({projectEstimates.length})</h3>
                         <div className="header-actions">
-                            <button className="add-in-header-btn" onClick={() => handleAddNewEstimateForProject()}><IconPlus/></button>
+                            <button className="add-in-header-btn" onClick={() => handleAddNewEstimateForProject(activeProject.id)}><IconPlus/></button>
                             <button className="add-in-header-btn" onClick={onOpenEstimatesListModal}><IconFolder/></button>
                         </div>
                     </div>
