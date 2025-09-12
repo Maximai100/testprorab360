@@ -765,6 +765,454 @@ const App: React.FC = () => {
         appState.navigateToView('scratchpad');
     }, [appState]);
 
+    const handleAddNewEstimateInProject = (projectId: string) => {
+        appState.setActiveProjectId(projectId);
+        estimatesHook.createNewEstimate({ projectId });
+        appState.setActiveView('estimate');
+    };
+
+    const handleDeleteTemplate = useCallback((index: number) => {
+        estimatesHook.deleteTemplate(index);
+    }, [estimatesHook]);
+
+    // Project handlers
+    const handleOpenProjectModal = useCallback((project: Partial<Project> | null = null) => {
+        appState.openModal('newProject', project);
+    }, [appState]);
+
+    // Supabase: create project
+    const handleCreateProject = useCallback(async (newProjectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const insertPayload = [{
+            name: newProjectData.name,
+            client: newProjectData.client,
+            address: newProjectData.address,
+            status: newProjectData.status ?? 'planned',
+            user_id: user.id,
+        }];
+
+        const { data, error } = await supabase
+            .from('projects')
+            .insert(insertPayload)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error creating project:', error);
+            return null;
+        }
+
+        // Map DB row -> frontend type
+        const created: Project = {
+            id: data.id,
+            name: data.name,
+            client: data.client || '',
+            address: data.address || '',
+            status: data.status,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+        };
+        setProjects(prev => [created, ...prev]);
+        // Перейти к созданному проекту
+        appState.setActiveProjectId(created.id);
+        appState.setActiveView('projectDetail');
+        return created;
+    }, []);
+
+    // Supabase: update project
+    const handleUpdateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+        const payload: any = {};
+        if (typeof updates.name !== 'undefined') payload.name = updates.name;
+        if (typeof updates.client !== 'undefined') payload.client = updates.client;
+        if (typeof updates.address !== 'undefined') payload.address = updates.address;
+        if (typeof updates.status !== 'undefined') payload.status = updates.status;
+
+        const { data, error } = await supabase
+            .from('projects')
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) {
+            console.error('Error updating project:', error);
+            return;
+        }
+        const updated: Project = {
+            id: data.id,
+            name: data.name,
+            client: data.client || '',
+            address: data.address || '',
+            status: data.status,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+        };
+        setProjects(prev => prev.map(p => (p.id === id ? updated : p)));
+    }, []);
+
+    // Supabase: delete project
+    const handleDeleteProjectSupabase = useCallback(async (id: string) => {
+        const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (error) {
+            console.error('Error deleting project:', error);
+            return;
+        }
+        setProjects(prev => prev.filter(p => p.id !== id));
+    }, []);
+
+    const handleSaveProject = useCallback(() => {
+        if (appState.selectedProject) {
+            if (appState.selectedProject.id) {
+                handleUpdateProject(appState.selectedProject.id, appState.selectedProject);
+            } else {
+                const base = appState.selectedProject as Omit<Project, 'id' | 'createdAt' | 'updatedAt'>;
+                handleCreateProject({ ...base, status: base.status ?? 'planned' });
+            }
+        }
+        appState.closeModal('newProject');
+    }, [appState, handleCreateProject, handleUpdateProject]);
+
+    const handleDeleteProject = useCallback((id: string) => {
+        safeShowConfirm('Вы уверены, что хотите удалить этот проект? Все связанные данные будут удалены.', (ok) => {
+            if (ok) {
+                handleDeleteProjectSupabase(id);
+                if (appState.activeProjectId === id) {
+                    appState.goBack();
+                }
+            }
+        });
+    }, [appState, handleDeleteProjectSupabase]);
+
+    // Finance handlers
+    const handleAddFinanceEntry = useCallback((entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+        if (appState.activeProjectId) {
+            projectsHook.addFinanceEntry(appState.activeProjectId, entryData);
+        }
+        appState.closeModal('financeEntry');
+    }, [projectsHook, appState]);
+
+    const handleDeleteFinanceEntry = useCallback((id: string) => {
+        projectsHook.deleteFinanceEntry(id);
+    }, [projectsHook]);
+
+    // Photo report handlers
+    const handleAddPhotoReport = useCallback((reportData: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+        if (appState.activeProjectId) {
+            projectsHook.addPhotoReport(appState.activeProjectId, reportData);
+        }
+        appState.closeModal('photoReport');
+    }, [projectsHook, appState]);
+
+    const handleViewPhoto = useCallback((photo: PhotoReport) => {
+        appState.openModal('photoViewer', photo);
+    }, [appState]);
+
+    // Document handlers
+    const handleAddDocument = useCallback((name: string, fileUrl: string) => {
+        if (appState.activeProjectId) {
+            projectsHook.addDocument(appState.activeProjectId, { name, fileUrl, date: new Date().toISOString() });
+        }
+        appState.closeModal('documentUpload');
+    }, [projectsHook, appState]);
+
+    const handleAddGlobalDocument = useCallback((name: string, fileUrl: string) => {
+        projectsHook.addDocument(null, { name, fileUrl, date: new Date().toISOString() });
+        appState.closeModal('globalDocument');
+    }, [projectsHook, appState]);
+
+    const handleDeleteDocument = useCallback((id: string) => {
+        projectsHook.deleteDocument(id);
+    }, [projectsHook]);
+
+    const handleDeleteGlobalDocument = useCallback((id: string) => {
+        projectsHook.deleteDocument(id);
+    }, [projectsHook]);
+
+    // Work stage handlers
+    const handleAddWorkStage = useCallback((stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+        if (appState.activeProjectId) {
+            projectsHook.addWorkStage(appState.activeProjectId, stageData);
+        }
+        appState.closeModal('workStage');
+    }, [projectsHook, appState]);
+
+    const handleUpdateWorkStage = useCallback((id: string, updates: Partial<WorkStage>) => {
+        projectsHook.updateWorkStage(id, updates);
+    }, [projectsHook]);
+
+    const handleDeleteWorkStage = useCallback((id: string) => {
+        projectsHook.deleteWorkStage(id);
+    }, [projectsHook]);
+
+    // Note handlers
+    const handleAddNote = useCallback((text: string) => {
+        if (appState.activeProjectId) {
+            projectsHook.addNote(appState.activeProjectId, text);
+        }
+        appState.closeModal('note');
+    }, [projectsHook, appState]);
+
+    const handleUpdateNote = useCallback((id: string, text: string) => {
+        projectsHook.updateNote(id, text);
+    }, [projectsHook]);
+
+    const handleDeleteNote = useCallback((id: string) => {
+        projectsHook.deleteNote(id);
+    }, [projectsHook]);
+
+    // Task handlers
+    const handleAddTask = useCallback((title: string, projectId: string | null) => {
+        projectsHook.addTask(title, projectId);
+    }, [projectsHook]);
+
+    const handleUpdateTask = useCallback((task: Task) => {
+        projectsHook.updateTask(task.id, task);
+    }, [projectsHook]);
+
+    const handleToggleTask = useCallback((id: string) => {
+        projectsHook.toggleTask(id);
+    }, [projectsHook]);
+
+    // Tool handlers
+    const handleAddTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
+        projectsHook.addTool(toolData);
+        appState.closeModal('addTool');
+    }, [projectsHook, appState]);
+
+    const handleUpdateTool = useCallback((tool: Tool) => {
+        projectsHook.updateTool(tool.id, tool);
+    }, [projectsHook]);
+
+    const handleDeleteTool = useCallback((id: string) => {
+        projectsHook.deleteTool(id);
+    }, [projectsHook]);
+
+    // Consumable handlers
+    const handleAddConsumable = useCallback((consumable: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>) => {
+        projectsHook.addConsumable(consumable);
+    }, [projectsHook]);
+
+    const handleUpdateConsumable = useCallback((consumable: Consumable) => {
+        projectsHook.updateConsumable(consumable.id, consumable);
+    }, [projectsHook]);
+
+    const handleDeleteConsumable = useCallback((id: string) => {
+        projectsHook.deleteConsumable(id);
+    }, [projectsHook]);
+
+    // Library handlers
+    const handleLibraryItemsChange = useCallback((items: LibraryItem[]) => {
+        setLibraryItems(items);
+    }, []);
+
+    const handleAddItemToEstimate = useCallback((item: LibraryItem) => {
+        estimatesHook.addItemFromLibrary(item);
+    }, [estimatesHook]);
+
+    // Profile handlers
+    const handleProfileChange = useCallback((field: keyof CompanyProfile, value: string) => {
+        setCompanyProfile(prev => ({ ...prev, [field]: value }));
+    }, []);
+
+    const handleLogoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            readFileAsDataURL(file).then(dataUrl => {
+                setCompanyProfile(prev => ({ ...prev, logo: dataUrl }));
+            });
+        }
+    }, []);
+
+    const handleRemoveLogo = useCallback(() => {
+        setCompanyProfile(prev => ({ ...prev, logo: null }));
+    }, []);
+
+    const handleSaveProfile = useCallback(() => {
+        // Profile is already saved via useEffect
+        appState.closeModal('settings');
+    }, [appState]);
+
+    // Backup and restore
+    const handleBackup = useCallback(() => {
+        try {
+            const data = dataService.exportData();
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            safeShowAlert('Резервная копия создана');
+        } catch (error) {
+            safeShowAlert('Ошибка при создании резервной копии');
+        }
+    }, []);
+
+    const handleRestore = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    dataService.importData(e.target?.result as string);
+                    safeShowAlert('Данные восстановлены. Перезагрузите страницу.');
+                } catch (error) {
+                    safeShowAlert('Ошибка при восстановлении данных');
+                }
+            };
+            reader.readAsText(file);
+        }
+    }, []);
+
+    // Item handlers
+    const handleAddItem = useCallback(() => {
+        estimatesHook.addItem();
+    }, [estimatesHook]);
+
+    const handleItemChange = useCallback((id: string, field: keyof Item, value: string | number) => {
+        estimatesHook.updateItem(id, field, value);
+        appState.setIsDirty(true);
+    }, [estimatesHook, appState]);
+
+    const handleRemoveItem = useCallback((id: string) => {
+        estimatesHook.removeItem(id);
+        appState.setIsDirty(true);
+    }, [estimatesHook, appState]);
+
+    const handleItemImageChange = useCallback((id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            resizeImage(file, 800).then(dataUrl => {
+                estimatesHook.updateItemImage(id, dataUrl);
+                appState.setIsDirty(true);
+            });
+        }
+    }, [estimatesHook, appState]);
+
+    const handleRemoveItemImage = useCallback((id: string) => {
+        estimatesHook.updateItemImage(id, null);
+        appState.setIsDirty(true);
+    }, [estimatesHook, appState]);
+
+    const handleDragSort = useCallback(() => {
+        if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+            estimatesHook.reorderItems(dragItem.current, dragOverItem.current);
+            appState.setIsDirty(true);
+        }
+        dragItem.current = null;
+        dragOverItem.current = null;
+    }, [estimatesHook, appState]);
+
+    // AI handlers
+    const handleAddItemsFromAI = useCallback((items: Omit<Item, 'id' | 'image' | 'type'>[]) => {
+        estimatesHook.addItemsFromAI(items);
+        appState.setIsDirty(true);
+    }, [estimatesHook, appState]);
+
+    // PDF export
+    const handleExportPDF = useCallback(async () => {
+        if (!estimatesHook.currentEstimate) return;
+        
+        appState.setLoading('pdf', true);
+        try {
+            const { jsPDF } = await import('jspdf');
+            const autoTable = (await import('jspdf-autotable')).default;
+            
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(20);
+            doc.text('СМЕТА', 20, 30);
+            
+            if (companyProfile.name) {
+                doc.setFontSize(12);
+                doc.text(companyProfile.name, 20, 40);
+            }
+            
+            // Client info
+            if (estimatesHook.clientInfo) {
+                doc.setFontSize(10);
+                doc.text(`Клиент: ${estimatesHook.clientInfo}`, 20, 50);
+            }
+            
+            // Estimate details
+            doc.text(`Номер: ${estimatesHook.estimateNumber}`, 20, 60);
+            doc.text(`Дата: ${estimatesHook.estimateDate}`, 20, 70);
+            
+            // Items table
+            const tableData = estimatesHook.items.map((item, index) => [
+                index + 1,
+                item.name,
+                item.quantity,
+                item.unit,
+                formatCurrency(item.price),
+                formatCurrency(item.quantity * item.price)
+            ]);
+            
+            autoTable(doc, {
+                head: [['№', 'Наименование', 'Кол-во', 'Ед.', 'Цена', 'Сумма']],
+                body: tableData,
+                startY: 80,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [79, 91, 213] }
+            });
+            
+            // Totals
+            const finalY = (doc as any).lastAutoTable.finalY + 10;
+            doc.setFontSize(10);
+            doc.text(`Итого: ${formatCurrency(estimatesHook.calculation.grandTotal)}`, 20, finalY);
+            
+            doc.save(`smeta-${estimatesHook.estimateNumber}.pdf`);
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            safeShowAlert('Ошибка при генерации PDF');
+        } finally {
+            appState.setLoading('pdf', false);
+        }
+    }, [estimatesHook, companyProfile, formatCurrency, appState]);
+
+    // Share
+    const handleShare = useCallback(() => {
+        if (tg && tg.sendData) {
+            const data = {
+                type: 'estimate',
+                estimate: estimatesHook.currentEstimate
+            };
+            tg.sendData(JSON.stringify(data));
+        } else {
+            safeShowAlert('Функция доступна только в Telegram');
+        }
+    }, [estimatesHook.currentEstimate]);
+
+    // Navigation handlers
+    const handleBackToProject = useCallback(() => {
+        if (appState.activeProjectId) {
+            appState.navigateToProject(appState.activeProjectId);
+        } else {
+            appState.navigateToView('workspace');
+        }
+    }, [appState]);
+
+    const handleNavigateToTasks = useCallback(() => {
+        appState.navigateToView('projectTasks');
+    }, [appState]);
+
+    const handleNavigateToInventory = useCallback(() => {
+        appState.navigateToView('inventory');
+    }, [appState]);
+
+    const handleNavigateToReports = useCallback(() => {
+        appState.navigateToView('reports');
+    }, [appState]);
+
+    const handleOpenScratchpad = useCallback(() => {
+        appState.navigateToView('scratchpad');
+    }, [appState]);
+
     // Render view
     const renderView = () => {
         switch (appState.activeView) {
@@ -1241,25 +1689,6 @@ const App: React.FC = () => {
                     <div className="modal-content scratchpad-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Блокнот</h2>
-                            <button onClick={() => appState.closeModal('scratchpad')} className="close-btn">
-                                <IconClose />
-                            </button>
-                        </div>
-                        <textarea
-                            value={projectsHook.scratchpad}
-                            onChange={(e) => projectsHook.setScratchpad(e.target.value)}
-                            placeholder="Ваши заметки..."
-                        />
-                    </div>
-                </div>
-            )}
-            </>
-            )}
-        </div>
-    );
-};
-
-export default App;
                             <button onClick={() => appState.closeModal('scratchpad')} className="close-btn">
                                 <IconClose />
                             </button>
