@@ -107,7 +107,19 @@ const App: React.FC = () => {
         const fetchAllEstimates = async () => {
           const { data, error } = await supabase
             .from('estimates')
-            .select('*, estimate_items(*)'); // Загружаем все сметы и все их позиции
+            .select(`
+              *,
+              estimate_items (
+                id,
+                name,
+                quantity,
+                price,
+                unit,
+                image_url, 
+                type,
+                estimate_id
+              )
+            `);
     
           if (error) console.error('Error fetching estimates:', error);
           else estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
