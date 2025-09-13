@@ -104,11 +104,21 @@ const App: React.FC = () => {
             }
         };
 
+        const fetchAllEstimates = async () => {
+          const { data, error } = await supabase
+            .from('estimates')
+            .select('*, estimate_items(*)'); // Загружаем все сметы и все их позиции
+    
+          if (error) console.error('Error fetching estimates:', error);
+          else estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+        };
+
         const checkInitialSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
             if (session) {
                 fetchProjects();
+                fetchAllEstimates();
             }
         };
         checkInitialSession();
@@ -117,6 +127,7 @@ const App: React.FC = () => {
             setSession(session);
             if (session) {
                 fetchProjects();
+                fetchAllEstimates();
             } else {
                 setProjects([]);
             }
