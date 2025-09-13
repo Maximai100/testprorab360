@@ -39,11 +39,20 @@ export const useEstimates = (session) => {
     };
   }, [items, discount, discountType, tax]);
 
-  const createNewEstimate = (projectId: string | null = null) => {
+  const createNewEstimate = (projectIdOrObject: string | { projectId: string } | null = null) => {
+    let finalProjectId: string | null = null;
+
+    // "Умная" проверка: исправляем данные, если они пришли в неправильном формате
+    if (typeof projectIdOrObject === 'string') {
+      finalProjectId = projectIdOrObject;
+    } else if (projectIdOrObject && typeof projectIdOrObject === 'object' && 'projectId' in projectIdOrObject) {
+      finalProjectId = projectIdOrObject.projectId;
+    }
+
     const newTempId = `temp-${crypto.randomUUID()}`;
     const newEstimate: Estimate = {
       id: newTempId,
-      projectId: projectId,
+      projectId: finalProjectId, // Используем исправленный projectId
       user_id: session.user.id,
       items: [],
       number: generateNewEstimateNumber(allEstimates),
@@ -56,6 +65,7 @@ export const useEstimates = (session) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
     setCurrentEstimate(newEstimate);
     setItems(newEstimate.items);
     setClientInfo(newEstimate.clientInfo || '');
