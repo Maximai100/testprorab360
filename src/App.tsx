@@ -331,7 +331,7 @@ const App: React.FC = () => {
 
     const handleAddNewEstimateInProject = (projectId: string) => {
         appState.setActiveProjectId(projectId);
-        estimatesHook.createNewEstimate({ projectId });
+        estimatesHook.createNewEstimate(projectId);
         appState.setActiveView('estimate');
     };
 
