@@ -171,7 +171,7 @@ export const useEstimates = (session: any) => {
             discount,
             discountType,
             tax,
-            projectId: projectId !== undefined ? projectId : currentEstimate.projectId,
+            projectId: projectId,
         } : null;
 
         if (!estimateWithLatestItems) return;

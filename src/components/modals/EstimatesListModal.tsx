@@ -20,7 +20,7 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
         }
     }, []);
 
-    const filteredEstimates = useMemo(() => estimates.filter(e => e.number.toLowerCase().includes(estimatesSearch.toLowerCase()) || e.clientInfo?.toLowerCase().includes(estimatesSearch.toLowerCase())), [estimates, estimatesSearch]);
+    const filteredEstimates = useMemo(() => estimates.filter(e => e.number.toLowerCase().includes(estimatesSearch.toLowerCase()) || (e.clientInfo && e.clientInfo.toLowerCase().includes(estimatesSearch.toLowerCase()))), [estimates, estimatesSearch]);
     const filteredTemplates = useMemo(() => templates.map((t, i) => ({ ...t, index: i })).filter(t => t.items.some(item => item.name.toLowerCase().includes(estimatesSearch.toLowerCase()))), [templates, estimatesSearch]);
 
     const { activeProjectId } = useProjectContext();
