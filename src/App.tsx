@@ -1123,7 +1123,7 @@ const App: React.FC = () => {
                     onLoadEstimate={handleLoadEstimate}
                     onDeleteEstimate={handleDeleteEstimate}
                     onStatusChange={handleStatusChange}
-                    onSaveAsTemplate={handleSaveAsTemplate}
+                    onSaveAsTemplate={estimatesHook.saveAsTemplate}
                     onDeleteTemplate={handleDeleteTemplate}
                     onNewEstimate={handleNewEstimate}
                     onInputFocus={handleInputFocus}
