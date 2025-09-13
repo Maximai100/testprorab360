@@ -162,106 +162,104 @@ export const useEstimates = (session: any) => {
 
     // Save estimate (handles both create and update)
     const saveEstimate = useCallback(async (projectId?: string | null) => {
-        if (!currentEstimate || !session?.user) return;
-
-        const isNewEstimate = currentEstimate.id.startsWith('temp-');
-
-        const estimateDataForDb = {
-            ...mapEstimateToDb(currentEstimate),
-            client_info: clientInfo,
-            number: estimateNumber,
+        const estimateWithLatestItems = currentEstimate ? {
+            ...currentEstimate,
+            items,
+            clientInfo,
+            estimateNumber,
             date: estimateDate,
-            discount: discount,
-            discount_type: discountType,
-            tax: tax,
-            project_id: projectId !== undefined ? projectId : currentEstimate.projectId,
-            user_id: session.user.id,
-        };
-        
-        if (isNewEstimate) {
-            // CREATE
-            const { data: newEstimateDb, error: estimateError } = await supabase
+            discount,
+            discountType,
+            tax,
+            projectId: projectId !== undefined ? projectId : currentEstimate.projectId,
+        } : null;
+
+        if (!estimateWithLatestItems) return;
+
+        const { items: itemsToSave, ...estimateData } = estimateWithLatestItems;
+
+        const user = session?.user;
+        if (!user) {
+            console.error("Пользователь не авторизован!");
+            return;
+        }
+
+        let estimateId = estimateData.id;
+        const isNew = estimateId.startsWith('temp-');
+
+        if (!isNew) {
+            // --- ОБНОВЛЕНИЕ СУЩЕСТВУЮЩЕЙ СМЕТЫ ---
+            const { error: estimateError } = await supabase
                 .from('estimates')
-                .insert(estimateDataForDb)
-                .select('*, estimate_items(*)')
-                .single();
+                .update(mapEstimateToDb({ ...estimateData, user_id: user.id }))
+                .eq('id', estimateData.id);
 
             if (estimateError) {
-                console.error("Error creating estimate:", estimateError);
+                console.error('Ошибка при обновлении сметы:', estimateError);
                 return;
             }
 
-            const itemsWithEstimateId = items.map(item => ({
-                ...item,
-                estimate_id: newEstimateDb.id,
-                image_url: item.image,
-            }));
-            
-            const { error: itemsError } = await supabase
-                .from('estimate_items')
-                .insert(itemsWithEstimateId);
-
-            if (itemsError) {
-                console.error("Error creating estimate items:", itemsError);
-                // Optionally, delete the estimate that was just created
-                await supabase.from('estimates').delete().eq('id', newEstimateDb.id);
-                return;
-            }
-            
-            const finalEstimate = mapEstimateFromDb(newEstimateDb);
-            finalEstimate.items = items; // ensure items are in state
-            setEstimates(prev => [finalEstimate, ...prev]);
-            setCurrentEstimate(finalEstimate);
-
-        } else {
-            // UPDATE
-            const { data: updatedEstimateDb, error: estimateError } = await supabase
-                .from('estimates')
-                .update(estimateDataForDb)
-                .eq('id', currentEstimate.id)
-                .select()
-                .single();
-
-            if (estimateError) {
-                console.error("Error updating estimate:", estimateError);
-                return;
-            }
-
-            // Easiest way: delete all old items and insert new ones
             const { error: deleteError } = await supabase
                 .from('estimate_items')
                 .delete()
-                .eq('estimate_id', currentEstimate.id);
+                .eq('estimate_id', estimateData.id);
 
             if (deleteError) {
-                console.error("Error deleting old items:", deleteError);
+                console.error('Ошибка при удалении старых позиций:', deleteError);
+            }
+        } else {
+            // --- СОЗДАНИЕ НОВОЙ СМЕТЫ ---
+            const { id, ...insertData } = estimateData;
+            const { data: newEstimate, error: estimateError } = await supabase
+                .from('estimates')
+                .insert([mapEstimateToDb({ ...insertData, user_id: user.id })])
+                .select('id')
+                .single();
+
+            if (estimateError) {
+                console.error('Ошибка при создании сметы:', estimateError);
                 return;
             }
+            estimateId = newEstimate.id;
+        }
 
-            const itemsWithEstimateId = items.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-                unit: item.unit,
-                image_url: item.image,
-                type: item.type,
-                estimate_id: currentEstimate.id,
+        // Шаг 2: Сохраняем позиции сметы
+        if (itemsToSave && itemsToSave.length > 0) {
+            const itemsToInsert = itemsToSave.map(({ id, image, ...item }) => ({
+                ...item,
+                image_url: image,
+                estimate_id: estimateId,
             }));
 
             const { error: itemsError } = await supabase
                 .from('estimate_items')
-                .insert(itemsWithEstimateId);
-            
+                .insert(itemsToInsert);
+
             if (itemsError) {
-                console.error("Error inserting new items:", itemsError);
+                console.error('Ошибка при сохранении позиций сметы:', itemsError);
                 return;
             }
-
-            const finalEstimate = { ...currentEstimate, ...mapEstimateFromDb(updatedEstimateDb), items };
-            setEstimates(prev => prev.map(e => e.id === finalEstimate.id ? finalEstimate : e));
-            setCurrentEstimate(finalEstimate);
         }
-    }, [currentEstimate, clientInfo, estimateNumber, estimateDate, items, discount, discountType, tax, session]);
+
+        // Шаг 3: Обновляем локальное состояние и сообщаем об успехе
+        console.log('Смета успешно сохранена!');
+        
+        await fetchEstimates();
+        if (isNew) {
+            const { data } = await supabase.from('estimates').select('*, estimate_items(*)').eq('id', estimateId).single();
+            if (data) {
+                const newCurrentEstimate = mapEstimateFromDb(data);
+                setCurrentEstimate(newCurrentEstimate);
+                setClientInfo(newCurrentEstimate.clientInfo);
+                setEstimateNumber(newCurrentEstimate.number);
+                setEstimateDate(new Date(newCurrentEstimate.date).toISOString().split('T')[0]);
+                setItems(newCurrentEstimate.items);
+                setDiscount(newCurrentEstimate.discount);
+                setDiscountType(newCurrentEstimate.discountType);
+                setTax(newCurrentEstimate.tax);
+            }
+        }
+    }, [currentEstimate, clientInfo, estimateNumber, estimateDate, items, discount, discountType, tax, session, fetchEstimates]);
 
     // Delete estimate
     const deleteEstimate = useCallback(async (id: string) => {
