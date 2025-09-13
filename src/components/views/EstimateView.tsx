@@ -6,12 +6,23 @@ import { Loader } from '../common/Loader';
 export const EstimateView: React.FC<EstimateViewProps> = ({
     currentEstimateProjectId, handleBackToProject, clientInfo, setClientInfo, setIsDirty, 
     handleThemeChange, themeIcon, themeMode, onOpenLibraryModal, onOpenEstimatesListModal, onOpenSettingsModal, onOpenAISuggestModal,
-    estimateNumber, setEstimateNumber, estimateDate, setEstimateDate, handleInputFocus, items, 
+    estimateNumber, setEstimateNumber, estimateDate, setEstimateDate, handleInputFocus, items = [], 
     dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange, 
     handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem, 
     discount, setDiscount, discountType, setDiscountType, tax, setTax, calculation, 
-    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, handleShare, handleNewEstimate 
-}) => (
+    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, handleShare, onNewEstimate 
+}) => {
+    const defaultCalculation = {
+        materialsTotal: 0,
+        workTotal: 0,
+        subtotal: 0,
+        discountAmount: 0,
+        taxAmount: 0,
+        grandTotal: 0,
+    };
+    const finalCalculation = calculation || defaultCalculation;
+
+    return (
     <>
         <header className="estimate-header">
             {currentEstimateProjectId && <button onClick={handleBackToProject} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>}
@@ -43,10 +54,12 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                         key={item.id} 
                         draggable 
                         onDragStart={() => {
-                            dragItem.current = index;
+                            if (dragItem) dragItem.current = index;
                             setDraggingItem(item.id);
                         }} 
-                        onDragEnter={() => dragOverItem.current = index} 
+                        onDragEnter={() => {
+                            if (dragOverItem) dragOverItem.current = index;
+                        }} 
                         onDragEnd={() => {
                             handleDragSort();
                             setDraggingItem(null);
@@ -61,7 +74,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                                     type="file"
                                     accept="image/*"
                                     style={{ display: 'none' }}
-                                    ref={el => { fileInputRefs.current[item.id] = el; }}
+                                    ref={el => { if (fileInputRefs) fileInputRefs.current[item.id] = el; }}
                                     onChange={(e) => handleItemImageChange(item.id, e)}
                                 />
                                 <button onClick={() => handleRemoveItem(item.id)} className="remove-btn" aria-label="Удалить позицию"><IconClose/></button>
@@ -93,30 +106,30 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
             </div>
             <div className="add-items-container">
                 <button onClick={handleAddItem} className="btn btn-secondary"><IconPlus/> Добавить позицию</button>
-                <button onClick={() => onOpenLibraryModal(true)} className="btn btn-secondary"><IconBook/> Из справочника</button>
+                <button onClick={() => onOpenLibraryModal()} className="btn btn-secondary"><IconBook/> Из справочника</button>
             </div>
             
             <div className="summary-details card"><div className="summary-row"><label htmlFor="discount">Скидка</label><div className="input-group"><input id="discount" type="number" value={discount || ''} onChange={(e) => { setDiscount(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/><div className="toggle-group"><button onClick={() => { setDiscountType('percent'); setIsDirty(true); }} className={discountType === 'percent' ? 'active' : ''}>%</button><button onClick={() => { setDiscountType('fixed'); setIsDirty(true); }} className={discountType === 'fixed' ? 'active' : ''}>РУБ</button></div></div></div><div className="summary-row"><label htmlFor="tax">Налог (%)</label><div className="input-group"><input id="tax" type="number" value={tax || ''} onChange={(e) => { setTax(Math.max(0, parseFloat(e.target.value) || 0)); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="0" min="0"/></div></div></div>
             <div className="total-container card">
                 <div className="total-breakdown">
-                    <div className="total-row"><span>Материалы</span><span>{formatCurrency(calculation.materialsTotal)}</span></div>
-                    <div className="total-row"><span>Работа</span><span>{formatCurrency(calculation.workTotal)}</span></div>
-                    <div className="total-row"><span>Подытог</span><span>{formatCurrency(calculation.subtotal)}</span></div>
-                    {calculation.discountAmount > 0 && (
+                    <div className="total-row"><span>Материалы</span><span>{formatCurrency(finalCalculation.materialsTotal)}</span></div>
+                    <div className="total-row"><span>Работа</span><span>{formatCurrency(finalCalculation.workTotal)}</span></div>
+                    <div className="total-row"><span>Подытог</span><span>{formatCurrency(finalCalculation.subtotal)}</span></div>
+                    {finalCalculation.discountAmount > 0 && (
                         <div className="total-row">
                             <span>Скидка ({discountType === 'percent' ? `${discount}%` : formatCurrency(discount)})</span>
-                            <span>-{formatCurrency(calculation.discountAmount)}</span>
+                            <span>-{formatCurrency(finalCalculation.discountAmount)}</span>
                         </div>
                     )}
-                    {calculation.taxAmount > 0 && (
+                    {finalCalculation.taxAmount > 0 && (
                         <div className="total-row">
                             <span>Налог ({tax}%)</span>
-                            <span>+{formatCurrency(calculation.taxAmount)}</span>
+                            <span>+{formatCurrency(finalCalculation.taxAmount)}</span>
                         </div>
                     )}
                     <div className="total-row grand-total">
                         <span>Итого:</span>
-                        <span>{formatCurrency(calculation.grandTotal)}</span>
+                        <span>{formatCurrency(finalCalculation.grandTotal)}</span>
                     </div>
                 </div>
             </div>
@@ -127,9 +140,10 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                 <button onClick={handleExportPDF} className="btn btn-secondary" disabled={isPdfLoading}>
                     {isPdfLoading ? <Loader /> : 'Экспорт в PDF'}
                 </button>
-                <button onClick={handleNewEstimate} className="btn btn-secondary"><IconPlus/> Новая смета</button>
+                <button onClick={() => onNewEstimate()} className="btn btn-secondary"><IconPlus/> Новая смета</button>
                 <button onClick={handleShare} className="btn btn-primary share-btn">Поделиться</button>
             </div>
         </main>
     </>
-);
+    );
+}

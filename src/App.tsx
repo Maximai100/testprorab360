@@ -167,7 +167,7 @@ const App: React.FC = () => {
 
     // Use new hooks
     const appState = useAppState();
-    const estimatesHook = useEstimates();
+    const estimatesHook = useEstimates(session);
     const projectsHook = useProjects();
 
     // Проекты (хранятся в Supabase)
@@ -1055,7 +1055,8 @@ const App: React.FC = () => {
                     onClick={() => {
                         appState.setActiveProjectId(null);
                         setContextActiveProjectId(null);
-                        handleNewEstimate();
+                        estimatesHook.createNewEstimate();
+                        appState.setActiveView('estimate');
                     }} 
                     className={appState.activeView === 'estimate' ? 'active' : ''}
                 >
