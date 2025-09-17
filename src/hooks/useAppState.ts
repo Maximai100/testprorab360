@@ -10,7 +10,7 @@ export const useAppState = () => {
     const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
     
     // Theme state
-    const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+    const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
     
     // UI state
     const [isDirty, setIsDirty] = useState(false);
