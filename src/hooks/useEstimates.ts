@@ -129,9 +129,18 @@ export const useEstimates = (session: Session | null) => {
       setStatus(estimateToLoad.status);
       
       // Если project_id изменился, помечаем как "грязную" для активации кнопки сохранения
+      console.log('loadEstimate: проверяем изменение project_id:', {
+        projectId,
+        originalProjectId: estimateToLoad.project_id,
+        isDifferent: projectId !== undefined && projectId !== estimateToLoad.project_id,
+        setIsDirtyExists: !!setIsDirty
+      });
+      
       if (projectId !== undefined && projectId !== estimateToLoad.project_id && setIsDirty) {
         setIsDirty(true);
         console.log('loadEstimate: смета привязана к новому проекту, активируем кнопку сохранения');
+      } else {
+        console.log('loadEstimate: project_id не изменился или setIsDirty не передан');
       }
       
       console.log('loadEstimate: загружена смета', estimateId, 'для проекта', projectId);

@@ -290,6 +290,7 @@ const App: React.FC = () => {
 
     // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
+        console.log('handleLoadEstimate: загружаем смету', id, 'для проекта', appState.activeProjectId);
         estimatesHook.loadEstimate(id, appState.activeProjectId, appState.setIsDirty);
         appState.navigateToEstimate(id);
     }, [estimatesHook, appState]);
