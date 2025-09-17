@@ -182,6 +182,7 @@
                startY = e.touches[0].clientY;
                isPulling = false;
                pullDistance = 0;
+               console.log('👆 Touch start:', startY);
            }, { passive: true });
            
            document.addEventListener('touchmove', (e) => {
@@ -191,11 +192,13 @@
                // Проверяем, что мы в самом верху страницы и тянем вниз
                if (scrollTop <= 5 && currentY > startY) {
                    pullDistance = currentY - startY;
+                   console.log('👆 Touch move - scrollTop:', scrollTop, 'pullDistance:', pullDistance);
                    
                    // Активируем pull-to-refresh только при достаточном расстоянии
                    if (pullDistance > 30) {
                        isPulling = true;
                        e.preventDefault();
+                       console.log('🔄 Pull-to-refresh активирован');
                        
                        const limitedDistance = Math.min(pullDistance, MAX_PULL);
                        
@@ -245,6 +248,22 @@
 <body>
     <div id="root"></div>
     <script>
+      // Диагностика скроллинга
+      console.log('🔍 Диагностика скроллинга:');
+      console.log('- document.body.style.position:', document.body.style.position);
+      console.log('- document.body.style.overflow:', document.body.style.overflow);
+      console.log('- document.body.style.height:', document.body.style.height);
+      console.log('- window.innerHeight:', window.innerHeight);
+      console.log('- document.documentElement.scrollHeight:', document.documentElement.scrollHeight);
+      
+      // Проверяем, есть ли скролл
+      setTimeout(() => {
+        const hasScroll = document.documentElement.scrollHeight > window.innerHeight;
+        console.log('📏 Есть ли скролл:', hasScroll);
+        console.log('📏 Высота документа:', document.documentElement.scrollHeight);
+        console.log('📏 Высота окна:', window.innerHeight);
+      }, 1000);
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js').then(function(registration) {
