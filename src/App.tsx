@@ -134,6 +134,32 @@ const App: React.FC = () => {
     const projectsHook = useProjects();
     console.log('🔧 App: useProjects инициализирован');
 
+    // Функция для загрузки всех смет
+    const fetchAllEstimates = useCallback(async () => {
+      console.log('App: fetchAllEstimates запущен');
+      const { data, error } = await supabase
+        .from('estimates')
+        .select(`
+          *,
+          estimate_items (
+            id,
+            name,
+            quantity,
+            price,
+            unit,
+            image_url, 
+            type,
+            estimate_id
+          )
+        `);
+
+      if (error) console.error('Error fetching estimates:', error);
+      else {
+          console.log('App: fetchAllEstimates успешно, данные:', data);
+          estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+      }
+    }, [estimatesHook]);
+
     // Subscribe to Supabase auth changes
     useEffect(() => {
         console.log('⚡ App: useEffect инициализации запущен - ' + new Date().toLocaleTimeString());
@@ -141,31 +167,6 @@ const App: React.FC = () => {
         console.log('⚡ App: estimatesHook:', estimatesHook);
         
         // Проекты теперь загружаются через projectsHook.loadProjectsFromSupabase()
-
-        const fetchAllEstimates = async () => {
-          console.log('App: fetchAllEstimates запущен');
-          const { data, error } = await supabase
-            .from('estimates')
-            .select(`
-              *,
-              estimate_items (
-                id,
-                name,
-                quantity,
-                price,
-                unit,
-                image_url, 
-                type,
-                estimate_id
-              )
-            `);
-    
-          if (error) console.error('Error fetching estimates:', error);
-          else {
-              console.log('App: fetchAllEstimates успешно, данные:', data);
-              estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
-          }
-        };
 
         const checkInitialSession = async () => {
             console.log('App: Проверяем начальную сессию...');
