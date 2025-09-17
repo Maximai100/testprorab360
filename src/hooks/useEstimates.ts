@@ -5,6 +5,7 @@ import { generateNewEstimateNumber } from '../utils';
 import type { Session } from '@supabase/supabase-js';
 
 export const useEstimates = (session: Session | null) => {
+  console.log('📊 useEstimates: Хук useEstimates инициализируется');
   const [allEstimates, setAllEstimates] = useState<Estimate[]>([]);
   const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
   const [clientInfo, setClientInfo] = useState('');

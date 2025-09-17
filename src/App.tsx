@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
+// Простой лог для проверки выполнения
+console.log('📁 App.tsx: Файл загружен и выполняется');
+
 import { GoogleGenAI } from '@google/genai';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
@@ -1300,4 +1303,5 @@ const App: React.FC = () => {
     );
 };
 
+console.log('📤 App.tsx: Компонент App определен, экспортируем...');
 export default App;
