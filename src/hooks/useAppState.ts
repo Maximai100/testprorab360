@@ -3,6 +3,7 @@ import { ThemeMode } from '../types';
 import { dataService } from '../services/storageService';
 
 export const useAppState = () => {
+    console.log('🎯 useAppState: Хук useAppState инициализируется');
     // App navigation state
     const [activeView, setActiveView] = useState<string>('workspace');
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -49,10 +50,12 @@ export const useAppState = () => {
     
     // Load initial state from localStorage
     useEffect(() => {
+        console.log('🎯 useAppState: Загружаем состояние из localStorage');
         setActiveView(dataService.getActiveView());
         setActiveProjectId(dataService.getActiveProjectId());
         setActiveEstimateId(dataService.getActiveEstimateId());
         setThemeMode(dataService.getThemeMode());
+        console.log('🎯 useAppState: Состояние загружено из localStorage');
     }, []);
     
     // Save state to localStorage when it changes
