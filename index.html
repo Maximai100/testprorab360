@@ -244,9 +244,44 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').catch(function(err){
+          navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            console.log('SW registered successfully');
+            
+            // Проверяем обновления при загрузке
+            registration.update();
+            
+            // Слушаем обновления Service Worker
+            registration.addEventListener('updatefound', function() {
+              console.log('SW: New version found, updating...');
+              const newWorker = registration.installing;
+              
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('SW: New version installed, reloading...');
+                  // Автоматически перезагружаем страницу для применения обновлений
+                  window.location.reload();
+                }
+              });
+            });
+            
+            // Слушаем сообщения от Service Worker
+            navigator.serviceWorker.addEventListener('message', function(event) {
+              if (event.data.type === 'UPDATE_AVAILABLE') {
+                console.log('SW: Update available, reloading...');
+                window.location.reload();
+              }
+            });
+            
+          }).catch(function(err){
             console.warn('SW registration failed', err);
           });
+          
+          // Проверяем обновления каждые 30 секунд
+          setInterval(function() {
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
+            }
+          }, 30000);
         });
       }
     </script>

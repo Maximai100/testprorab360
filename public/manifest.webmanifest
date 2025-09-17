@@ -1,6 +1,7 @@
 {
   "name": "Смета за 5 минут",
   "short_name": "Смета",
+  "version": "2.0.0",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
