@@ -349,6 +349,12 @@ export const useProjects = () => {
         const projectFinances = getFinanceEntriesByProject(projectId);
         
         const estimateTotal = projectEstimates.reduce((sum, est) => {
+            // Проверяем, что est.items существует и является массивом
+            if (!est.items || !Array.isArray(est.items)) {
+                console.warn('Estimate items is undefined or not an array:', est);
+                return sum;
+            }
+            
             const subtotal = est.items.reduce((acc: number, item: any) => acc + (item.quantity * item.price), 0);
             const discountAmount = est.discountType === 'percent' ? subtotal * (est.discount / 100) : est.discount;
             const totalAfterDiscount = subtotal - discountAmount;
