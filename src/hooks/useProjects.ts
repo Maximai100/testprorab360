@@ -311,7 +311,7 @@ export const useProjects = () => {
     
     // Financial calculations
     const calculateProjectFinancials = useCallback((projectId: string, estimates: any[]): ProjectFinancials => {
-        const projectEstimates = estimates.filter(e => e.projectId === projectId);
+        const projectEstimates = estimates.filter(e => e.project_id === projectId);
         const projectFinances = getFinanceEntriesByProject(projectId);
         
         const estimateTotal = projectEstimates.reduce((sum, est) => {

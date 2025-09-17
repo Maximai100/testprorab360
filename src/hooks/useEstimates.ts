@@ -84,7 +84,7 @@ export const useEstimates = (session: Session | null) => {
     const newTempId = `temp-${crypto.randomUUID()}`;
     const newEstimate: Estimate = {
       id: newTempId,
-      projectId: finalProjectId, // Используем исправленный projectId
+      project_id: finalProjectId, // Используем исправленный projectId
       user_id: session?.user?.id || '',
       items: [],
       number: generateNewEstimateNumber(allEstimates),
@@ -130,10 +130,10 @@ export const useEstimates = (session: Session | null) => {
 
     const isNew = currentEstimate.id.startsWith('temp-');
     
-    console.log('saveCurrentEstimate: currentEstimate.projectId =', currentEstimate.projectId, 'тип:', typeof currentEstimate.projectId);
+    console.log('saveCurrentEstimate: currentEstimate.project_id =', currentEstimate.project_id, 'тип:', typeof currentEstimate.project_id);
     
     const estimateData = {
-      project_id: currentEstimate.projectId,
+      project_id: currentEstimate.project_id,
       client_info: clientInfo,
       number: estimateNumber,
       date: estimateDate,
@@ -222,13 +222,13 @@ export const useEstimates = (session: Session | null) => {
       console.log('project_id первой сметы:', allEstimates[0].project_id);
     }
     
-    const filtered = allEstimates.filter(e => e.projectId === projectId);
+    const filtered = allEstimates.filter(e => e.project_id === projectId);
     console.log('Отфильтрованные сметы:', filtered);
     return filtered;
   }, [allEstimates]);
 
   const getCurrentEstimateProjectId = useCallback(() => {
-    return currentEstimate?.projectId || null;
+    return currentEstimate?.project_id || null;
   }, [currentEstimate]);
 
   return {

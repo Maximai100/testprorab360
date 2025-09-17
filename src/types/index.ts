@@ -133,7 +133,7 @@ export interface Estimate {
     number: string; // Генерируется в формате 'ГГГГ-ННН', где ННН - порядковый номер для года
     date: string; // ISO 8601 format
     status: EstimateStatus;
-    projectId: string | null;
+    project_id: string | null;
     user_id: string; // ID пользователя
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format

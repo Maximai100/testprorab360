@@ -16,12 +16,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     console.log('ProjectDetailView: estimates:', estimates);
     
     const projectEstimates = useMemo(() => {
-        const filtered = estimates.filter(e => e.projectId === activeProject.id);
+        const filtered = estimates.filter(e => e.project_id === activeProject.id);
         console.log('ProjectDetailView: projectEstimates фильтрация:', {
             totalEstimates: estimates.length,
             activeProjectId: activeProject.id,
             filteredCount: filtered.length,
-            estimatesWithProjectId: estimates.filter(e => e.projectId).map(e => ({ id: e.id, projectId: e.projectId, number: e.number }))
+            estimatesWithProjectId: estimates.filter(e => e.project_id).map(e => ({ id: e.id, project_id: e.project_id, number: e.number }))
         });
         return filtered;
     }, [estimates, activeProject.id]);
