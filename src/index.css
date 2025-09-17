@@ -47,15 +47,6 @@ html {
 }
 
 body {
-    position: relative;
-    width: 100%;
-    overflow-x: hidden;
-    overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    touch-action: pan-y; /* Allow only vertical panning */
-}
-
-body {
     margin: 0;
     font-family: var(--font-family);
     background-color: var(--bg-color);
@@ -63,18 +54,26 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.2s ease, color 0.2s ease;
+    
+    /* Layout and positioning */
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    
+    /* Scrolling and overflow */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    
+    /* Touch and overscroll behavior */
+    touch-action: pan-y; /* Allow only vertical panning */
+    overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
+    overscroll-behavior-y: auto; /* Allow natural vertical scrolling */
+    
+    /* Bottom navigation space */
     padding-bottom: 80px; /* Fallback for browsers that don't support env() */
     padding-bottom: calc(60px + env(safe-area-inset-bottom)); /* Space for bottom nav */
-    /* Prevent app from closing on swipe down */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    height: 100vh; /* Fallback */
-    height: calc(var(--vh, 1vh) * 100); /* Use custom viewport height */
 }
 
 .app-container {

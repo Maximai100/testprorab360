@@ -178,39 +178,41 @@
             `;
             document.body.appendChild(refreshIndicator);
             
-            document.addEventListener('touchstart', (e) => {
-                startY = e.touches[0].clientY;
-                isPulling = false;
-                pullDistance = 0;
-            }, { passive: true });
-            
-            document.addEventListener('touchmove', (e) => {
-                currentY = e.touches[0].clientY;
-                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-                
-                if (scrollTop <= 0 && currentY > startY) {
-                    pullDistance = currentY - startY;
-                    
-                    if (pullDistance > 20) {
-                        isPulling = true;
-                        e.preventDefault();
-                        
-                        const limitedDistance = Math.min(pullDistance, MAX_PULL);
-                        
-                        if (limitedDistance >= PULL_THRESHOLD) {
-                            refreshIndicator.innerHTML = '↑ Отпустите для обновления';
-                            refreshIndicator.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-                        } else {
-                            refreshIndicator.innerHTML = '↓ Потяните для обновления';
-                            refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                        }
-                        
-                        refreshIndicator.style.transform = `translateY(${limitedDistance}px)`;
-                        document.body.style.transform = `translateY(${limitedDistance * 0.3}px)`;
-                        document.body.style.transition = 'none';
-                    }
-                }
-            }, { passive: false });
+           document.addEventListener('touchstart', (e) => {
+               startY = e.touches[0].clientY;
+               isPulling = false;
+               pullDistance = 0;
+           }, { passive: true });
+           
+           document.addEventListener('touchmove', (e) => {
+               currentY = e.touches[0].clientY;
+               const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+               
+               // Проверяем, что мы в самом верху страницы и тянем вниз
+               if (scrollTop <= 5 && currentY > startY) {
+                   pullDistance = currentY - startY;
+                   
+                   // Активируем pull-to-refresh только при достаточном расстоянии
+                   if (pullDistance > 30) {
+                       isPulling = true;
+                       e.preventDefault();
+                       
+                       const limitedDistance = Math.min(pullDistance, MAX_PULL);
+                       
+                       if (limitedDistance >= PULL_THRESHOLD) {
+                           refreshIndicator.innerHTML = '↑ Отпустите для обновления';
+                           refreshIndicator.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                       } else {
+                           refreshIndicator.innerHTML = '↓ Потяните для обновления';
+                           refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                       }
+                       
+                       refreshIndicator.style.transform = `translateY(${limitedDistance}px)`;
+                       document.body.style.transform = `translateY(${limitedDistance * 0.2}px)`;
+                       document.body.style.transition = 'none';
+                   }
+               }
+           }, { passive: false });
             
             document.addEventListener('touchend', (e) => {
                 if (isPulling && pullDistance >= PULL_THRESHOLD) {
@@ -220,7 +222,8 @@
                     setTimeout(() => {
                         window.location.reload();
                     }, 500);
-                } else {
+                } else if (isPulling) {
+                    // Возвращаем индикатор в исходное положение
                     refreshIndicator.style.transform = 'translateY(-50px)';
                     document.body.style.transform = 'translateY(0)';
                     document.body.style.transition = 'transform 0.3s ease';
