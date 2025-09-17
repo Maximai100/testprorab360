@@ -42,6 +42,7 @@ export const useEstimates = (session: Session | null) => {
 
   // Загружаем сметы при инициализации
   useEffect(() => {
+    console.log('useEffect сработал, session:', session);
     const loadEstimates = async () => {
       if (session?.user) {
         console.log('Загружаем сметы для пользователя:', session.user.id);
@@ -53,9 +54,11 @@ export const useEstimates = (session: Session | null) => {
         if (error) {
           console.error('Ошибка загрузки смет:', error);
         } else {
-          console.log('Загружено смет:', data?.length || 0);
+          console.log('Загружено смет:', data?.length || 0, data);
           setAllEstimates(data || []);
         }
+      } else {
+        console.log('Session или user не определен');
       }
     };
 
@@ -176,6 +179,7 @@ export const useEstimates = (session: Session | null) => {
     }
 
     const { data } = await supabase.from('estimates').select('*, estimate_items(*)');
+    console.log('После сохранения загружено смет:', data?.length || 0, data);
     setAllEstimates(data || []);
     
     // After saving, load the definitive version from the server
