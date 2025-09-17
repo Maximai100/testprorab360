@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Estimate, Item, LibraryItem, CalculationResults, EstimateStatus } from '../types';
+import { Estimate, Item, LibraryItem, CalculationResults, EstimateStatus, EstimateTemplate } from '../types';
 import { supabase } from '../supabaseClient';
 import { generateNewEstimateNumber } from '../utils';
 import type { Session } from '@supabase/supabase-js';
@@ -16,6 +16,24 @@ export const useEstimates = (session: Session | null) => {
   const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent');
   const [tax, setTax] = useState(0);
   const [status, setStatus] = useState<EstimateStatus>('draft');
+  const [templates, setTemplates] = useState<EstimateTemplate[]>([]);
+
+  // Загружаем шаблоны из localStorage при инициализации
+  useEffect(() => {
+    const savedTemplates = localStorage.getItem('estimateTemplates');
+    if (savedTemplates) {
+      try {
+        setTemplates(JSON.parse(savedTemplates));
+      } catch (error) {
+        console.error('Ошибка загрузки шаблонов:', error);
+      }
+    }
+  }, []);
+
+  // Сохраняем шаблоны в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem('estimateTemplates', JSON.stringify(templates));
+  }, [templates]);
 
   const calculation = useMemo((): CalculationResults => {
     const materialsTotal = items
@@ -145,6 +163,8 @@ export const useEstimates = (session: Session | null) => {
       }
       
       console.log('loadEstimate: загружена смета', estimateId, 'для проекта', projectId);
+    } else {
+      console.error('loadEstimate: смета не найдена', estimateId);
     }
   };
 
@@ -286,9 +306,24 @@ export const useEstimates = (session: Session | null) => {
         const { data } = await supabase.from('estimates').select('*, estimate_items(*)');
         setAllEstimates(data || []);
     },
-    templates: [],
-    deleteTemplate: () => {},
-    saveAsTemplate: () => {},
+    templates,
+    deleteTemplate: (timestamp: number) => {
+      setTemplates(prev => prev.filter(t => t.lastModified !== timestamp));
+    },
+    saveAsTemplate: (estimateId: string) => {
+      const estimate = allEstimates.find(e => e.id === estimateId);
+      if (estimate) {
+        const template: EstimateTemplate = {
+          items: estimate.items || [],
+          discount: estimate.discount,
+          discountType: estimate.discountType,
+          tax: estimate.tax,
+          lastModified: Date.now()
+        };
+        setTemplates(prev => [template, ...prev]);
+        console.log('Шаблон сохранен:', template);
+      }
+    },
     addItemFromLibrary: () => {},
     addItemsFromAI: () => {},
     updateItemImage: () => {},

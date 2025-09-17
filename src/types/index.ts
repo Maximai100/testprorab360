@@ -233,10 +233,18 @@ export interface SettingsModalProps {
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }
 
+export type EstimateTemplate = {
+  items: Item[];
+  discount: number;
+  discountType: 'percent' | 'fixed';
+  tax: number;
+  lastModified: number;
+};
+
 export interface EstimatesListModalProps {
     onClose: () => void;
     estimates: Estimate[];
-    templates: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[];
+    templates: EstimateTemplate[];
     activeEstimateId: string | null;
     statusMap: Record<EstimateStatus, { text: string; color: string; textColor: string; }>;
     formatCurrency: (value: number) => string;
@@ -245,7 +253,7 @@ export interface EstimatesListModalProps {
     onStatusChange: (id: string, status: EstimateStatus) => void;
     onSaveAsTemplate: (id: string) => void;
     onDeleteTemplate: (timestamp: number) => void;
-    onNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
+    onNewEstimate: (template?: EstimateTemplate) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }
 
@@ -377,7 +385,7 @@ export interface EstimateViewProps {
     isSaving: boolean;
     handleExportPDF: () => void;
     handleShare: () => void;
-    onNewEstimate: (template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
+    onNewEstimate: (template?: EstimateTemplate) => void;
 }
 
 export interface ProjectsListViewProps {

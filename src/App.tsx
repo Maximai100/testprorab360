@@ -332,8 +332,18 @@ const App: React.FC = () => {
         appState.navigateToEstimate(id);
     }, [estimatesHook, appState]);
 
-    const handleNewEstimate = useCallback((template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+    const handleNewEstimate = useCallback((template?: { items: any[]; discount: number; discountType: 'percent' | 'fixed'; tax: number; }) => {
         const newEstimate = estimatesHook.createNewEstimate(null);
+        
+        // Если передан шаблон, применяем его данные
+        if (template) {
+            estimatesHook.setItems(template.items || []);
+            estimatesHook.setDiscount(template.discount || 0);
+            estimatesHook.setDiscountType(template.discountType || 'percent');
+            estimatesHook.setTax(template.tax || 0);
+            appState.setIsDirty(true); // Помечаем как измененную
+        }
+        
         appState.navigateToEstimate(newEstimate.id);
     }, [estimatesHook, appState]);
 
