@@ -51,5 +51,5 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
             </div>
         </main>
     </>
-    );
+);
 };
