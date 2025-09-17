@@ -6,8 +6,13 @@ import type { Session } from '@supabase/supabase-js';
 
 // Вспомогательная функция для преобразования данных из Supabase
 const transformSupabaseData = (data: any[] | null) => {
-  console.log('transformSupabaseData: входящие данные:', data);
-  const transformed = (data || []).map(estimate => {
+  console.log('🔧 transformSupabaseData: входящие данные:', data);
+  console.log('🔧 transformSupabaseData: количество смет:', data?.length || 0);
+  
+  const transformed = (data || []).map((estimate, index) => {
+    console.log(`🔧 transformSupabaseData: обрабатываем смету ${index + 1}:`, estimate);
+    console.log(`🔧 transformSupabaseData: estimate_items для сметы ${index + 1}:`, estimate.estimate_items);
+    
     const transformedEstimate = {
       ...estimate,
       items: estimate.estimate_items || [],
@@ -18,10 +23,14 @@ const transformSupabaseData = (data: any[] | null) => {
       createdAt: estimate.created_at || new Date().toISOString(),
       updatedAt: estimate.updated_at || new Date().toISOString()
     };
-    console.log('transformSupabaseData: преобразованная смета:', transformedEstimate);
+    
+    console.log(`🔧 transformSupabaseData: преобразованная смета ${index + 1}:`, transformedEstimate);
+    console.log(`🔧 transformSupabaseData: items в преобразованной смете ${index + 1}:`, transformedEstimate.items);
+    
     return transformedEstimate;
   });
-  console.log('transformSupabaseData: все преобразованные данные:', transformed);
+  
+  console.log('🔧 transformSupabaseData: все преобразованные данные:', transformed);
   return transformed;
 };
 
@@ -167,14 +176,32 @@ export const useEstimates = (session: Session | null) => {
         ? { ...estimateToLoad, project_id: projectId }
         : estimateToLoad;
       
+      console.log('🔧 loadEstimate: устанавливаем currentEstimate:', updatedEstimate);
       setCurrentEstimate(updatedEstimate);
+      
+      console.log('🔧 loadEstimate: устанавливаем items:', estimateToLoad.items);
+      console.log('🔧 loadEstimate: items.length:', estimateToLoad.items?.length || 0);
       setItems(estimateToLoad.items || []);
+      
+      console.log('🔧 loadEstimate: устанавливаем clientInfo:', estimateToLoad.clientInfo);
       setClientInfo(estimateToLoad.clientInfo || '');
+      
+      console.log('🔧 loadEstimate: устанавливаем estimateNumber:', estimateToLoad.number);
       setEstimateNumber(estimateToLoad.number || '');
+      
+      console.log('🔧 loadEstimate: устанавливаем estimateDate:', estimateToLoad.date);
       setEstimateDate(new Date(estimateToLoad.date).toISOString().split('T')[0]);
+      
+      console.log('🔧 loadEstimate: устанавливаем discount:', estimateToLoad.discount);
       setDiscount(estimateToLoad.discount);
+      
+      console.log('🔧 loadEstimate: устанавливаем discountType:', estimateToLoad.discountType);
       setDiscountType(estimateToLoad.discountType);
+      
+      console.log('🔧 loadEstimate: устанавливаем tax:', estimateToLoad.tax);
       setTax(estimateToLoad.tax);
+      
+      console.log('🔧 loadEstimate: устанавливаем status:', estimateToLoad.status);
       setStatus(estimateToLoad.status);
       
       // Если project_id изменился, помечаем как "грязную" для активации кнопки сохранения
