@@ -298,12 +298,8 @@
             console.warn('SW registration failed', err);
           });
           
-          // Проверяем обновления каждые 30 секунд
-          setInterval(function() {
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
-            }
-          }, 30000);
+          // Автоматическая проверка обновлений отключена
+          // Обновления будут проверяться только при загрузке страницы
         });
       }
     </script>

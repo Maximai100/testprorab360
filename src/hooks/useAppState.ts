@@ -46,7 +46,7 @@ export const useAppState = () => {
     
     // Search and filter states
     const [projectSearch, setProjectSearch] = useState('');
-    const [projectStatusFilter, setProjectStatusFilter] = useState<'all' | 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled'>('all');
+    const [projectStatusFilter, setProjectStatusFilter] = useState<'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled'>('in_progress');
     
     // Load initial state from localStorage
     useEffect(() => {

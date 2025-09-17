@@ -1,4 +1,4 @@
-export type ProjectStatus = 'all' | 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
+export type ProjectStatus = 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
 export type ToolLocation = 'on_base' | 'in_repair' | 'on_project';
 export type FinanceCategory = 'materials' | 'labor' | 'transport' | 'tools_rental' | 'other';
 export type TaskPriority = 'low' | 'medium' | 'high';

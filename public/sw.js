@@ -160,9 +160,10 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
   
-  if (event.data && event.data.type === 'CHECK_UPDATE') {
-    checkForUpdates();
-  }
+  // Автоматическая проверка обновлений отключена
+  // if (event.data && event.data.type === 'CHECK_UPDATE') {
+  //   checkForUpdates();
+  // }
 });
 
 // Проверка обновлений
