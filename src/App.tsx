@@ -136,27 +136,33 @@ const App: React.FC = () => {
 
     // Функция для загрузки всех смет
     const fetchAllEstimates = useCallback(async () => {
-      console.log('App: fetchAllEstimates запущен');
-      const { data, error } = await supabase
-        .from('estimates')
-        .select(`
-          *,
-          estimate_items (
-            id,
-            name,
-            quantity,
-            price,
-            unit,
-            image_url, 
-            type,
-            estimate_id
-          )
-        `);
+      try {
+        console.log('App: fetchAllEstimates запущен');
+        const { data, error } = await supabase
+          .from('estimates')
+          .select(`
+            *,
+            estimate_items (
+              id,
+              name,
+              quantity,
+              price,
+              unit,
+              image_url, 
+              type,
+              estimate_id
+            )
+          `);
 
-      if (error) console.error('Error fetching estimates:', error);
-      else {
-          console.log('App: fetchAllEstimates успешно, данные:', data);
-          estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+        if (error) {
+          console.error('App: Ошибка загрузки смет:', error);
+          return;
+        }
+        
+        console.log('App: fetchAllEstimates успешно, данные:', data);
+        estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+      } catch (error) {
+        console.error('App: Ошибка в fetchAllEstimates:', error);
       }
     }, [estimatesHook]);
 
@@ -169,19 +175,30 @@ const App: React.FC = () => {
         // Проекты теперь загружаются через projectsHook.loadProjectsFromSupabase()
 
         const checkInitialSession = async () => {
-            console.log('App: Проверяем начальную сессию...');
-            const { data: { session } } = await supabase.auth.getSession();
-            console.log('App: Начальная сессия:', session);
-            setSession(session);
-            if (session) {
-                console.log('App: Сессия найдена, загружаем проекты и сметы...');
-                console.log('App: Вызываем projectsHook.loadProjectsFromSupabase()');
-                await projectsHook.loadProjectsFromSupabase();
-                console.log('App: Вызываем fetchAllEstimates()');
-                await fetchAllEstimates();
-                console.log('App: Загрузка завершена');
-            } else {
-                console.log('App: Сессия не найдена');
+            try {
+                console.log('App: Проверяем начальную сессию...');
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('App: Ошибка получения сессии:', error);
+                    return;
+                }
+                
+                console.log('App: Начальная сессия:', session);
+                setSession(session);
+                
+                if (session) {
+                    console.log('App: Сессия найдена, загружаем проекты и сметы...');
+                    console.log('App: Вызываем projectsHook.loadProjectsFromSupabase()');
+                    await projectsHook.loadProjectsFromSupabase();
+                    console.log('App: Вызываем fetchAllEstimates()');
+                    await fetchAllEstimates();
+                    console.log('App: Загрузка завершена');
+                } else {
+                    console.log('App: Сессия не найдена');
+                }
+            } catch (error) {
+                console.error('App: Ошибка в checkInitialSession:', error);
             }
         };
         checkInitialSession();
