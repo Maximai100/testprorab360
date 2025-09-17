@@ -34,26 +34,207 @@
             setViewportHeight();
             window.addEventListener('resize', setViewportHeight);
             
-            // Prevent swipe down to close
+            // Pull-to-refresh functionality
             let startY = 0;
             let currentY = 0;
+            let isPulling = false;
+            let pullDistance = 0;
+            const PULL_THRESHOLD = 100; // Минимальное расстояние для обновления
+            const MAX_PULL = 150; // Максимальное расстояние для визуального эффекта
+            
+            // Создаем индикатор обновления
+            const refreshIndicator = document.createElement('div');
+            refreshIndicator.id = 'refresh-indicator';
+            refreshIndicator.innerHTML = '↓ Потяните для обновления';
+            refreshIndicator.style.cssText = `
+                position: fixed;
+                top: -50px;
+                left: 0;
+                right: 0;
+                height: 50px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 500;
+                transition: transform 0.3s ease;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(refreshIndicator);
             
             document.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
+                isPulling = false;
+                pullDistance = 0;
             }, { passive: true });
             
             document.addEventListener('touchmove', (e) => {
                 currentY = e.touches[0].clientY;
                 const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
                 
-                // Prevent swipe down when at top of page
+                // Проверяем, находимся ли мы в начале страницы
                 if (scrollTop <= 0 && currentY > startY) {
-                    e.preventDefault();
+                    pullDistance = currentY - startY;
+                    
+                    if (pullDistance > 20) {
+                        isPulling = true;
+                        e.preventDefault();
+                        
+                        // Ограничиваем максимальное расстояние
+                        const limitedDistance = Math.min(pullDistance, MAX_PULL);
+                        
+                        // Обновляем текст индикатора
+                        if (limitedDistance >= PULL_THRESHOLD) {
+                            refreshIndicator.innerHTML = '↑ Отпустите для обновления';
+                            refreshIndicator.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                        } else {
+                            refreshIndicator.innerHTML = '↓ Потяните для обновления';
+                            refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        }
+                        
+                        // Показываем индикатор
+                        refreshIndicator.style.transform = `translateY(${limitedDistance}px)`;
+                        
+                        // Добавляем визуальный эффект для страницы
+                        document.body.style.transform = `translateY(${limitedDistance * 0.3}px)`;
+                        document.body.style.transition = 'none';
+                    }
                 }
             }, { passive: false });
             
+            document.addEventListener('touchend', (e) => {
+                if (isPulling && pullDistance >= PULL_THRESHOLD) {
+                    // Запускаем обновление
+                    refreshIndicator.innerHTML = '🔄 Обновление...';
+                    refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+                    
+                    // Обновляем страницу
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    // Возвращаем индикатор в исходное положение
+                    refreshIndicator.style.transform = 'translateY(-50px)';
+                    document.body.style.transform = 'translateY(0)';
+                    document.body.style.transition = 'transform 0.3s ease';
+                    
+                    setTimeout(() => {
+                        refreshIndicator.style.transform = 'translateY(-50px)';
+                        refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        refreshIndicator.innerHTML = '↓ Потяните для обновления';
+                    }, 300);
+                }
+                
+                isPulling = false;
+                pullDistance = 0;
+            }, { passive: true });
+            
             // Initialize the app
             tg.ready();
+        } else {
+            // Fallback for non-Telegram browsers
+            console.log('Telegram WebApp not available, using fallback');
+            
+            // Set viewport height for mobile browsers
+            const setViewportHeight = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            
+            setViewportHeight();
+            window.addEventListener('resize', setViewportHeight);
+            
+            // Pull-to-refresh functionality for regular browsers
+            let startY = 0;
+            let currentY = 0;
+            let isPulling = false;
+            let pullDistance = 0;
+            const PULL_THRESHOLD = 100;
+            const MAX_PULL = 150;
+            
+            // Создаем индикатор обновления
+            const refreshIndicator = document.createElement('div');
+            refreshIndicator.id = 'refresh-indicator';
+            refreshIndicator.innerHTML = '↓ Потяните для обновления';
+            refreshIndicator.style.cssText = `
+                position: fixed;
+                top: -50px;
+                left: 0;
+                right: 0;
+                height: 50px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 500;
+                transition: transform 0.3s ease;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(refreshIndicator);
+            
+            document.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isPulling = false;
+                pullDistance = 0;
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', (e) => {
+                currentY = e.touches[0].clientY;
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                
+                if (scrollTop <= 0 && currentY > startY) {
+                    pullDistance = currentY - startY;
+                    
+                    if (pullDistance > 20) {
+                        isPulling = true;
+                        e.preventDefault();
+                        
+                        const limitedDistance = Math.min(pullDistance, MAX_PULL);
+                        
+                        if (limitedDistance >= PULL_THRESHOLD) {
+                            refreshIndicator.innerHTML = '↑ Отпустите для обновления';
+                            refreshIndicator.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                        } else {
+                            refreshIndicator.innerHTML = '↓ Потяните для обновления';
+                            refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        }
+                        
+                        refreshIndicator.style.transform = `translateY(${limitedDistance}px)`;
+                        document.body.style.transform = `translateY(${limitedDistance * 0.3}px)`;
+                        document.body.style.transition = 'none';
+                    }
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchend', (e) => {
+                if (isPulling && pullDistance >= PULL_THRESHOLD) {
+                    refreshIndicator.innerHTML = '🔄 Обновление...';
+                    refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    refreshIndicator.style.transform = 'translateY(-50px)';
+                    document.body.style.transform = 'translateY(0)';
+                    document.body.style.transition = 'transform 0.3s ease';
+                    
+                    setTimeout(() => {
+                        refreshIndicator.style.transform = 'translateY(-50px)';
+                        refreshIndicator.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        refreshIndicator.innerHTML = '↓ Потяните для обновления';
+                    }, 300);
+                }
+                
+                isPulling = false;
+                pullDistance = 0;
+            }, { passive: true });
         }
     </script>
 
