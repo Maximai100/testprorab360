@@ -179,7 +179,9 @@ const App: React.FC = () => {
         const checkInitialSession = async () => {
             try {
                 console.log('App: Проверяем начальную сессию...');
+                console.log('App: Выполняем запрос к supabase.auth.getSession()...');
                 const { data: { session }, error } = await supabase.auth.getSession();
+                console.log('App: Запрос к getSession завершен');
                 
                 if (error) {
                     console.error('App: Ошибка получения сессии:', error);
