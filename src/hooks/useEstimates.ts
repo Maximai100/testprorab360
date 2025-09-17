@@ -4,6 +4,20 @@ import { supabase } from '../supabaseClient';
 import { generateNewEstimateNumber } from '../utils';
 import type { Session } from '@supabase/supabase-js';
 
+// Вспомогательная функция для преобразования данных из Supabase
+const transformSupabaseData = (data: any[] | null) => {
+  return (data || []).map(estimate => ({
+    ...estimate,
+    items: estimate.estimate_items || [],
+    clientInfo: estimate.client_info || '',
+    estimateNumber: estimate.number || '',
+    estimateDate: estimate.date || new Date().toISOString(),
+    discountType: estimate.discount_type || 'percent',
+    createdAt: estimate.created_at || new Date().toISOString(),
+    updatedAt: estimate.updated_at || new Date().toISOString()
+  }));
+};
+
 export const useEstimates = (session: Session | null) => {
   console.log('📊 useEstimates: Хук useEstimates инициализируется');
   const [allEstimates, setAllEstimates] = useState<Estimate[]>([]);
@@ -74,7 +88,12 @@ export const useEstimates = (session: Session | null) => {
           console.error('Ошибка загрузки смет:', error);
         } else {
           console.log('Загружено смет:', data?.length || 0, data);
-          setAllEstimates(data || []);
+          
+          // Преобразуем данные из Supabase в нужный формат
+          const transformedData = transformSupabaseData(data);
+          
+          console.log('Преобразованные данные:', transformedData);
+          setAllEstimates(transformedData);
         }
       } else {
         console.log('Session или user не определен');
@@ -223,10 +242,14 @@ export const useEstimates = (session: Session | null) => {
 
     const { data } = await supabase.from('estimates').select('*, estimate_items(*)');
     console.log('После сохранения загружено смет:', data?.length || 0, data);
-    setAllEstimates(data || []);
+    
+    // Преобразуем данные из Supabase в нужный формат
+    const transformedData = transformSupabaseData(data);
+    
+    setAllEstimates(transformedData);
     
     // After saving, load the definitive version from the server
-    const savedEstimate = (data || []).find(e => e.id === estimateId);
+    const savedEstimate = transformedData.find(e => e.id === estimateId);
     if(savedEstimate) setCurrentEstimate(savedEstimate);
   };
 
@@ -299,12 +322,20 @@ export const useEstimates = (session: Session | null) => {
     deleteEstimate: async (id: string) => {
         await supabase.from('estimates').delete().eq('id', id);
         const { data } = await supabase.from('estimates').select('*, estimate_items(*)');
-        setAllEstimates(data || []);
+        
+        // Преобразуем данные из Supabase в нужный формат
+        const transformedData = transformSupabaseData(data);
+        
+        setAllEstimates(transformedData);
     },
     updateEstimateStatus: async (id: string, newStatus: EstimateStatus) => {
         await supabase.from('estimates').update({ status: newStatus }).eq('id', id);
         const { data } = await supabase.from('estimates').select('*, estimate_items(*)');
-        setAllEstimates(data || []);
+        
+        // Преобразуем данные из Supabase в нужный формат
+        const transformedData = transformSupabaseData(data);
+        
+        setAllEstimates(transformedData);
     },
     templates,
     deleteTemplate: (timestamp: number) => {
