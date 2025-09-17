@@ -110,10 +110,15 @@ export const useEstimates = (session: Session | null) => {
     return newEstimate;
   };
 
-  const loadEstimate = (estimateId: string) => {
+  const loadEstimate = (estimateId: string, projectId?: string | null) => {
     const estimateToLoad = allEstimates.find(e => e.id === estimateId);
     if (estimateToLoad) {
-      setCurrentEstimate(estimateToLoad);
+      // Создаем копию сметы с обновленным project_id, если он передан
+      const updatedEstimate = projectId !== undefined 
+        ? { ...estimateToLoad, project_id: projectId }
+        : estimateToLoad;
+      
+      setCurrentEstimate(updatedEstimate);
       setItems(estimateToLoad.items || []);
       setClientInfo(estimateToLoad.clientInfo || '');
       setEstimateNumber(estimateToLoad.number);
@@ -122,6 +127,8 @@ export const useEstimates = (session: Session | null) => {
       setDiscountType(estimateToLoad.discountType);
       setTax(estimateToLoad.tax);
       setStatus(estimateToLoad.status);
+      
+      console.log('loadEstimate: загружена смета', estimateId, 'для проекта', projectId);
     }
   };
 
@@ -218,7 +225,7 @@ export const useEstimates = (session: Session | null) => {
     if (allEstimates.length > 0) {
       console.log('Первая смета:', allEstimates[0]);
       console.log('Поля первой сметы:', Object.keys(allEstimates[0]));
-      console.log('projectId первой сметы:', allEstimates[0].projectId);
+      console.log('projectId первой сметы:', allEstimates[0].project_id);
       console.log('project_id первой сметы:', allEstimates[0].project_id);
     }
     
