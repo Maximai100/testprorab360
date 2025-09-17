@@ -112,11 +112,13 @@ export const useProjects = () => {
     // Load projects from Supabase
     const loadProjectsFromSupabase = useCallback(async () => {
         try {
-            console.log('loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
+            console.log('🔄 loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
+            console.log('🔄 loadProjectsFromSupabase: Выполняем запрос к Supabase...');
             const { data: projectsData, error } = await supabase
                 .from('projects')
                 .select('*')
                 .order('created_at', { ascending: false });
+            console.log('🔄 loadProjectsFromSupabase: Запрос к Supabase завершен');
 
             if (error) {
                 console.error('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
@@ -144,8 +146,9 @@ export const useProjects = () => {
                 console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');
             }
         } catch (error) {
-            console.error('loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
+            console.error('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
         }
+        console.log('✅ loadProjectsFromSupabase: Функция завершена');
     }, []);
     
     // Finance management
