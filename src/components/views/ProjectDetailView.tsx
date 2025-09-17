@@ -33,6 +33,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     const [isFinancesCollapsed, setIsFinancesCollapsed] = useState(false);
     
     const calculateEstimateTotal = useCallback((estimate: Estimate) => {
+        // Проверяем, что estimate.items существует и является массивом
+        if (!estimate.items || !Array.isArray(estimate.items)) {
+            console.warn('Estimate items is undefined or not an array in ProjectDetailView:', estimate);
+            return 0;
+        }
+        
         const subtotal = estimate.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0);
         const discountAmount = estimate.discountType === 'percent' ? subtotal * (Number(estimate.discount) / 100) : Number(estimate.discount);
         const totalAfterDiscount = subtotal - discountAmount;
