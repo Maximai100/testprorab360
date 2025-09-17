@@ -316,12 +316,12 @@ const App: React.FC = () => {
     }, [estimatesHook, appState]);
 
     const handleNewEstimate = useCallback((template?: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        const newEstimate = estimatesHook.createNewEstimate(template);
+        const newEstimate = estimatesHook.createNewEstimate(null);
         appState.navigateToEstimate(newEstimate.id);
     }, [estimatesHook, appState]);
 
     const handleSaveEstimate = useCallback(() => {
-        estimatesHook.saveEstimate(appState.activeProjectId);
+        estimatesHook.saveEstimate();
         appState.setIsDirty(false);
         appState.setLoading('saving', false);
     }, [estimatesHook, appState]);
@@ -887,7 +887,7 @@ const App: React.FC = () => {
                         handleOpenProjectModal={handleOpenProjectModal}
                         handleDeleteProject={handleDeleteProject}
                         handleLoadEstimate={handleLoadEstimate}
-                        handleAddNewEstimateForProject={handleAddNewEstimateInProject}
+                        handleAddNewEstimateForProject={() => handleAddNewEstimateInProject(activeProject.id)}
                         handleDeleteProjectEstimate={handleDeleteEstimate}
                         onOpenFinanceModal={() => appState.openModal('financeEntry')}
                         onDeleteFinanceEntry={handleDeleteFinanceEntry}
