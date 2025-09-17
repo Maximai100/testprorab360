@@ -213,6 +213,15 @@ export const useEstimates = (session: Session | null) => {
   const getEstimatesByProject = useCallback((projectId: string) => {
     console.log('getEstimatesByProject вызвана для projectId:', projectId);
     console.log('allEstimates:', allEstimates);
+    
+    // Проверим структуру данных
+    if (allEstimates.length > 0) {
+      console.log('Первая смета:', allEstimates[0]);
+      console.log('Поля первой сметы:', Object.keys(allEstimates[0]));
+      console.log('projectId первой сметы:', allEstimates[0].projectId);
+      console.log('project_id первой сметы:', allEstimates[0].project_id);
+    }
+    
     const filtered = allEstimates.filter(e => e.projectId === projectId);
     console.log('Отфильтрованные сметы:', filtered);
     return filtered;
