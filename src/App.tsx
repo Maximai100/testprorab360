@@ -286,14 +286,21 @@ const App: React.FC = () => {
 
     // Filtered projects
     const filteredProjects = useMemo(() => {
-        return projectsHook.projects.filter(project => {
-            const matchesStatus = project.status === appState.projectStatusFilter;
+        console.log('App: filteredProjects вычисляется, projectsHook.projects:', projectsHook.projects);
+        console.log('App: projectStatusFilter:', appState.projectStatusFilter);
+        console.log('App: projectSearch:', appState.projectSearch);
+        
+        const filtered = projectsHook.projects.filter(project => {
+            const matchesStatus = appState.projectStatusFilter === 'all' || project.status === appState.projectStatusFilter;
             const matchesSearch = !appState.projectSearch || 
                 project.name.toLowerCase().includes(appState.projectSearch.toLowerCase()) ||
                 project.client.toLowerCase().includes(appState.projectSearch.toLowerCase()) ||
                 project.address.toLowerCase().includes(appState.projectSearch.toLowerCase());
             return matchesStatus && matchesSearch;
         });
+        
+        console.log('App: filteredProjects результат:', filtered);
+        return filtered;
     }, [projectsHook.projects, appState.projectStatusFilter, appState.projectSearch]);
 
     // Estimate handlers

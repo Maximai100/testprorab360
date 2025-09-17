@@ -36,6 +36,7 @@ export const useProjects = () => {
     
     // Save data to storage when it changes
     useEffect(() => {
+        console.log('useProjects: projects изменились:', projects);
         dataService.setProjects(projects);
     }, [projects]);
     
