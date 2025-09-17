@@ -46,7 +46,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                     />
                 </div>
             )}
-            <div className="card estimate-meta"><div className="meta-field"><label htmlFor="estimateNumber">Номер сметы</label><input id="estimateNumber" type="text" value={estimateNumber} onChange={e => { setEstimateNumber(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div><div className="meta-field"><label htmlFor="estimateDate">Дата</label><input id="estimateDate" type="date" value={estimateDate} onChange={e => { setEstimateDate(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div></div>
+            <div className="card estimate-meta"><div className="meta-field"><label htmlFor="estimateNumber">Название сметы/номер сметы</label><input id="estimateNumber" type="text" value={estimateNumber} onChange={e => { setEstimateNumber(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="Например: Ремонт кухни №2025-001" /></div><div className="meta-field"><label htmlFor="estimateDate">Дата</label><input id="estimateDate" type="date" value={estimateDate} onChange={e => { setEstimateDate(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div></div>
             <div className="items-list">
                 {items.map((item: any, index: number) => (
                     <div 

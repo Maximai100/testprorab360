@@ -699,7 +699,7 @@ const App: React.FC = () => {
             }
             
             // Estimate details
-            doc.text(`Номер: ${estimatesHook.estimateNumber}`, 20, 60);
+            doc.text(`Название: ${estimatesHook.estimateNumber}`, 20, 60);
             doc.text(`Дата: ${estimatesHook.estimateDate}`, 20, 70);
             
             // Items table

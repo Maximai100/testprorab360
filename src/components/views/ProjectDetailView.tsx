@@ -165,7 +165,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 <ListItem
                                     key={est.id}
                                     icon={<IconDocument />}
-                                    title={`${est.number} - ${est.clientInfo || 'Без названия'}`}
+                                    title={est.number || 'Без названия'}
                                     subtitle={
                                         <span>
                                             {formatCurrency(calculateEstimateTotal(est))}{' '}

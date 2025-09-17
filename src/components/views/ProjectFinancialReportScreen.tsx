@@ -403,7 +403,7 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
                   <ListItem
                     key={estimate.id}
                     icon={<IconTrendingUp />}
-                    title={`Смета №${estimate.estimateNumber || estimate.id?.slice(0, 8)}`}
+                    title={estimate.number || `Смета ${estimate.id?.slice(0, 8)}`}
                     subtitle={estimate.date ? new Date(estimate.date).toLocaleDateString('ru-RU') : 'Без даты'}
                     amountText={formatCurrency(estimateTotal)}
                     amountColor="var(--color-success)"
