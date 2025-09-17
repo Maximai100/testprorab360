@@ -57,7 +57,9 @@ import { useProjects } from './hooks/useProjects';
 import { dataService } from './services/storageService';
 
 const App: React.FC = () => {
-    console.log('🚀 App: Компонент App рендерится - ' + new Date().toLocaleTimeString());
+    const renderCount = useRef(0);
+    renderCount.current += 1;
+    console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -219,7 +221,7 @@ const App: React.FC = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, []); // Убираем зависимости, чтобы избежать бесконечного цикла
+    }, []); // Пустые зависимости для инициализации
 
     // Проекты теперь управляются через projectsHook
 
