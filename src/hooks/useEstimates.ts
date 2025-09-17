@@ -42,11 +42,17 @@ export const useEstimates = (session) => {
   const createNewEstimate = (projectIdOrObject: string | { projectId: string } | null = null) => {
     let finalProjectId: string | null = null;
 
+    console.log('createNewEstimate вызвана с параметром:', projectIdOrObject, 'тип:', typeof projectIdOrObject);
+
     // "Умная" проверка: исправляем данные, если они пришли в неправильном формате
     if (typeof projectIdOrObject === 'string') {
       finalProjectId = projectIdOrObject;
+      console.log('projectId как строка:', finalProjectId);
     } else if (projectIdOrObject && typeof projectIdOrObject === 'object' && 'projectId' in projectIdOrObject) {
       finalProjectId = projectIdOrObject.projectId;
+      console.log('projectId из объекта:', finalProjectId);
+    } else {
+      console.log('projectId не определен, используем null');
     }
 
     const newTempId = `temp-${crypto.randomUUID()}`;
@@ -98,6 +104,8 @@ export const useEstimates = (session) => {
 
     const isNew = currentEstimate.id.startsWith('temp-');
     
+    console.log('saveCurrentEstimate: currentEstimate.projectId =', currentEstimate.projectId, 'тип:', typeof currentEstimate.projectId);
+    
     const estimateData = {
       project_id: currentEstimate.projectId,
       client_info: clientInfo,
@@ -109,6 +117,8 @@ export const useEstimates = (session) => {
       tax: tax,
       user_id: session.user.id,
     };
+
+    console.log('saveCurrentEstimate: estimateData =', estimateData);
 
     let estimateId = currentEstimate.id;
 
