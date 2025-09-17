@@ -57,7 +57,7 @@ import { useProjects } from './hooks/useProjects';
 import { dataService } from './services/storageService';
 
 const App: React.FC = () => {
-    console.log('🚀 App: Компонент App рендерится');
+    console.log('🚀 App: Компонент App рендерится - ' + new Date().toLocaleTimeString());
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -136,7 +136,7 @@ const App: React.FC = () => {
 
     // Subscribe to Supabase auth changes
     useEffect(() => {
-        console.log('⚡ App: useEffect инициализации запущен');
+        console.log('⚡ App: useEffect инициализации запущен - ' + new Date().toLocaleTimeString());
         console.log('⚡ App: projectsHook:', projectsHook);
         console.log('⚡ App: estimatesHook:', estimatesHook);
         
