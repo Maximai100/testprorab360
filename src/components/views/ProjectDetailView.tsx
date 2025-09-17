@@ -169,7 +169,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                     subtitle={
                                         <span>
                                             {formatCurrency(calculateEstimateTotal(est))}{' '}
-                                            <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color }}>
+                                            <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color, color: statusMap[est.status].textColor }}>
                                                 {statusMap[est.status].text}
                                             </span>
                                         </span>

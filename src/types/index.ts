@@ -238,7 +238,7 @@ export interface EstimatesListModalProps {
     estimates: Estimate[];
     templates: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[];
     activeEstimateId: string | null;
-    statusMap: Record<EstimateStatus, string>;
+    statusMap: Record<EstimateStatus, { text: string; color: string; textColor: string; }>;
     formatCurrency: (value: number) => string;
     onLoadEstimate: (id: string) => void;
     onDeleteEstimate: (id: string) => void;
@@ -402,7 +402,7 @@ export interface ProjectDetailViewProps {
     workStages: WorkStage[];
     financials: ProjectFinancials;
     formatCurrency: (value: number) => string;
-    statusMap: Record<EstimateStatus, string>;
+    statusMap: Record<EstimateStatus, { text: string; color: string; textColor: string; }>;
     setActiveView: (value: string) => void;
     setActiveProjectId: (value: string | null) => void;
     handleOpenProjectModal: (project: Partial<Project> | null) => void;

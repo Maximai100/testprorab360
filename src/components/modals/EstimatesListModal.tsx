@@ -57,7 +57,7 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
                                     <strong>{e.number || 'Без названия'}</strong>
                                     <div className="estimate-meta">
                                         <span className="estimate-date">{new Date(e.date).toLocaleDateString('ru-RU')}</span>
-                                        <span className="status-badge" style={{ backgroundColor: statusMap[e.status].color }}>{statusMap[e.status].text}</span>
+                                        <span className="status-badge" style={{ backgroundColor: statusMap[e.status].color, color: statusMap[e.status].textColor }}>{statusMap[e.status].text}</span>
                                     </div>
                                 </div>
                                 <div className="list-item-actions"><select value={e.status} onChange={(ev) => onStatusChange(e.id, ev.target.value as EstimateStatus)} onClick={ev => ev.stopPropagation()} className="status-select">{Object.entries(statusMap).map(([k, v]) => (<option key={k} value={k}>{v.text}</option>))}</select><button onClick={() => onSaveAsTemplate(e.id)} className="btn btn-secondary" title="Сохранить как шаблон"><IconClipboard/></button><button onClick={() => onLoadEstimate(e.id)} className="btn btn-secondary">Загрузить</button><button onClick={() => onDeleteEstimate(e.id)} className="btn btn-tertiary"><IconTrash/></button></div>
