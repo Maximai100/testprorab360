@@ -211,7 +211,11 @@ export const useEstimates = (session: Session | null) => {
   }, []);
 
   const getEstimatesByProject = useCallback((projectId: string) => {
-    return allEstimates.filter(e => e.projectId === projectId);
+    console.log('getEstimatesByProject вызвана для projectId:', projectId);
+    console.log('allEstimates:', allEstimates);
+    const filtered = allEstimates.filter(e => e.projectId === projectId);
+    console.log('Отфильтрованные сметы:', filtered);
+    return filtered;
   }, [allEstimates]);
 
   const getCurrentEstimateProjectId = useCallback(() => {
