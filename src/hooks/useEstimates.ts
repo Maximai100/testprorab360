@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Estimate, Item, LibraryItem, CalculationResults, EstimateStatus } from '../types';
 import { supabase } from '../supabaseClient';
 import { generateNewEstimateNumber } from '../utils';
+import type { Session } from '@supabase/supabase-js';
 
-export const useEstimates = (session) => {
+export const useEstimates = (session: Session | null) => {
   const [allEstimates, setAllEstimates] = useState<Estimate[]>([]);
   const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
   const [clientInfo, setClientInfo] = useState('');
@@ -39,6 +40,28 @@ export const useEstimates = (session) => {
     };
   }, [items, discount, discountType, tax]);
 
+  // Загружаем сметы при инициализации
+  useEffect(() => {
+    const loadEstimates = async () => {
+      if (session?.user) {
+        console.log('Загружаем сметы для пользователя:', session.user.id);
+        const { data, error } = await supabase
+          .from('estimates')
+          .select('*, estimate_items(*)')
+          .eq('user_id', session.user.id);
+        
+        if (error) {
+          console.error('Ошибка загрузки смет:', error);
+        } else {
+          console.log('Загружено смет:', data?.length || 0);
+          setAllEstimates(data || []);
+        }
+      }
+    };
+
+    loadEstimates();
+  }, [session?.user]);
+
   const createNewEstimate = (projectIdOrObject: string | { projectId: string } | null = null) => {
     let finalProjectId: string | null = null;
 
@@ -59,7 +82,7 @@ export const useEstimates = (session) => {
     const newEstimate: Estimate = {
       id: newTempId,
       projectId: finalProjectId, // Используем исправленный projectId
-      user_id: session.user.id,
+      user_id: session?.user?.id || '',
       items: [],
       number: generateNewEstimateNumber(allEstimates),
       date: new Date().toISOString(),

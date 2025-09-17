@@ -134,6 +134,7 @@ export interface Estimate {
     date: string; // ISO 8601 format
     status: EstimateStatus;
     projectId: string | null;
+    user_id: string; // ID пользователя
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
 }
