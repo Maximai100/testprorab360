@@ -193,8 +193,7 @@ const App: React.FC = () => {
     const estimatesHook = useEstimates(session);
     const projectsHook = useProjects();
 
-    // Проекты (хранятся в Supabase)
-    const [projects, setProjects] = useState<Project[]>([]);
+    // Проекты теперь управляются через projectsHook
 
     // Additional state that's not yet moved to hooks
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
@@ -288,8 +287,8 @@ const App: React.FC = () => {
     // Get active project
     const activeProject = useMemo(() => {
         const id = appState.activeProjectId || '';
-        return projects.find(p => p.id === id) || null;
-    }, [appState.activeProjectId, projects]);
+        return projectsHook.projects.find(p => p.id === id) || null;
+    }, [appState.activeProjectId, projectsHook.projects]);
 
     // Get project financials
     const projectFinancials = useMemo(() => {
@@ -299,7 +298,7 @@ const App: React.FC = () => {
 
     // Filtered projects
     const filteredProjects = useMemo(() => {
-        return projects.filter(project => {
+        return projectsHook.projects.filter(project => {
             const matchesStatus = project.status === appState.projectStatusFilter;
             const matchesSearch = !appState.projectSearch || 
                 project.name.toLowerCase().includes(appState.projectSearch.toLowerCase()) ||
@@ -307,7 +306,7 @@ const App: React.FC = () => {
                 project.address.toLowerCase().includes(appState.projectSearch.toLowerCase());
             return matchesStatus && matchesSearch;
         });
-    }, [projects, appState.projectStatusFilter, appState.projectSearch]);
+    }, [projectsHook.projects, appState.projectStatusFilter, appState.projectSearch]);
 
     // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
@@ -863,7 +862,7 @@ const App: React.FC = () => {
                         setProjectSearch={appState.setProjectSearch}
                         handleInputFocus={handleInputFocus}
                         filteredProjects={filteredProjects}
-                        projects={projects}
+                        projects={projectsHook.projects}
                         setActiveProjectId={appState.setActiveProjectId}
                         setActiveView={appState.setActiveView}
                     />
@@ -911,7 +910,7 @@ const App: React.FC = () => {
                 return (
                     <InventoryScreen
                         tools={inventoryItems}
-                        projects={projects}
+                        projects={projectsHook.projects}
                         consumables={projectsHook.consumables}
                         onToolClick={(tool) => {
                             appState.setSelectedTool(tool);
@@ -928,7 +927,7 @@ const App: React.FC = () => {
             case 'reports':
                 return (
                     <ReportsHubScreen 
-                        projects={projects}
+                        projects={projectsHook.projects}
                         onOpenProjectReport={(project) => {
                             setReportProject(project);
                             appState.navigateToView('projectFinancialReport');
@@ -978,7 +977,7 @@ const App: React.FC = () => {
             case 'overallFinancialReport':
                 return (
                     <OverallFinancialReportScreen
-                        projects={projects}
+                        projects={projectsHook.projects}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectsHook.financeEntries}
                         formatCurrency={formatCurrency}
