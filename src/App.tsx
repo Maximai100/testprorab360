@@ -54,7 +54,7 @@ import { useProjects } from './hooks/useProjects';
 import { dataService } from './services/storageService';
 
 const App: React.FC = () => {
-    console.log('App: Компонент App рендерится');
+    console.log('🚀 App: Компонент App рендерится');
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -123,15 +123,19 @@ const App: React.FC = () => {
     }
 
     // Use new hooks
+    console.log('🔧 App: Инициализируем хуки...');
     const appState = useAppState();
+    console.log('🔧 App: useAppState инициализирован');
     const estimatesHook = useEstimates(session);
+    console.log('🔧 App: useEstimates инициализирован');
     const projectsHook = useProjects();
+    console.log('🔧 App: useProjects инициализирован');
 
     // Subscribe to Supabase auth changes
     useEffect(() => {
-        console.log('App: useEffect инициализации запущен');
-        console.log('App: projectsHook:', projectsHook);
-        console.log('App: estimatesHook:', estimatesHook);
+        console.log('⚡ App: useEffect инициализации запущен');
+        console.log('⚡ App: projectsHook:', projectsHook);
+        console.log('⚡ App: estimatesHook:', estimatesHook);
         
         // Проекты теперь загружаются через projectsHook.loadProjectsFromSupabase()
 
