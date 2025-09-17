@@ -12,6 +12,10 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
     discount, setDiscount, discountType, setDiscountType, tax, setTax, calculation, 
     handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, handleShare, onNewEstimate 
 }) => {
+    console.log('🔧 EstimateView: Компонент рендерится');
+    console.log('🔧 EstimateView: handleSave получен:', handleSave);
+    console.log('🔧 EstimateView: isDirty:', isDirty);
+    console.log('🔧 EstimateView: isSaving:', isSaving);
     const defaultCalculation = {
         materialsTotal: 0,
         workTotal: 0,
@@ -134,7 +138,13 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                 </div>
             </div>
             <div className="actions-footer">
-                <button onClick={handleSave} className="btn btn-secondary save-btn" disabled={!isDirty || isSaving}>
+                <button onClick={() => {
+                    console.log('🔧 EstimateView: Кнопка Сохранить нажата');
+                    console.log('🔧 EstimateView: isDirty:', isDirty);
+                    console.log('🔧 EstimateView: isSaving:', isSaving);
+                    console.log('🔧 EstimateView: handleSave:', handleSave);
+                    handleSave();
+                }} className="btn btn-secondary save-btn" disabled={!isDirty || isSaving}>
                     {isSaving ? <Loader /> : (isDirty ? 'Сохранить' : 'Сохранено ✓')}
                 </button>
                 <button onClick={handleExportPDF} className="btn btn-secondary" disabled={isPdfLoading}>

@@ -442,6 +442,7 @@ export const useProjects = () => {
         deleteProject,
         getProjectById,
         loadProjectsFromSupabase,
+        setProjects,
         
         // Finance management
         addFinanceEntry,

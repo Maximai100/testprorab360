@@ -59,7 +59,12 @@ import { dataService } from './services/storageService';
 const App: React.FC = () => {
     const renderCount = useRef(0);
     renderCount.current += 1;
-    console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
+    // Временно отключаем логирование рендеринга для диагностики бесконечного цикла
+    if (renderCount.current <= 5) {
+        console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
+    } else if (renderCount.current === 6) {
+        console.error('🚨 КРИТИЧЕСКАЯ ОШИБКА: Бесконечный цикл рендеринга! Остановлено логирование.');
+    }
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -139,7 +144,7 @@ const App: React.FC = () => {
     // Функция для загрузки всех смет
     const fetchAllEstimates = useCallback(async () => {
       try {
-        console.log('App: fetchAllEstimates запущен');
+        console.log('🔧 App: fetchAllEstimates запущен');
         const { data, error } = await supabase
           .from('estimates')
           .select(`
@@ -157,85 +162,49 @@ const App: React.FC = () => {
           `);
 
         if (error) {
-          console.error('App: Ошибка загрузки смет:', error);
+          console.error('🔧 App: Ошибка загрузки смет:', error);
           return;
         }
         
-        console.log('App: fetchAllEstimates успешно, данные:', data);
-        estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
-      } catch (error) {
-        console.error('App: Ошибка в fetchAllEstimates:', error);
-      }
-    }, [estimatesHook]);
-
-    // Subscribe to Supabase auth changes
-    useEffect(() => {
-        console.log('⚡ App: useEffect инициализации запущен - ' + new Date().toLocaleTimeString());
-        console.log('⚡ App: projectsHook:', projectsHook);
-        console.log('⚡ App: estimatesHook:', estimatesHook);
+        console.log('🔧 App: fetchAllEstimates успешно, данные:', data);
+        console.log('🔧 App: количество смет:', data?.length || 0);
         
-        // Проекты теперь загружаются через projectsHook.loadProjectsFromSupabase()
+        if (data && data.length > 0) {
+          console.log('🔧 App: первая смета:', data[0]);
+          console.log('🔧 App: estimate_items первой сметы:', data[0].estimate_items);
+          console.log('🔧 App: количество позиций в первой смете:', data[0].estimate_items?.length || 0);
+          
+          if (data[0].estimate_items && data[0].estimate_items.length > 0) {
+            console.log('🔧 App: первая позиция первой сметы:', data[0].estimate_items[0]);
+          }
+        }
+        
+        estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+        console.log('🔧 App: setEstimates вызван');
+      } catch (error) {
+        console.error('🔧 App: Ошибка в fetchAllEstimates:', error);
+      }
+    }, []); // Убираем estimatesHook из зависимостей для предотвращения бесконечного цикла
 
-        const checkInitialSession = async () => {
-            try {
-                console.log('App: Проверяем начальную сессию...');
-                console.log('App: Выполняем запрос к supabase.auth.getSession()...');
-                
-                // Проверяем localStorage на наличие сессии
-                const storedSession = localStorage.getItem('sb-prorab360-auth-token');
-                console.log('App: Сохраненная сессия в localStorage:', storedSession);
-                
-                // Добавляем таймаут для запроса
-                const sessionPromise = supabase.auth.getSession();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Таймаут запроса к getSession')), 5000)
-                );
-                
-                const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
-                const { data: { session }, error } = result;
-                console.log('App: Запрос к getSession завершен');
-                
-                if (error) {
-                    console.error('App: Ошибка получения сессии:', error);
-                    return;
-                }
-                
-                console.log('App: Начальная сессия:', session);
-                setSession(session);
-                
-                if (session) {
-                    console.log('App: Сессия найдена, загружаем проекты и сметы...');
-                    console.log('App: Вызываем projectsHook.loadProjectsFromSupabase()');
-                    await projectsHook.loadProjectsFromSupabase();
-                    console.log('App: Вызываем fetchAllEstimates()');
-                    await fetchAllEstimates();
-                    console.log('App: Загрузка завершена');
-                } else {
-                    console.log('App: Сессия не найдена');
-                }
-            } catch (error) {
-                console.error('App: Ошибка в checkInitialSession:', error);
-            }
-        };
-        checkInitialSession();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('App: Изменение состояния аутентификации:', event, session);
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
-            if (session) {
-                console.log('App: Сессия активна, загружаем проекты и сметы...');
-                projectsHook.loadProjectsFromSupabase();
-                fetchAllEstimates();
-            } else {
-                console.log('App: Сессия неактивна');
-                // Проекты теперь управляются через projectsHook
-            }
         });
 
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []); // Пустые зависимости для инициализации
+        return () => subscription.unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (session) {
+            console.log("Сессия активна, загружаем данные...");
+            projectsHook.loadProjectsFromSupabase();
+            estimatesHook.fetchAllEstimates();
+        } else {
+            console.log("Сессия отсутствует, очищаем данные...");
+            projectsHook.setProjects([]);
+            estimatesHook.setEstimates([]);
+        }
+    }, [session, projectsHook.loadProjectsFromSupabase, estimatesHook.fetchAllEstimates]);
 
     // Проекты теперь управляются через projectsHook
 
@@ -361,9 +330,12 @@ const App: React.FC = () => {
 
     // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
-        console.log('handleLoadEstimate: загружаем смету', id, 'для проекта', appState.activeProjectId);
+        console.log('🔧 handleLoadEstimate: загружаем смету', id, 'для проекта', appState.activeProjectId);
         estimatesHook.loadEstimate(id, appState.activeProjectId, appState.setIsDirty);
         appState.navigateToEstimate(id);
+        // Закрываем модальное окно после загрузки сметы
+        appState.closeModal('estimatesList');
+        console.log('🔧 handleLoadEstimate: модальное окно закрыто');
     }, [estimatesHook, appState]);
 
     const handleNewEstimate = useCallback((template?: { items: any[]; discount: number; discountType: 'percent' | 'fixed'; tax: number; }) => {
@@ -381,10 +353,18 @@ const App: React.FC = () => {
         appState.navigateToEstimate(newEstimate.id);
     }, [estimatesHook, appState]);
 
-    const handleSaveEstimate = useCallback(() => {
-        estimatesHook.saveEstimate();
-        appState.setIsDirty(false);
-        appState.setLoading('saving', false);
+    const handleSaveEstimate = useCallback(async () => {
+        console.log('🔧 App: handleSaveEstimate вызвана');
+        appState.setLoading('saving', true);
+        try {
+            await estimatesHook.saveEstimate();
+            console.log('🔧 App: saveEstimate завершена успешно');
+            appState.setIsDirty(false);
+        } catch (error) {
+            console.error('🔧 App: Ошибка при сохранении сметы:', error);
+        } finally {
+            appState.setLoading('saving', false);
+        }
     }, [estimatesHook, appState]);
 
     const handleDeleteEstimate = useCallback((id: string) => {
