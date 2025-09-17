@@ -6,16 +6,23 @@ import type { Session } from '@supabase/supabase-js';
 
 // Вспомогательная функция для преобразования данных из Supabase
 const transformSupabaseData = (data: any[] | null) => {
-  return (data || []).map(estimate => ({
-    ...estimate,
-    items: estimate.estimate_items || [],
-    clientInfo: estimate.client_info || '',
-    estimateNumber: estimate.number || '',
-    estimateDate: estimate.date || new Date().toISOString(),
-    discountType: estimate.discount_type || 'percent',
-    createdAt: estimate.created_at || new Date().toISOString(),
-    updatedAt: estimate.updated_at || new Date().toISOString()
-  }));
+  console.log('transformSupabaseData: входящие данные:', data);
+  const transformed = (data || []).map(estimate => {
+    const transformedEstimate = {
+      ...estimate,
+      items: estimate.estimate_items || [],
+      clientInfo: estimate.client_info || '',
+      number: estimate.number || '',
+      date: estimate.date || new Date().toISOString(),
+      discountType: estimate.discount_type || 'percent',
+      createdAt: estimate.created_at || new Date().toISOString(),
+      updatedAt: estimate.updated_at || new Date().toISOString()
+    };
+    console.log('transformSupabaseData: преобразованная смета:', transformedEstimate);
+    return transformedEstimate;
+  });
+  console.log('transformSupabaseData: все преобразованные данные:', transformed);
+  return transformed;
 };
 
 export const useEstimates = (session: Session | null) => {
@@ -149,8 +156,12 @@ export const useEstimates = (session: Session | null) => {
   };
 
   const loadEstimate = (estimateId: string, projectId?: string | null, setIsDirty?: (value: boolean) => void) => {
+    console.log('loadEstimate: начинаем загрузку сметы', estimateId);
+    console.log('loadEstimate: allEstimates:', allEstimates);
     const estimateToLoad = allEstimates.find(e => e.id === estimateId);
+    console.log('loadEstimate: найдена смета:', estimateToLoad);
     if (estimateToLoad) {
+      console.log('loadEstimate: items сметы:', estimateToLoad.items);
       // Создаем копию сметы с обновленным project_id, если он передан
       const updatedEstimate = projectId !== undefined 
         ? { ...estimateToLoad, project_id: projectId }
@@ -159,7 +170,7 @@ export const useEstimates = (session: Session | null) => {
       setCurrentEstimate(updatedEstimate);
       setItems(estimateToLoad.items || []);
       setClientInfo(estimateToLoad.clientInfo || '');
-      setEstimateNumber(estimateToLoad.number);
+      setEstimateNumber(estimateToLoad.number || '');
       setEstimateDate(new Date(estimateToLoad.date).toISOString().split('T')[0]);
       setDiscount(estimateToLoad.discount);
       setDiscountType(estimateToLoad.discountType);
