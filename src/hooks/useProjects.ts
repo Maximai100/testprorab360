@@ -19,9 +19,9 @@ export const useProjects = () => {
     const [scratchpad, setScratchpad] = useState('');
     const [globalDocuments, setGlobalDocuments] = useState<Document[]>([]);
     
-    // Load data from storage
+    // Load data from storage (only for non-Supabase data)
     useEffect(() => {
-        setProjects(dataService.getProjects());
+        // Не загружаем проекты из локального хранилища, они будут загружены из Supabase
         setFinanceEntries(dataService.getFinanceEntries());
         setPhotoReports(dataService.getPhotoReports());
         setDocuments(dataService.getDocuments());
@@ -110,16 +110,18 @@ export const useProjects = () => {
     // Load projects from Supabase
     const loadProjectsFromSupabase = useCallback(async () => {
         try {
-            console.log('Загружаем проекты из Supabase...');
+            console.log('loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
             const { data: projectsData, error } = await supabase
                 .from('projects')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Ошибка загрузки проектов из Supabase:', error);
+                console.error('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
                 return;
             }
+
+            console.log('loadProjectsFromSupabase: Получены данные из Supabase:', projectsData);
 
             if (projectsData) {
                 const mappedProjects = projectsData.map((row: any) => ({
@@ -132,11 +134,15 @@ export const useProjects = () => {
                     updatedAt: row.updated_at,
                 }));
                 
-                console.log('Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
+                console.log('loadProjectsFromSupabase: Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
+                console.log('loadProjectsFromSupabase: Устанавливаем проекты в состояние...');
                 setProjects(mappedProjects);
+                console.log('loadProjectsFromSupabase: Проекты установлены в состояние');
+            } else {
+                console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');
             }
         } catch (error) {
-            console.error('Ошибка при загрузке проектов:', error);
+            console.error('loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
         }
     }, []);
     

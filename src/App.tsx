@@ -106,21 +106,29 @@ const App: React.FC = () => {
         };
 
         const checkInitialSession = async () => {
+            console.log('App: Проверяем начальную сессию...');
             const { data: { session } } = await supabase.auth.getSession();
+            console.log('App: Начальная сессия:', session);
             setSession(session);
             if (session) {
+                console.log('App: Сессия найдена, загружаем проекты и сметы...');
                 projectsHook.loadProjectsFromSupabase();
                 fetchAllEstimates();
+            } else {
+                console.log('App: Сессия не найдена');
             }
         };
         checkInitialSession();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('App: Изменение состояния аутентификации:', event, session);
             setSession(session);
             if (session) {
+                console.log('App: Сессия активна, загружаем проекты и сметы...');
                 projectsHook.loadProjectsFromSupabase();
                 fetchAllEstimates();
             } else {
+                console.log('App: Сессия неактивна');
                 // Проекты теперь управляются через projectsHook
             }
         });
