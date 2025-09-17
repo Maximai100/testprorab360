@@ -10,6 +10,12 @@ export default defineConfig({
     hmr: {
       port: 5173,
       host: 'localhost'
+    },
+    // Disable caching for development
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     }
   },
   build: {
@@ -18,7 +24,11 @@ export default defineConfig({
       output: {
         manualChunks: {
           pdf: ['jspdf', 'jspdf-autotable']
-        }
+        },
+        // Add hash to filenames for better caching
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
   },
