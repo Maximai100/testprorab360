@@ -82,6 +82,51 @@ const App: React.FC = () => {
         return () => window.removeEventListener('error', handleGlobalError);
     }, []);
 
+    // Subscribe to Supabase auth changes - перемещен после объявления хуков
+
+    // Show error screen if there's an error
+    if (hasError) {
+        return (
+            <div style={{ 
+                padding: '20px', 
+                textAlign: 'center', 
+                fontFamily: 'Arial, sans-serif',
+                backgroundColor: '#f5f5f5',
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <h2>Произошла ошибка</h2>
+                <p>{errorMessage}</p>
+                <button 
+                    onClick={() => {
+                        setHasError(false);
+                        setErrorMessage('');
+                        window.location.reload();
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginTop: '20px'
+                    }}
+                >
+                    Перезагрузить приложение
+                </button>
+            </div>
+        );
+    }
+
+    // Use new hooks
+    const appState = useAppState();
+    const estimatesHook = useEstimates(session);
+    const projectsHook = useProjects();
+
     // Subscribe to Supabase auth changes
     useEffect(() => {
         console.log('App: useEffect инициализации запущен');
@@ -149,50 +194,7 @@ const App: React.FC = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
-
-    // Show error screen if there's an error
-    if (hasError) {
-        return (
-            <div style={{ 
-                padding: '20px', 
-                textAlign: 'center', 
-                fontFamily: 'Arial, sans-serif',
-                backgroundColor: '#f5f5f5',
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
-                <h2>Произошла ошибка</h2>
-                <p>{errorMessage}</p>
-                <button 
-                    onClick={() => {
-                        setHasError(false);
-                        setErrorMessage('');
-                        window.location.reload();
-                    }}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        marginTop: '20px'
-                    }}
-                >
-                    Перезагрузить приложение
-                </button>
-            </div>
-        );
-    }
-
-    // Use new hooks
-    const appState = useAppState();
-    const estimatesHook = useEstimates(session);
-    const projectsHook = useProjects();
+    }, [projectsHook, estimatesHook]);
 
     // Проекты теперь управляются через projectsHook
 
