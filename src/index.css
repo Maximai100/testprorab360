@@ -859,6 +859,18 @@ body.dark-theme .btn-ai {
     margin-top: 4px; 
 }
 
+.estimate-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.estimate-amount {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
 /* Library Modal Specific Styles */
 .library-modal-body { gap: 16px; }
 .library-add-form-wrapper h3, .library-list-wrapper h3 { font-size: 16px; margin: 0 0 10px 0; color: var(--text-color); }

@@ -45,9 +45,10 @@
 .list-item-subtitle {
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .list-item-actions {

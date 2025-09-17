@@ -167,12 +167,12 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                     icon={<IconDocument />}
                                     title={est.number || 'Без названия'}
                                     subtitle={
-                                        <span>
-                                            {formatCurrency(calculateEstimateTotal(est))}{' '}
+                                        <div className="estimate-subtitle">
+                                            <span className="estimate-amount">{formatCurrency(calculateEstimateTotal(est))}</span>
                                             <span className="status-badge" style={{ backgroundColor: statusMap[est.status].color, color: statusMap[est.status].textColor }}>
                                                 {statusMap[est.status].text}
                                             </span>
-                                        </span>
+                                        </div>
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
                                     onDelete={() => {
