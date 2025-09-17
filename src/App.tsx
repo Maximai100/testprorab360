@@ -201,7 +201,7 @@ const App: React.FC = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, [projectsHook, estimatesHook]);
+    }, []); // Убираем зависимости, чтобы избежать бесконечного цикла
 
     // Проекты теперь управляются через projectsHook
 
