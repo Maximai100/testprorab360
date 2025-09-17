@@ -54,6 +54,8 @@ import { useProjects } from './hooks/useProjects';
 import { dataService } from './services/storageService';
 
 const App: React.FC = () => {
+    console.log('App: Компонент App рендерится');
+    
     // Error boundary state
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -82,9 +84,14 @@ const App: React.FC = () => {
 
     // Subscribe to Supabase auth changes
     useEffect(() => {
+        console.log('App: useEffect инициализации запущен');
+        console.log('App: projectsHook:', projectsHook);
+        console.log('App: estimatesHook:', estimatesHook);
+        
         // Проекты теперь загружаются через projectsHook.loadProjectsFromSupabase()
 
         const fetchAllEstimates = async () => {
+          console.log('App: fetchAllEstimates запущен');
           const { data, error } = await supabase
             .from('estimates')
             .select(`
@@ -102,7 +109,10 @@ const App: React.FC = () => {
             `);
     
           if (error) console.error('Error fetching estimates:', error);
-          else estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+          else {
+              console.log('App: fetchAllEstimates успешно, данные:', data);
+              estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
+          }
         };
 
         const checkInitialSession = async () => {
@@ -112,8 +122,11 @@ const App: React.FC = () => {
             setSession(session);
             if (session) {
                 console.log('App: Сессия найдена, загружаем проекты и сметы...');
-                projectsHook.loadProjectsFromSupabase();
-                fetchAllEstimates();
+                console.log('App: Вызываем projectsHook.loadProjectsFromSupabase()');
+                await projectsHook.loadProjectsFromSupabase();
+                console.log('App: Вызываем fetchAllEstimates()');
+                await fetchAllEstimates();
+                console.log('App: Загрузка завершена');
             } else {
                 console.log('App: Сессия не найдена');
             }

@@ -6,7 +6,13 @@ import { ListItem } from '../ui/ListItem';
 export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
     handleOpenProjectModal, projectStatusFilter, setProjectStatusFilter, projectSearch, setProjectSearch,
     handleInputFocus, filteredProjects, projects, setActiveProjectId, setActiveView
-}) => (
+}) => {
+    console.log('ProjectsListView: Компонент рендерится');
+    console.log('ProjectsListView: projects:', projects);
+    console.log('ProjectsListView: filteredProjects:', filteredProjects);
+    console.log('ProjectsListView: projectStatusFilter:', projectStatusFilter);
+    
+    return (
     <>
         <header className="projects-list-header">
             <h1>Проекты</h1>
@@ -45,4 +51,5 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
             </div>
         </main>
     </>
-);
+    );
+};

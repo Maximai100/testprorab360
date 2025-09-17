@@ -7,6 +7,7 @@ import { dataService, dataUtils } from '../services/storageService';
 import { supabase } from '../supabaseClient';
 
 export const useProjects = () => {
+    console.log('useProjects: Хук useProjects инициализируется');
     const [projects, setProjects] = useState<Project[]>([]);
     const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
