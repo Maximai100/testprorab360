@@ -180,7 +180,19 @@ const App: React.FC = () => {
             try {
                 console.log('App: Проверяем начальную сессию...');
                 console.log('App: Выполняем запрос к supabase.auth.getSession()...');
-                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                // Проверяем localStorage на наличие сессии
+                const storedSession = localStorage.getItem('sb-prorab360-auth-token');
+                console.log('App: Сохраненная сессия в localStorage:', storedSession);
+                
+                // Добавляем таймаут для запроса
+                const sessionPromise = supabase.auth.getSession();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Таймаут запроса к getSession')), 5000)
+                );
+                
+                const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
+                const { data: { session }, error } = result;
                 console.log('App: Запрос к getSession завершен');
                 
                 if (error) {
