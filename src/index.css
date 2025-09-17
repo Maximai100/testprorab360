@@ -41,12 +41,16 @@ body.dark-theme {
 }
 
 /* --- FIX FOR HORIZONTAL SCROLLING --- */
-html, body {
+html {
+    scroll-behavior: smooth; /* Smooth scrolling */
+    overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
+}
+
+body {
     position: relative;
     width: 100%;
     overflow-x: hidden;
     overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
-    overscroll-behavior-y: none; /* Prevents vertical swipe gesture */
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     touch-action: pan-y; /* Allow only vertical panning */
 }
@@ -56,7 +60,6 @@ body {
     font-family: var(--font-family);
     background-color: var(--bg-color);
     color: var(--text-color);
-    overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -710,8 +713,8 @@ body.dark-theme .btn-ai {
     z-index: 1000;
     padding: 16px;
     /* Prevent swipe to close */
-    overscroll-behavior: none;
-    touch-action: none;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 .modal-content {
@@ -722,7 +725,7 @@ body.dark-theme .btn-ai {
     display: flex;
     flex-direction: column;
     /* Prevent swipe to close */
-    overscroll-behavior: none;
+    overscroll-behavior-x: none;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
 }
@@ -2071,13 +2074,7 @@ input[type=number] { -moz-appearance: textfield; }
     
     /* Prevent app from closing on swipe down */
     body {
-        overscroll-behavior-y: none;
         -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Prevent pull-to-refresh */
-    html, body {
-        overscroll-behavior: none;
     }
 }
 
