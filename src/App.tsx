@@ -100,7 +100,7 @@ const App: React.FC = () => {
                     createdAt: row.created_at,
                     updatedAt: row.updated_at,
                 }));
-                setProjects(mapped);
+                // Проекты теперь управляются через projectsHook
             }
         };
 
@@ -141,7 +141,7 @@ const App: React.FC = () => {
                 fetchProjects();
                 fetchAllEstimates();
             } else {
-                setProjects([]);
+                // Проекты теперь управляются через projectsHook
             }
         });
 
@@ -389,7 +389,8 @@ const App: React.FC = () => {
             createdAt: data.created_at,
             updatedAt: data.updated_at,
         };
-        setProjects(prev => [created, ...prev]);
+        // Проект создан в Supabase, обновляем локальное состояние через projectsHook
+        // projectsHook автоматически синхронизируется с локальным хранилищем
         // Перейти к созданному проекту
         appState.setActiveProjectId(created.id);
         appState.setActiveView('projectDetail');
@@ -423,7 +424,8 @@ const App: React.FC = () => {
             createdAt: data.created_at,
             updatedAt: data.updated_at,
         };
-        setProjects(prev => prev.map(p => (p.id === id ? updated : p)));
+        // Проект обновлен в Supabase, обновляем локальное состояние через projectsHook
+        // projectsHook автоматически синхронизируется с локальным хранилищем
     }, []);
 
     // Supabase: delete project
@@ -433,7 +435,8 @@ const App: React.FC = () => {
             console.error('Error deleting project:', error);
             return;
         }
-        setProjects(prev => prev.filter(p => p.id !== id));
+        // Проект удален из Supabase, обновляем локальное состояние через projectsHook
+        // projectsHook автоматически синхронизируется с локальным хранилищем
     }, []);
 
     const handleSaveProject = useCallback(() => {
