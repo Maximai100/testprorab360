@@ -4,6 +4,7 @@ import {
     Task, Tool, Consumable, ProjectFinancials, ProjectStatus 
 } from '../types';
 import { dataService, dataUtils } from '../services/storageService';
+import { supabase } from '../supabaseClient';
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -105,6 +106,39 @@ export const useProjects = () => {
     const getProjectById = useCallback((id: string) => {
         return projects.find(p => p.id === id) || null;
     }, [projects]);
+    
+    // Load projects from Supabase
+    const loadProjectsFromSupabase = useCallback(async () => {
+        try {
+            console.log('Загружаем проекты из Supabase...');
+            const { data: projectsData, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Ошибка загрузки проектов из Supabase:', error);
+                return;
+            }
+
+            if (projectsData) {
+                const mappedProjects = projectsData.map((row: any) => ({
+                    id: row.id,
+                    name: row.name,
+                    client: row.client || '',
+                    address: row.address || '',
+                    status: row.status,
+                    createdAt: row.created_at,
+                    updatedAt: row.updated_at,
+                }));
+                
+                console.log('Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
+                setProjects(mappedProjects);
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке проектов:', error);
+        }
+    }, []);
     
     // Finance management
     const addFinanceEntry = useCallback((projectId: string, entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
@@ -390,6 +424,7 @@ export const useProjects = () => {
         updateProject,
         deleteProject,
         getProjectById,
+        loadProjectsFromSupabase,
         
         // Finance management
         addFinanceEntry,
