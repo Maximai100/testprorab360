@@ -53,9 +53,27 @@ export const useEstimates = (session: Session | null) => {
     const savedTemplates = localStorage.getItem('estimateTemplates');
     if (savedTemplates) {
       try {
-        setTemplates(JSON.parse(savedTemplates));
+        const parsedTemplates = JSON.parse(savedTemplates);
+        console.log('🔧 useEstimates: Загружены шаблоны из localStorage:', parsedTemplates);
+        
+        // Проверяем, есть ли старые шаблоны без новых полей
+        const hasOldTemplates = parsedTemplates.some((template: any) => !template.id || !template.name);
+        
+        if (hasOldTemplates) {
+          console.log('🔧 useEstimates: Обнаружены старые шаблоны, очищаем localStorage');
+          // Очищаем старые шаблоны - пользователь должен будет создать новые
+          localStorage.removeItem('estimateTemplates');
+          setTemplates([]);
+          return;
+        }
+        
+        console.log('🔧 useEstimates: Шаблоны уже в новом формате:', parsedTemplates);
+        setTemplates(parsedTemplates);
       } catch (error) {
         console.error('Ошибка загрузки шаблонов:', error);
+        // При ошибке очищаем localStorage
+        localStorage.removeItem('estimateTemplates');
+        setTemplates([]);
       }
     }
   }, []);
@@ -552,8 +570,8 @@ export const useEstimates = (session: Session | null) => {
         setAllEstimates(transformedData);
     },
     templates,
-    deleteTemplate: (timestamp: number) => {
-      setTemplates(prev => prev.filter(t => t.lastModified !== timestamp));
+    deleteTemplate: (templateId: string) => {
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
     },
     saveAsTemplate: (estimateId: string) => {
       console.log('🔧 useEstimates: saveAsTemplate вызвана для estimateId:', estimateId);
@@ -565,6 +583,8 @@ export const useEstimates = (session: Session | null) => {
       
       if (estimate) {
         const template: EstimateTemplate = {
+          id: crypto.randomUUID(), // Уникальный ID для шаблона
+          name: estimate.number || 'Без названия', // Название сметы
           items: estimate.items || [],
           discount: estimate.discount,
           discountType: estimate.discountType,

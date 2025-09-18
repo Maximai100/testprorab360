@@ -388,8 +388,8 @@ const App: React.FC = () => {
         appState.setActiveView('estimate');
     };
 
-    const handleDeleteTemplate = useCallback((index: number) => {
-        estimatesHook.deleteTemplate(index);
+    const handleDeleteTemplate = useCallback((templateId: string) => {
+        estimatesHook.deleteTemplate(templateId);
     }, [estimatesHook]);
 
     // Project handlers

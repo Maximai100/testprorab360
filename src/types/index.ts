@@ -234,6 +234,8 @@ export interface SettingsModalProps {
 }
 
 export type EstimateTemplate = {
+  id: string; // Уникальный ID для шаблона
+  name: string; // Название сметы
   items: Item[];
   discount: number;
   discountType: 'percent' | 'fixed';
@@ -252,7 +254,7 @@ export interface EstimatesListModalProps {
     onDeleteEstimate: (id: string) => void;
     onStatusChange: (id: string, status: EstimateStatus) => void;
     onSaveAsTemplate: (id: string) => void;
-    onDeleteTemplate: (timestamp: number) => void;
+    onDeleteTemplate: (templateId: string) => void;
     onNewEstimate: (template?: EstimateTemplate) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }

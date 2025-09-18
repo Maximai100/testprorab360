@@ -84,9 +84,9 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
                     </>)}
                     {activeTab === 'templates' && ( <>
                          {filteredTemplates.length === 0 ? <p className="no-results-message">{templates.length > 0 ? 'Ничего не найдено.' : 'Шаблонов нет.'}</p> :
-                            filteredTemplates.map(t => ( <div key={t.lastModified} className="list-item">
-                                <div className="list-item-info"><strong>Шаблон от {new Date(t.lastModified).toLocaleDateString('ru-RU')}</strong><span>{t.items.length} поз., Итого: {formatCurrency(t.items.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span></div>
-                                <div className="list-item-actions"><button onClick={() => { handleSelectTemplate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.lastModified)} className="btn btn-tertiary"><IconTrash/></button></div>
+                            filteredTemplates.map(t => ( <div key={t.id} className="list-item">
+                                <div className="list-item-info"><strong>{t.name}</strong><span>{t.items.length} поз., Итого: {formatCurrency(t.items.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span></div>
+                                <div className="list-item-actions"><button onClick={() => { handleSelectTemplate(t); onClose(); }} className="btn btn-primary">Использовать</button><button onClick={() => onDeleteTemplate(t.id)} className="btn btn-tertiary"><IconTrash/></button></div>
                             </div>))
                         }
                     </>)}
