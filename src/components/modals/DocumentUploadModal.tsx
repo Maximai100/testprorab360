@@ -3,7 +3,7 @@ import { DocumentUploadModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 import { useFileStorage } from '../../hooks/useFileStorage';
 
-export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClose, onSave, showAlert }) => {
+export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClose, onSave, showAlert, projectId = null }) => {
     const [fileName, setFileName] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -54,11 +54,12 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             }
 
             // Создаем запись в базе данных
-            const documentRecord = await createDocument({
-                name: fileName.trim(),
-                file_url: uploadResult.publicUrl,
-                storage_path: uploadResult.path,
-            });
+            const documentRecord = await createDocument(
+                fileName.trim(),
+                uploadResult.publicUrl,
+                uploadResult.path,
+                projectId
+            );
 
             // Вызываем callback с данными документа
             onSave(documentRecord.name, documentRecord.file_url);

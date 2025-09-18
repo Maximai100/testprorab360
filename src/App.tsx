@@ -1421,6 +1421,7 @@ const App: React.FC = () => {
                     onClose={() => appState.closeModal('documentUpload')}
                     onSave={handleAddDocument}
                     showAlert={safeShowAlert}
+                    projectId={appState.activeProjectId}
                 />
             )}
 
@@ -1429,6 +1430,7 @@ const App: React.FC = () => {
                     onClose={() => appState.closeModal('globalDocument')}
                     onSave={handleAddGlobalDocument}
                     showAlert={safeShowAlert}
+                    projectId={null}
                 />
             )}
 

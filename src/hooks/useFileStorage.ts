@@ -87,51 +87,41 @@ export const useFileStorage = () => {
 
   /**
    * Создает запись документа в базе данных
-   * @param documentData - данные документа
+   * @param name - название документа
+   * @param file_url - URL файла
+   * @param storage_path - путь к файлу в Storage
+   * @param project_id - ID проекта (null для глобальных документов)
    * @returns созданная запись или ошибка
    */
-  const createDocument = async (documentData: {
-    project_id?: string;
-    name: string;
-    file_url: string;
-    storage_path: string;
-  }) => {
-    try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        console.error('Ошибка получения пользователя:', authError);
-        throw new Error(`Ошибка авторизации: ${authError.message}`);
-      }
-      
-      if (!user) {
-        throw new Error('Пользователь не авторизован');
-      }
-      
-      console.log('🔧 Создание документа для пользователя:', user.id);
+  const createDocument = async (
+    name: string,
+    file_url: string,
+    storage_path: string,
+    project_id: string | null // project_id теперь явный параметр
+  ) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Пользователь не авторизован');
+    }
 
-      const { data, error } = await supabase
-        .from('documents')
-        .insert({
-          user_id: user.id,
-          project_id: documentData.project_id || null,
-          name: documentData.name,
-          file_url: documentData.file_url,
-          storage_path: documentData.storage_path,
-        })
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
+        user_id: user.id,
+        project_id: project_id, // Используем явный параметр
+        name: name,
+        file_url: file_url,
+        storage_path: storage_path,
+      })
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Ошибка создания документа:', error);
-        throw error;
-      }
-
-      return data as DocumentRecord;
-    } catch (error) {
-      console.error('Ошибка при создании документа:', error);
+    if (error) {
+      console.error('Ошибка при создании записи о документе:', error);
       throw error;
     }
+
+    return data;
   };
 
   /**

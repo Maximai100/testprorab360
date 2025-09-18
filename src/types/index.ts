@@ -341,6 +341,7 @@ export interface DocumentUploadModalProps {
     onClose: () => void;
     onSave: (name: string, fileUrl: string) => void;
     showAlert: (message: string) => void;
+    projectId?: string | null; // ID проекта (null для глобальных документов)
 }
 
 export interface WorkStageModalProps {
