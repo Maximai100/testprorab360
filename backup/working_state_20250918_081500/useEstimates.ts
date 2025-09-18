@@ -611,12 +611,6 @@ export const useEstimates = (session: Session | null) => {
     updateItemImage: () => {},
     reorderItems: () => {},
     fetchAllEstimates: useCallback(async () => {
-      if (!session?.user?.id) {
-        console.log('🔧 useEstimates: Нет сессии, очищаем данные');
-        setAllEstimates([]);
-        return;
-      }
-
       try {
         console.log('🔧 useEstimates: fetchAllEstimates запущен');
         const { data, error } = await supabase
@@ -633,8 +627,7 @@ export const useEstimates = (session: Session | null) => {
               type,
               estimate_id
             )
-          `)
-          .eq('user_id', session.user.id);
+          `);
 
         if (error) {
           console.error('🔧 useEstimates: Ошибка загрузки смет:', error);
@@ -663,6 +656,6 @@ export const useEstimates = (session: Session | null) => {
       } catch (error) {
         console.error('🔧 useEstimates: Ошибка в fetchAllEstimates:', error);
       }
-    }, [session]), // Добавляем session в зависимости
+    }, []), // Пустой массив зависимостей для стабильности
   };
 };

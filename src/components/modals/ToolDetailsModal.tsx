@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AddToolModalProps, ToolCondition } from '../../types';
-import { IconClose } from '../common/Icon';
+import { ToolDetailsModalProps, ToolCondition } from '../../types';
+import { IconClose, IconTrash } from '../common/Icon';
 
 const conditionMap: Record<ToolCondition, string> = {
     excellent: 'Отличное',
@@ -8,15 +8,21 @@ const conditionMap: Record<ToolCondition, string> = {
     needs_service: 'Требует обслуживания',
 };
 
-export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, projects = [] }) => {
-    const [name, setName] = useState('');
-    const [category, setCategory] = useState('');
-    const [condition, setCondition] = useState<ToolCondition>('excellent');
-    const [notes, setNotes] = useState('');
+export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({ 
+    tool, 
+    onClose, 
+    onSave, 
+    onDelete, 
+    projects = [] 
+}) => {
+    const [name, setName] = useState(tool?.name || '');
+    const [category, setCategory] = useState(tool?.category || '');
+    const [condition, setCondition] = useState<ToolCondition>(tool?.condition || 'excellent');
+    const [notes, setNotes] = useState(tool?.notes || '');
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [purchaseDate, setPurchaseDate] = useState('');
-    const [purchasePrice, setPurchasePrice] = useState('');
+    const [imagePreview, setImagePreview] = useState<string>(tool?.image_url || '');
+    const [purchaseDate, setPurchaseDate] = useState(tool?.purchase_date || '');
+    const [purchasePrice, setPurchasePrice] = useState(tool?.purchase_price?.toString() || '');
     const modalRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,12 +59,12 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
     };
 
     const handleSave = () => {
-        if (!name.trim()) {
-            // Or show an alert
+        if (!name.trim() || !tool) {
             return;
         }
         
-        const toolData = {
+        const updatedTool: Tool = {
+            ...tool,
             name,
             category: category || undefined,
             condition,
@@ -68,15 +74,26 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
             purchase_price: purchasePrice ? parseFloat(purchasePrice) : undefined,
         };
         
-        onSave(toolData);
+        onSave(updatedTool);
         onClose();
     };
+
+    const handleDelete = () => {
+        if (tool && window.confirm('Вы уверены, что хотите удалить этот инструмент?')) {
+            onDelete(tool.id);
+            onClose();
+        }
+    };
+
+    if (!tool) {
+        return null;
+    }
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
                 <div className="modal-header">
-                    <h2>Добавить инструмент</h2>
+                    <h2>Редактировать инструмент</h2>
                     <button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose /></button>
                 </div>
                 <div className="modal-body">
@@ -190,22 +207,47 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
                 </div>
                 <div className="modal-footer" style={{ 
                     display: 'flex', 
-                    justifyContent: 'center', 
+                    justifyContent: 'space-between', 
                     alignItems: 'center',
+                    gap: '12px',
                     padding: '16px 24px',
                     borderTop: '1px solid var(--border-color)',
                     backgroundColor: 'var(--card-bg)'
                 }}>
                     <button 
+                        onClick={handleDelete} 
+                        style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 20px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}
+                    >
+                        <IconTrash /> Удалить
+                    </button>
+                    <button 
                         onClick={handleSave} 
                         style={{ 
-                            padding: '12px 32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 24px',
                             backgroundColor: '#007bff',
                             color: 'white',
                             border: 'none',
                             borderRadius: '8px',
                             cursor: 'pointer',
-                            fontSize: '16px',
+                            fontSize: '14px',
                             fontWeight: '500',
                             transition: 'background-color 0.2s'
                         }}

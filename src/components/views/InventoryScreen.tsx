@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation } from '../../types';
+import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation, ConsumableLocation } from '../../types';
 import { IconPlus, IconTrash, IconSettings, IconClipboard } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { ConsumableListItem } from '../ui/ConsumableListItem';
+import { ToolLocationSelector } from '../ui/ToolLocationSelector';
 
 export const InventoryScreen: React.FC<InventoryScreenProps & {
     toolsScratchpad: string;
@@ -19,6 +20,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
     onAddConsumable,
     onUpdateConsumable,
     onDeleteConsumable,
+    onOpenToolDetailsModal,
     toolsScratchpad,
     consumablesScratchpad,
     onToolsScratchpadChange,
@@ -49,6 +51,10 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
         }
     };
 
+    const handleConsumableLocationChange = (consumable: Consumable, location: ConsumableLocation, projectId?: string | null) => {
+        onUpdateConsumable({ ...consumable, location, projectId });
+    };
+
     return (
         <>
             <header className="projects-list-header">
@@ -70,18 +76,39 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <div className="project-items-list">
                                     {tools.length > 0 ? (
                                         tools.map(tool => (
-                                            <ListItem
-                                              key={tool.id}
-                                              icon={<IconSettings />}
-                                              title={tool.name}
-                                              amountText={
-                                                tool.location === 'on_project'
-                                                  ? projects.find(p => p.id === tool.projectId)?.name || 'На объекте'
-                                                  : tool.location === 'on_base' ? 'На базе' : 'В ремонте'
-                                              }
-                                              onClick={() => onToolClick(tool)}
-                                              // onDelete здесь не нужен, так как его нет в интерфейсе
-                                            />
+                                            <div key={tool.id} className="list-item" style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                padding: '8px 12px',
+                                                backgroundColor: 'var(--card-bg)',
+                                                borderRadius: '6px',
+                                                marginBottom: '6px',
+                                                cursor: 'pointer',
+                                                minHeight: 'auto'
+                                            }} onClick={() => onOpenToolDetailsModal(tool)}>
+                                                <div style={{ marginRight: '8px' }}>
+                                                    <IconSettings />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: '500', fontSize: '14px' }}>
+                                                        {tool.name}
+                                                    </div>
+                                                </div>
+                                                <div onClick={(e) => e.stopPropagation()}>
+                                                    <ToolLocationSelector
+                                                        location={tool.location || 'on_base'}
+                                                        projectId={tool.projectId}
+                                                        projects={projects}
+                                                        onLocationChange={(location, projectId) => {
+                                                            onUpdateTool({
+                                                                ...tool,
+                                                                location,
+                                                                projectId
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
                                         ))
                                     ) : (
                                         <div className="empty-state-container">
@@ -114,7 +141,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                     <>
                         <div className="card project-section">
                             <div className="project-section-body">
-                                <div className="add-consumable-form">
+                                <div className="add-consumable-form" style={{ display: 'flex', gap: '8px' }}>
                                     <input
                                         type="text"
                                         placeholder="Наименование"
@@ -143,6 +170,8 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                                 consumable={consumable}
                                                 onQuantityChange={handleUpdateConsumableQuantity}
                                                 onDelete={onDeleteConsumable}
+                                                onLocationChange={handleConsumableLocationChange}
+                                                projects={projects}
                                             />
                                         ))
                                     ) : (

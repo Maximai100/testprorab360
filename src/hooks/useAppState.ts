@@ -33,6 +33,7 @@ export const useAppState = () => {
     const [showActGenerationModal, setShowActGenerationModal] = useState(false);
     const [showAISuggestModal, setShowAISuggestModal] = useState(false);
     const [showAddToolModal, setShowAddToolModal] = useState(false);
+    const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
     const [showScratchpadModal, setShowScratchpadModal] = useState(false);
     const [showGlobalDocumentModal, setShowGlobalDocumentModal] = useState(false);
     
@@ -175,6 +176,10 @@ export const useAppState = () => {
                 setSelectedTool(data || null);
                 setShowAddToolModal(true);
                 break;
+            case 'toolDetails':
+                setSelectedTool(data || null);
+                setShowToolDetailsModal(true);
+                break;
             case 'scratchpad':
                 setShowScratchpadModal(true);
                 break;
@@ -234,6 +239,10 @@ export const useAppState = () => {
                 setShowAddToolModal(false);
                 setSelectedTool(null);
                 break;
+            case 'toolDetails':
+                setShowToolDetailsModal(false);
+                setSelectedTool(null);
+                break;
             case 'scratchpad':
                 setShowScratchpadModal(false);
                 break;
@@ -280,6 +289,7 @@ export const useAppState = () => {
         showActGenerationModal,
         showAISuggestModal,
         showAddToolModal,
+        showToolDetailsModal,
         showScratchpadModal,
         showGlobalDocumentModal,
         

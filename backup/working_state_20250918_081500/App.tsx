@@ -31,7 +31,6 @@ import { NoteModal } from './components/modals/NoteModal';
 import { ActGenerationModal } from './components/modals/ActGenerationModal';
 import { AISuggestModal } from './components/modals/AISuggestModal';
 import { AddToolModal } from './components/modals/AddToolModal';
-import { ToolDetailsModal } from './components/modals/ToolDetailsModal';
 import { EstimateView } from './components/views/EstimateView';
 import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
@@ -55,14 +54,17 @@ import type { Session } from '@supabase/supabase-js';
 import { useAppState } from './hooks/useAppState';
 import { useEstimates } from './hooks/useEstimates';
 import { useProjects } from './hooks/useProjects';
-import { useInventory } from './hooks/useInventory';
-import { useNotes } from './hooks/useNotes';
-import { dataService, storageService } from './services/storageService';
+import { dataService } from './services/storageService';
 
 const App: React.FC = () => {
     const renderCount = useRef(0);
     renderCount.current += 1;
-    console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
+    // Временно отключаем логирование рендеринга для диагностики бесконечного цикла
+    if (renderCount.current <= 5) {
+        console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
+    } else if (renderCount.current === 6) {
+        console.error('🚨 КРИТИЧЕСКАЯ ОШИБКА: Бесконечный цикл рендеринга! Остановлено логирование.');
+    }
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -89,23 +91,6 @@ const App: React.FC = () => {
         window.addEventListener('error', handleGlobalError);
         return () => window.removeEventListener('error', handleGlobalError);
     }, []);
-
-    // Use new hooks - ВСЕГДА вызываем хуки в начале компонента
-    console.log('🔧 App: Инициализируем хуки...');
-    const appState = useAppState();
-    console.log('🔧 App: useAppState инициализирован');
-    const estimatesHook = useEstimates(session);
-    console.log('🔧 App: useEstimates инициализирован');
-    const projectsHook = useProjects();
-    console.log('🔧 App: useProjects инициализирован');
-    const inventoryHook = useInventory(session);
-    console.log('🔧 App: useInventory инициализирован');
-    const notesHook = useNotes(session);
-    console.log('🔧 App: useNotes инициализирован');
-    
-    // Логирование состояния после инициализации хуков
-    console.log('🚀 App: activeView:', appState?.activeView);
-    console.log('🚀 App: session:', session ? 'есть' : 'нет');
 
     // Subscribe to Supabase auth changes - перемещен после объявления хуков
 
@@ -146,6 +131,15 @@ const App: React.FC = () => {
             </div>
         );
     }
+
+    // Use new hooks
+    console.log('🔧 App: Инициализируем хуки...');
+    const appState = useAppState();
+    console.log('🔧 App: useAppState инициализирован');
+    const estimatesHook = useEstimates(session);
+    console.log('🔧 App: useEstimates инициализирован');
+    const projectsHook = useProjects();
+    console.log('🔧 App: useProjects инициализирован');
 
     // Функция для загрузки всех смет
     const fetchAllEstimates = useCallback(async () => {
@@ -200,32 +194,24 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-    // Флаг для предотвращения множественных вызовов
-    const [dataLoaded, setDataLoaded] = useState(false);
-
     useEffect(() => {
-        if (session && !dataLoaded) {
+        if (session) {
             console.log("Сессия активна, загружаем данные...");
             projectsHook.loadProjectsFromSupabase();
             estimatesHook.fetchAllEstimates();
-            inventoryHook.fetchAllInventory(session);
-            notesHook.fetchAllNotes(session);
-            setDataLoaded(true);
-        } else if (!session && dataLoaded) {
+        } else {
             console.log("Сессия отсутствует, очищаем данные...");
             projectsHook.setProjects([]);
             estimatesHook.setEstimates([]);
-            inventoryHook.fetchAllInventory(null);
-            notesHook.fetchAllNotes(null);
-            setDataLoaded(false);
         }
-    }, [session, dataLoaded]); // Добавляем dataLoaded в зависимости
+    }, [session, projectsHook.loadProjectsFromSupabase, estimatesHook.fetchAllEstimates]);
 
     // Проекты теперь управляются через projectsHook
 
     // Additional state that's not yet moved to hooks
     const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
+    const [inventoryItems, setInventoryItems] = useState<Tool[]>([]);
     const [inventoryNotes, setInventoryNotes] = useState<InventoryNote[]>([]);
     const [toolsScratchpad, setToolsScratchpad] = useState('');
     const [consumablesScratchpad, setConsumablesScratchpad] = useState('');
@@ -246,6 +232,7 @@ const App: React.FC = () => {
     useEffect(() => {
         setLibraryItems(dataService.getLibraryItems());
         setCompanyProfile(dataService.getCompanyProfile());
+        setInventoryItems(dataService.getTools());
         setInventoryNotes(dataService.getInventoryNotes());
     }, []);
 
@@ -257,6 +244,10 @@ const App: React.FC = () => {
     useEffect(() => {
         dataService.setCompanyProfile(companyProfile);
     }, [companyProfile]);
+
+    useEffect(() => {
+        dataService.setTools(inventoryItems);
+    }, [inventoryItems]);
 
     useEffect(() => {
         dataService.setInventoryNotes(inventoryNotes);
@@ -617,30 +608,30 @@ const App: React.FC = () => {
 
     // Tool handlers
     const handleAddTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
-        inventoryHook.addTool(toolData);
+        projectsHook.addTool(toolData);
         appState.closeModal('addTool');
-    }, [inventoryHook, appState]);
+    }, [projectsHook, appState]);
 
     const handleUpdateTool = useCallback((tool: Tool) => {
-        inventoryHook.updateTool(tool);
-    }, [inventoryHook]);
+        projectsHook.updateTool(tool.id, tool);
+    }, [projectsHook]);
 
     const handleDeleteTool = useCallback((id: string) => {
-        inventoryHook.deleteTool(id);
-    }, [inventoryHook]);
+        projectsHook.deleteTool(id);
+    }, [projectsHook]);
 
     // Consumable handlers
     const handleAddConsumable = useCallback((consumable: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>) => {
-        inventoryHook.addConsumable(consumable);
-    }, [inventoryHook]);
+        projectsHook.addConsumable(consumable);
+    }, [projectsHook]);
 
     const handleUpdateConsumable = useCallback((consumable: Consumable) => {
-        inventoryHook.updateConsumable(consumable);
-    }, [inventoryHook]);
+        projectsHook.updateConsumable(consumable.id, consumable);
+    }, [projectsHook]);
 
     const handleDeleteConsumable = useCallback((id: string) => {
-        inventoryHook.deleteConsumable(id);
-    }, [inventoryHook]);
+        projectsHook.deleteConsumable(id);
+    }, [projectsHook]);
 
     // Library handlers
     const handleLibraryItemsChange = useCallback((items: LibraryItem[]) => {
@@ -648,18 +639,7 @@ const App: React.FC = () => {
     }, []);
 
     const handleAddItemToEstimate = useCallback((item: LibraryItem) => {
-        // Добавляем элемент из библиотеки в текущую смету
-        const newItem: Item = {
-            id: `temp-item-${Date.now()}`,
-            name: item.name,
-            quantity: 1,
-            price: item.price,
-            unit: item.unit,
-            image: null,
-            type: 'material'
-        };
-        estimatesHook.addItem();
-        // TODO: Нужно будет обновить последний добавленный элемент данными из библиотеки
+        estimatesHook.addItemFromLibrary(item);
     }, [estimatesHook]);
 
     // Profile handlers
@@ -688,7 +668,7 @@ const App: React.FC = () => {
     // Backup and restore
     const handleBackup = useCallback(() => {
         try {
-            const data = (storageService as any).exportData();
+            const data = dataService.exportData();
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -710,7 +690,7 @@ const App: React.FC = () => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    (storageService as any).importData(e.target?.result as string);
+                    dataService.importData(e.target?.result as string);
                     safeShowAlert('Данные восстановлены. Перезагрузите страницу.');
                 } catch (error) {
                     safeShowAlert('Ошибка при восстановлении данных');
@@ -739,21 +719,20 @@ const App: React.FC = () => {
         const file = e.target.files?.[0];
         if (file) {
             resizeImage(file, 800).then(dataUrl => {
-                estimatesHook.updateItem(id, 'image', dataUrl);
+                estimatesHook.updateItemImage(id, dataUrl);
                 appState.setIsDirty(true);
             });
         }
     }, [estimatesHook, appState]);
 
     const handleRemoveItemImage = useCallback((id: string) => {
-        estimatesHook.updateItem(id, 'image', '');
+        estimatesHook.updateItemImage(id, null);
         appState.setIsDirty(true);
     }, [estimatesHook, appState]);
 
     const handleDragSort = useCallback(() => {
         if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-            // TODO: Реализовать reorderItems в useEstimates
-            // estimatesHook.reorderItems(dragItem.current, dragOverItem.current);
+            estimatesHook.reorderItems(dragItem.current, dragOverItem.current);
             appState.setIsDirty(true);
         }
         dragItem.current = null;
@@ -762,11 +741,7 @@ const App: React.FC = () => {
 
     // AI handlers
     const handleAddItemsFromAI = useCallback((items: Omit<Item, 'id' | 'image' | 'type'>[]) => {
-        // Добавляем элементы из ИИ в текущую смету
-        items.forEach(item => {
-            estimatesHook.addItem();
-            // TODO: Нужно будет обновить последний добавленный элемент данными из ИИ
-        });
+        estimatesHook.addItemsFromAI(items);
         appState.setIsDirty(true);
     }, [estimatesHook, appState]);
 
@@ -881,7 +856,6 @@ const App: React.FC = () => {
                         onOpenGlobalDocumentModal={() => appState.openModal('globalDocument')}
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
-                        notesHook={notesHook}
                     />
                 );
             
@@ -986,30 +960,24 @@ const App: React.FC = () => {
                         onProjectScratchpadChange={projectsHook.updateProjectScratchpad}
                         onExportWorkSchedulePDF={() => {}}
                         onOpenEstimatesListModal={() => appState.openModal('estimatesList')}
-                        notesHook={notesHook}
                     />
                 );
             
             case 'inventory':
                 return (
                     <InventoryScreen
-                        tools={inventoryHook.tools}
+                        tools={inventoryItems}
                         projects={projectsHook.projects}
-                        consumables={inventoryHook.consumables}
+                        consumables={projectsHook.consumables}
                         onToolClick={(tool) => {
-                            appState.openModal('toolDetails', tool);
+                            appState.setSelectedTool(tool);
+                            appState.navigateToView('toolDetails');
                         }}
                         onUpdateTool={handleUpdateTool}
                         onOpenAddToolModal={() => appState.openModal('addTool')}
                         onAddConsumable={handleAddConsumable}
                         onUpdateConsumable={handleUpdateConsumable}
                         onDeleteConsumable={handleDeleteConsumable}
-                        onOpenToolDetailsModal={(tool) => appState.openModal('toolDetails', tool)}
-                        toolsScratchpad={toolsScratchpad}
-                        consumablesScratchpad={consumablesScratchpad}
-                        onToolsScratchpadChange={setToolsScratchpad}
-                        onConsumablesScratchpadChange={setConsumablesScratchpad}
-                        notesHook={notesHook}
                     />
                 );
             
@@ -1105,7 +1073,6 @@ const App: React.FC = () => {
                         onOpenGlobalDocumentModal={() => appState.openModal('globalDocument')}
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
-                        notesHook={notesHook}
                     />
                 );
         }
@@ -1346,20 +1313,8 @@ const App: React.FC = () => {
                 <AddToolModal
                     onClose={() => appState.closeModal('addTool')}
                     onSave={handleAddTool}
-                    projects={projectsHook.projects}
                 />
             )}
-
-            {appState.showToolDetailsModal && appState.selectedTool && (
-                <ToolDetailsModal
-                    tool={appState.selectedTool}
-                    onClose={() => appState.closeModal('toolDetails')}
-                    onSave={handleUpdateTool}
-                    onDelete={handleDeleteTool}
-                    projects={projectsHook.projects}
-                />
-            )}
-
 
             {appState.showScratchpadModal && (
                 <div className="modal-overlay" onClick={() => appState.closeModal('scratchpad')}>

@@ -6,7 +6,6 @@ export type ToolCondition = 'excellent' | 'good' | 'needs_service';
 export type WorkStageStatus = 'planned' | 'in_progress' | 'completed';
 export type ItemType = 'material' | 'work';
 export type LibraryItemCategory = 'electrics' | 'plumbing' | 'finishing_materials';
-export type NoteContext = 'global' | 'project' | 'inventory_tools' | 'inventory_consumables';
 
 export interface ProjectFinancials {
     estimateTotal: number;
@@ -38,11 +37,6 @@ export interface InventoryScreenProps {
     onAddConsumable: (consumable: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>) => void;
     onUpdateConsumable: (consumable: Consumable) => void;
     onDeleteConsumable: (id: string) => void;
-    onOpenToolDetailsModal: (tool: Tool) => void;
-    notesHook: {
-        getNote: (context: NoteContext, entityId?: string | null) => string;
-        saveNote: (context: NoteContext, content: string, entityId?: string | null) => Promise<void>;
-    };
 }
 
 export interface ToolDetailsScreenProps {
@@ -52,15 +46,11 @@ export interface ToolDetailsScreenProps {
     onDelete: (id: string) => void;
 }
 
-export type ConsumableLocation = 'on_base' | 'on_project' | 'to_buy';
-
 export interface Consumable {
     id: string; // Генерируется UUID
     name: string;
     quantity: number;
-    unit?: string;
-    location?: ConsumableLocation;
-    projectId?: string | null;
+    unit: string;
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
 }
@@ -68,24 +58,14 @@ export interface Consumable {
 export interface Tool {
     id: string; // Генерируется UUID
     name: string;
-    category?: string;
-    condition?: ToolCondition;
+    category: string;
+    condition: ToolCondition;
     location?: ToolLocation;
     notes?: string;
-    image_url?: string; // URL-адрес изображения (соответствует Supabase)
-    purchase_date?: string; // ISO 8601 format (соответствует Supabase)
-    purchase_price?: number; // соответствует Supabase
+    image?: string; // URL-адрес изображения
+    purchaseDate?: string; // ISO 8601 format
+    purchasePrice?: number;
     projectId?: string | null; // Required if location is 'on_project'
-    createdAt: string; // ISO 8601 format
-    updatedAt: string; // ISO 8601 format
-}
-
-export interface Note {
-    id: string; // Генерируется UUID
-    userId: string; // Ссылка на auth.users
-    content: string; // Содержимое заметки
-    context: NoteContext; // Контекст заметки
-    entityId?: string | null; // ID связанной сущности (например, project_id)
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
 }
@@ -360,23 +340,6 @@ export interface AISuggestModalProps {
 export interface AddToolModalProps {
     onClose: () => void;
     onSave: (tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => void;
-    projects?: Project[];
-}
-
-export interface ToolDetailsModalProps {
-    tool: Tool | null;
-    onClose: () => void;
-    onSave: (tool: Tool) => void;
-    onDelete: (toolId: string) => void;
-    projects: Project[];
-}
-
-export interface ConsumableDetailsModalProps {
-    consumable: Consumable | null;
-    onClose: () => void;
-    onSave: (consumable: Consumable) => void;
-    onDelete: (consumableId: string) => void;
-    projects?: Project[];
 }
 
 // View Props
@@ -472,10 +435,6 @@ export interface ProjectDetailViewProps {
     onProjectScratchpadChange: (projectId: string, content: string) => void;
     onExportWorkSchedulePDF: (project: Project, workStages: WorkStage[]) => void;
     onOpenEstimatesListModal: () => void;
-    notesHook: {
-        getNote: (context: NoteContext, entityId?: string | null) => string;
-        saveNote: (context: NoteContext, content: string, entityId?: string | null) => Promise<void>;
-    };
 }
 
 export interface InventoryViewProps {
@@ -501,10 +460,6 @@ export interface WorkspaceViewProps {
     onOpenGlobalDocumentModal: () => void;
     onDeleteGlobalDocument: (id: string) => void;
     onOpenScratchpad: () => void;
-    notesHook: {
-        getNote: (context: NoteContext, entityId?: string | null) => string;
-        saveNote: (context: NoteContext, content: string, entityId?: string | null) => Promise<void>;
-    };
 }
 
 export interface ScratchpadViewProps {

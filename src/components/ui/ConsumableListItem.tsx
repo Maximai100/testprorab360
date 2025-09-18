@@ -1,19 +1,29 @@
 
 import React from 'react';
 import './ConsumableListItem.css';
-import { Consumable } from '../../types'; // Убедись, что путь к типам правильный
-import { IconCart } from '../common/Icon';
+import { Consumable, ConsumableLocation, Project } from '../../types';
+import { IconTrash, IconCart } from '../common/Icon';
 
 type ConsumableListItemProps = {
   consumable: Consumable;
   onQuantityChange: (consumable: Consumable, newQuantity: number) => void;
   onDelete: (consumableId: string) => void;
+  onLocationChange: (consumable: Consumable, location: ConsumableLocation, projectId?: string | null) => void;
+  projects: Project[];
+};
+
+const locationMap: Record<ConsumableLocation, string> = {
+  on_base: 'На базе',
+  on_project: 'На проекте',
+  to_buy: 'Купить',
 };
 
 export const ConsumableListItem: React.FC<ConsumableListItemProps> = ({
   consumable,
   onQuantityChange,
   onDelete,
+  onLocationChange,
+  projects,
 }) => {
   const handleDecrement = () => {
     if (consumable.quantity > 0) {
@@ -29,6 +39,33 @@ export const ConsumableListItem: React.FC<ConsumableListItemProps> = ({
     onDelete(consumable.id);
   };
 
+  const getCurrentValue = () => {
+    if (consumable.location === 'on_project' && consumable.projectId) {
+      return `project_${consumable.projectId}`;
+    }
+    return consumable.location || 'on_base';
+  };
+
+  const handleLocationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+
+    if (value.startsWith('project_')) {
+      const projectId = value.replace('project_', '');
+      onLocationChange(consumable, 'on_project', projectId);
+    } else {
+      onLocationChange(consumable, value as ConsumableLocation, null);
+    }
+  };
+
+  const options = [
+    { value: 'on_base', label: 'На базе' },
+    { value: 'to_buy', label: 'Купить' },
+    ...projects.map(project => ({
+      value: `project_${project.id}`,
+      label: project.name
+    }))
+  ];
+
   return (
     <div className="c-list-item">
       <div className="c-list-item-icon-wrapper">
@@ -43,8 +80,32 @@ export const ConsumableListItem: React.FC<ConsumableListItemProps> = ({
         <button className="c-quantity-button" onClick={handleDecrement}>-</button>
         <span className="c-quantity-text">{`${consumable.quantity} ${consumable.unit}`}</span>
         <button className="c-quantity-button" onClick={handleIncrement}>+</button>
+        
+        <select
+          value={getCurrentValue()}
+          onChange={handleLocationChange}
+          style={{
+            padding: '4px 8px',
+            borderRadius: '4px',
+            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--input-bg)',
+            color: 'var(--text-color)',
+            fontSize: '12px',
+            outline: 'none',
+            cursor: 'pointer',
+            minWidth: '80px',
+            marginRight: '8px'
+          }}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        
         <button className="c-delete-button" onClick={handleDelete}>
-          <Icon name="delete" />
+          <IconTrash />
         </button>
       </div>
     </div>
