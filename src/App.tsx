@@ -339,17 +339,29 @@ const App: React.FC = () => {
     }, [estimatesHook, appState]);
 
     const handleNewEstimate = useCallback((template?: { items: any[]; discount: number; discountType: 'percent' | 'fixed'; tax: number; }) => {
+        console.log('🔧 App: handleNewEstimate вызвана с шаблоном:', template);
+        
         const newEstimate = estimatesHook.createNewEstimate(null);
+        console.log('🔧 App: создана новая смета:', newEstimate);
         
         // Если передан шаблон, применяем его данные
         if (template) {
+            console.log('🔧 App: применяем данные шаблона:');
+            console.log('🔧 App: items:', template.items);
+            console.log('🔧 App: discount:', template.discount);
+            console.log('🔧 App: discountType:', template.discountType);
+            console.log('🔧 App: tax:', template.tax);
+            
             estimatesHook.setItems(template.items || []);
             estimatesHook.setDiscount(template.discount || 0);
             estimatesHook.setDiscountType(template.discountType || 'percent');
             estimatesHook.setTax(template.tax || 0);
             appState.setIsDirty(true); // Помечаем как измененную
+            
+            console.log('🔧 App: данные шаблона применены к новой смете');
         }
         
+        console.log('🔧 App: переходим к смете:', newEstimate.id);
         appState.navigateToEstimate(newEstimate.id);
     }, [estimatesHook, appState]);
 

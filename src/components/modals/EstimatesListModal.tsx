@@ -44,15 +44,18 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
     const { activeProjectId } = useProjectContext();
 
     const handleSelectTemplate = (template) => {
-      // Создаем новую смету из шаблона
-      const newEstimate = { 
-        ...template, 
-        id: crypto.randomUUID(), // Создаем новый уникальный ID
-        projectId: activeProjectId, // Привязываем ID проекта из контекста (будет null, если мы не в проекте)
-        date: new Date().toISOString().split('T')[0], // Устанавливаем текущую дату
-        status: 'draft' // Устанавливаем статус "черновик"
+      console.log('🔧 EstimatesListModal: handleSelectTemplate вызвана с шаблоном:', template);
+      
+      // Передаем только необходимые поля шаблона в handleNewEstimate
+      const templateData = {
+        items: template.items || [],
+        discount: template.discount || 0,
+        discountType: template.discountType || 'percent',
+        tax: template.tax || 0
       };
-      onNewEstimate(newEstimate); // Вызываем родительскую функцию с подготовленной сметой
+      
+      console.log('🔧 EstimatesListModal: передаем данные шаблона:', templateData);
+      onNewEstimate(templateData); // Вызываем родительскую функцию с данными шаблона
     };
 
     return (
