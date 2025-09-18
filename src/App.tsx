@@ -32,6 +32,7 @@ import { ActGenerationModal } from './components/modals/ActGenerationModal';
 import { AISuggestModal } from './components/modals/AISuggestModal';
 import { AddToolModal } from './components/modals/AddToolModal';
 import { ToolDetailsModal } from './components/modals/ToolDetailsModal';
+import { AddTaskModal } from './components/modals/AddTaskModal';
 import { EstimateView } from './components/views/EstimateView';
 import { ProjectsListView } from './components/views/ProjectsListView';
 import { ProjectDetailView } from './components/views/ProjectDetailView';
@@ -57,6 +58,7 @@ import { useEstimates } from './hooks/useEstimates';
 import { useProjects } from './hooks/useProjects';
 import { useInventory } from './hooks/useInventory';
 import { useNotes } from './hooks/useNotes';
+import { useTasks } from './hooks/useTasks';
 import { dataService, storageService } from './services/storageService';
 
 const App: React.FC = () => {
@@ -102,50 +104,14 @@ const App: React.FC = () => {
     console.log('🔧 App: useInventory инициализирован');
     const notesHook = useNotes(session);
     console.log('🔧 App: useNotes инициализирован');
+    const tasksHook = useTasks(session);
+    console.log('🔧 App: useTasks инициализирован');
     
     // Логирование состояния после инициализации хуков
     console.log('🚀 App: activeView:', appState?.activeView);
     console.log('🚀 App: session:', session ? 'есть' : 'нет');
 
     // Subscribe to Supabase auth changes - перемещен после объявления хуков
-
-    // Show error screen if there's an error
-    if (hasError) {
-        return (
-            <div style={{ 
-                padding: '20px', 
-                textAlign: 'center', 
-                fontFamily: 'Arial, sans-serif',
-                backgroundColor: '#f5f5f5',
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
-                <h2>Произошла ошибка</h2>
-                <p>{errorMessage}</p>
-                <button 
-                    onClick={() => {
-                        setHasError(false);
-                        setErrorMessage('');
-                        window.location.reload();
-                    }}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        marginTop: '20px'
-                    }}
-                >
-                    Перезагрузить приложение
-                </button>
-            </div>
-        );
-    }
 
     // Функция для загрузки всех смет
     const fetchAllEstimates = useCallback(async () => {
@@ -193,7 +159,18 @@ const App: React.FC = () => {
     }, []); // Убираем estimatesHook из зависимостей для предотвращения бесконечного цикла
 
     useEffect(() => {
+        // Получаем текущую сессию при инициализации
+        const getInitialSession = async () => {
+            const { data: { session: initialSession } } = await supabase.auth.getSession();
+            setSession(initialSession);
+            console.log('🔧 App: Начальная сессия:', initialSession ? 'есть' : 'нет');
+        };
+        
+        getInitialSession();
+
+        // Подписываемся на изменения состояния авторизации
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            console.log('🔧 App: Изменение состояния авторизации:', _event, session ? 'есть' : 'нет');
             setSession(session);
         });
 
@@ -210,6 +187,7 @@ const App: React.FC = () => {
             estimatesHook.fetchAllEstimates();
             inventoryHook.fetchAllInventory(session);
             notesHook.fetchAllNotes(session);
+            tasksHook.fetchAllTasks(session);
             setDataLoaded(true);
         } else if (!session && dataLoaded) {
             console.log("Сессия отсутствует, очищаем данные...");
@@ -603,17 +581,26 @@ const App: React.FC = () => {
     }, [projectsHook]);
 
     // Task handlers
-    const handleAddTask = useCallback((title: string, projectId: string | null) => {
-        projectsHook.addTask(title, projectId);
-    }, [projectsHook]);
+    const handleAddTask = useCallback(async (title: string, projectId: string | null, priority?: string, dueDate?: string | null) => {
+        await tasksHook.addTask({ 
+            title, 
+            projectId, 
+            priority: priority as 'low' | 'medium' | 'high' | 'urgent' || 'medium',
+            dueDate 
+        });
+    }, [tasksHook]);
 
-    const handleUpdateTask = useCallback((task: Task) => {
-        projectsHook.updateTask(task.id, task);
-    }, [projectsHook]);
+    const handleUpdateTask = useCallback(async (task: Task) => {
+        await tasksHook.updateTask(task.id, task);
+    }, [tasksHook]);
 
-    const handleToggleTask = useCallback((id: string) => {
-        projectsHook.toggleTask(id);
-    }, [projectsHook]);
+    const handleToggleTask = useCallback(async (id: string) => {
+        await tasksHook.toggleTask(id);
+    }, [tasksHook]);
+
+    const handleDeleteTask = useCallback(async (id: string) => {
+        await tasksHook.deleteTask(id);
+    }, [tasksHook]);
 
     // Tool handlers
     const handleAddTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -855,7 +842,13 @@ const App: React.FC = () => {
     }, [appState]);
 
     const handleNavigateToTasks = useCallback(() => {
-        appState.navigateToView('projectTasks');
+        if (appState.activeProjectId) {
+            // Если мы в проекте, показываем задачи этого проекта
+            appState.navigateToView('projectTasks');
+        } else {
+            // Если мы не в проекте, показываем все задачи
+            appState.navigateToView('allTasks');
+        }
     }, [appState]);
 
     const handleNavigateToInventory = useCallback(() => {
@@ -961,6 +954,7 @@ const App: React.FC = () => {
                         photoReports={projectsHook.getPhotoReportsByProject(activeProject.id)}
                         documents={projectsHook.getDocumentsByProject(activeProject.id)}
                         workStages={projectsHook.getWorkStagesByProject(activeProject.id)}
+                        tasks={tasksHook.getTasksByProject(activeProject.id)}
                         financials={projectFinancials!}
                         formatCurrency={formatCurrency}
                         statusMap={statusMap}
@@ -987,6 +981,8 @@ const App: React.FC = () => {
                         onExportWorkSchedulePDF={() => {}}
                         onOpenEstimatesListModal={() => appState.openModal('estimatesList')}
                         notesHook={notesHook}
+                        tasksHook={tasksHook}
+                        appState={appState}
                     />
                 );
             
@@ -1086,12 +1082,31 @@ const App: React.FC = () => {
             case 'allTasks':
                 return (
                     <ProjectTasksScreen
-                        tasks={projectsHook.tasks}
+                        tasks={tasksHook.tasks}
                         projects={projectsHook.projects}
                         projectId={null}
                         onAddTask={handleAddTask}
                         onUpdateTask={handleUpdateTask}
                         onToggleTask={handleToggleTask}
+                        onDeleteTask={handleDeleteTask}
+                        onBack={appState.goBack}
+                    />
+                );
+            
+            case 'projectTasks':
+                if (!activeProject) {
+                    appState.navigateToView('allTasks');
+                    return null;
+                }
+                return (
+                    <ProjectTasksScreen
+                        tasks={tasksHook.getTasksByProject(activeProject.id)}
+                        projects={projectsHook.projects}
+                        projectId={activeProject.id}
+                        onAddTask={handleAddTask}
+                        onUpdateTask={handleUpdateTask}
+                        onToggleTask={handleToggleTask}
+                        onDeleteTask={handleDeleteTask}
                         onBack={appState.goBack}
                     />
                 );
@@ -1110,6 +1125,44 @@ const App: React.FC = () => {
                 );
         }
     };
+
+    // Show error screen if there's an error
+    if (hasError) {
+        return (
+            <div style={{ 
+                padding: '20px', 
+                textAlign: 'center', 
+                fontFamily: 'Arial, sans-serif',
+                backgroundColor: '#f5f5f5',
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <h2>Произошла ошибка</h2>
+                <p>{errorMessage}</p>
+                <button 
+                    onClick={() => {
+                        setHasError(false);
+                        setErrorMessage('');
+                        window.location.reload();
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginTop: '20px'
+                    }}
+                >
+                    Перезагрузить приложение
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="app-container">
@@ -1157,7 +1210,14 @@ const App: React.FC = () => {
                     <span>Главная</span>
                 </button>
                 <button 
-                    onClick={() => appState.navigateToView('projects')} 
+                    onClick={() => {
+                        // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
+                        if (appState.activeProjectId) {
+                            appState.navigateToView('projectDetail');
+                        } else {
+                            appState.navigateToView('projects');
+                        }
+                    }} 
                     className={appState.activeView.startsWith('project') ? 'active' : ''}
                 >
                     <IconProject />
@@ -1357,6 +1417,41 @@ const App: React.FC = () => {
                     onSave={handleUpdateTool}
                     onDelete={handleDeleteTool}
                     projects={projectsHook.projects}
+                />
+            )}
+
+            {appState.showAddTaskModal && (
+                <AddTaskModal
+                    onClose={() => appState.closeModal('addTask')}
+                    onSave={(title, projectId, priority, dueDate) => {
+                        handleAddTask(title, projectId as string | null, priority, dueDate);
+                        appState.closeModal('addTask');
+                    }}
+                    projects={projectsHook.projects}
+                    initialProjectId={appState.selectedTask?.projectId || (appState.selectedProject?.id as string) || null}
+                    hideProjectSelect={!!appState.selectedProject} // Скрываем поле, если создаем из проекта
+                />
+            )}
+
+            {appState.showEditTaskModal && appState.selectedTask && (
+                <AddTaskModal
+                    onClose={() => appState.closeModal('editTask')}
+                    onSave={(title, projectId, priority, dueDate) => {
+                        handleUpdateTask({
+                            ...appState.selectedTask!,
+                            title,
+                            projectId: projectId as string | null,
+                            priority: priority as 'low' | 'medium' | 'high' | 'urgent',
+                            dueDate
+                        });
+                        appState.closeModal('editTask');
+                    }}
+                    projects={projectsHook.projects}
+                    initialProjectId={appState.selectedTask.projectId}
+                    initialTitle={appState.selectedTask.title}
+                    initialPriority={appState.selectedTask.priority}
+                    initialDueDate={appState.selectedTask.dueDate}
+                    hideProjectSelect={!!appState.selectedTask.projectId} // Скрываем поле, если задача уже привязана к проекту
                 />
             )}
 

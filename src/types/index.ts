@@ -1,7 +1,7 @@
 export type ProjectStatus = 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
 export type ToolLocation = 'on_base' | 'in_repair' | 'on_project';
 export type FinanceCategory = 'materials' | 'labor' | 'transport' | 'tools_rental' | 'other';
-export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type ToolCondition = 'excellent' | 'good' | 'needs_service';
 export type WorkStageStatus = 'planned' | 'in_progress' | 'completed';
 export type ItemType = 'material' | 'work';
@@ -22,9 +22,10 @@ export interface ProjectTasksScreenProps {
     tasks: Task[];
     projects: Project[];
     projectId: string | null;
-    onAddTask: (title: string, projectId: string | null) => void;
+    onAddTask: (title: string, projectId: string | null, priority?: string, dueDate?: string | null) => void;
     onUpdateTask: (task: Task) => void;
     onToggleTask: (id: string) => void;
+    onDeleteTask: (id: string) => void;
     onBack?: () => void;
 }
 
@@ -447,6 +448,7 @@ export interface ProjectDetailViewProps {
     photoReports: PhotoReport[];
     documents: Document[];
     workStages: WorkStage[];
+    tasks: Task[];
     financials: ProjectFinancials;
     formatCurrency: (value: number) => string;
     statusMap: Record<EstimateStatus, { text: string; color: string; textColor: string; }>;
@@ -475,6 +477,23 @@ export interface ProjectDetailViewProps {
     notesHook: {
         getNote: (context: NoteContext, entityId?: string | null) => string;
         saveNote: (context: NoteContext, content: string, entityId?: string | null) => Promise<void>;
+    };
+    tasksHook: {
+        tasks: Task[];
+        addTask: (taskData: { title: string; projectId?: string | null; priority?: 'low' | 'medium' | 'high' | 'urgent'; tags?: string[]; dueDate?: string | null }) => Promise<Task | null>;
+        updateTask: (taskId: string, updates: Partial<Task>) => Promise<Task | null>;
+        deleteTask: (taskId: string) => Promise<boolean>;
+        toggleTask: (taskId: string) => Promise<Task | null>;
+        getTasksByProject: (projectId: string | null) => Task[];
+        getGeneralTasks: () => Task[];
+        loading: boolean;
+        error: string | null;
+        fetchAllTasks: (session: any) => Promise<void>;
+        clearError: () => void;
+    };
+    appState: {
+        openModal: (modalType: string, data?: any) => void;
+        closeModal: (modalType: string) => void;
     };
 }
 

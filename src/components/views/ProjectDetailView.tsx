@@ -1,16 +1,123 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder } from '../common/Icon';
+import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry, Task } from '../../types';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
+import { TaskDetailsScreen } from './TaskDetailsScreen';
+import { formatDueDate } from '../../utils';
 
+
+// Карта приоритетов для задач
+const priorityMap: Record<string, { color: string, name: string }> = {
+    low: { color: '#808080', name: 'Низкий' },
+    medium: { color: '#ffc107', name: 'Средний' },
+    high: { color: '#e53935', name: 'Высокий' },
+    urgent: { color: '#d32f2f', name: 'Срочный' },
+};
+
+// Компонент TaskItem (точно такой же как в ProjectTasksScreen)
+const TaskItem: React.FC<{ 
+    task: Task, 
+    projectName: string, 
+    onToggle: (id: string | number) => void, 
+    onSelect: (task: Task) => void,
+    onDelete: (id: string) => void
+}> = ({ task, projectName, onToggle, onSelect, onDelete }) => (
+    <li className={task.isCompleted ? 'completed' : ''}>
+        <input
+            type="checkbox"
+            checked={task.isCompleted}
+            onChange={() => onToggle(task.id)}
+        />
+        <div className="task-info" onClick={() => onSelect(task)}>
+            <span className="task-title">{task.title}</span>
+            <div className="task-meta">
+                <span className="task-project">{projectName || 'Без проекта'}</span>
+                {task.dueDate && <span className="task-duedate">{formatDueDate(task.dueDate)}</span>}
+                {task.priority && <span className="priority-dot" style={{ backgroundColor: priorityMap[task.priority].color }}></span>}
+            </div>
+        </div>
+        <div className="task-actions">
+            <button 
+                className="task-action-btn delete" 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Удалить задачу?')) {
+                        onDelete(task.id);
+                    }
+                }}
+                aria-label="Удалить задачу"
+            >
+                <IconTrash />
+            </button>
+        </div>
+    </li>
+);
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: ProjectFinancials, onProjectScratchpadChange: (projectId: string, content: string) => void, financeEntries: FinanceEntry[] }> = ({
-    activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
+    activeProject, estimates, photoReports, documents, workStages, tasks, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject, handleDeleteProjectEstimate,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries, notesHook
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries, notesHook, tasksHook, appState
 }) => {
+    // Состояние для выбранной задачи
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+    // Обработчики для задач
+    const handleTaskSelect = useCallback((task: Task) => {
+        setSelectedTask(task);
+    }, []);
+
+    const handleTaskSave = useCallback(async (updatedTask: Task) => {
+        await tasksHook.updateTask(updatedTask.id, updatedTask);
+        setSelectedTask(null);
+    }, [tasksHook]);
+
+    const handleTaskBack = useCallback(() => {
+        setSelectedTask(null);
+    }, []);
+
+    const handleTaskToggle = useCallback(async (taskId: string) => {
+        await tasksHook.toggleTask(taskId);
+    }, [tasksHook]);
+
+    // Группировка задач (точно такая же как в ProjectTasksScreen)
+    const groupedTasks = useMemo(() => {
+        const groups = {
+            overdue: [] as Task[],
+            today: [] as Task[],
+            upcoming: [] as Task[],
+            completed: [] as Task[],
+        };
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        tasks.forEach(task => {
+            if (task.isCompleted) {
+                groups.completed.push(task);
+                return;
+            }
+
+            if (task.dueDate) {
+                const dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const diffTime = dueDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 0) {
+                    groups.overdue.push(task);
+                } else if (diffDays === 0) {
+                    groups.today.push(task);
+                } else {
+                    groups.upcoming.push(task);
+                }
+            } else {
+                groups.upcoming.push(task);
+            }
+        });
+
+        return groups;
+    }, [tasks]);
 
     console.log('ProjectDetailView: handleDeleteProjectEstimate получен как пропс:', !!handleDeleteProjectEstimate);
     console.log('ProjectDetailView: estimates:', estimates);
@@ -150,8 +257,77 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                 </div>
                 <div className="card project-section">
                      <div className="project-section-header">
-                        <h3>Задачи</h3>
-                        <button className="add-in-header-btn" onClick={onNavigateToTasks}><IconCheckSquare/></button>
+                        <h3>Задачи ({tasks.length})</h3>
+                        <div className="header-actions">
+                            <button className="add-in-header-btn" onClick={() => appState.openModal('addTask', { id: activeProject.id, name: activeProject.name })}><IconPlus/></button>
+                            <button className="add-in-header-btn" onClick={onNavigateToTasks}><IconCheckSquare/></button>
+                        </div>
+                    </div>
+                    <div className="project-section-body">
+                        <div className="project-items-list">
+                            {tasks.length > 0 ? (
+                                <div className="task-groups-container">
+                                    {groupedTasks.overdue.length > 0 && (
+                                        <div className="task-group">
+                                            <h4>Просроченные</h4>
+                                            <ul className="task-list">
+                                                {groupedTasks.overdue.slice(0, 3).map(task => (
+                                                    <TaskItem 
+                                                        key={task.id} 
+                                                        task={task} 
+                                                        projectName={activeProject.name} 
+                                                        onToggle={handleTaskToggle} 
+                                                        onSelect={handleTaskSelect} 
+                                                        onDelete={tasksHook.deleteTask} 
+                                                    />
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {groupedTasks.today.length > 0 && (
+                                        <div className="task-group">
+                                            <h4>Сегодня</h4>
+                                            <ul className="task-list">
+                                                {groupedTasks.today.slice(0, 3).map(task => (
+                                                    <TaskItem 
+                                                        key={task.id} 
+                                                        task={task} 
+                                                        projectName={activeProject.name} 
+                                                        onToggle={handleTaskToggle} 
+                                                        onSelect={handleTaskSelect} 
+                                                        onDelete={tasksHook.deleteTask} 
+                                                    />
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {groupedTasks.upcoming.length > 0 && (
+                                        <div className="task-group">
+                                            <h4>Предстоящие</h4>
+                                            <ul className="task-list">
+                                                {groupedTasks.upcoming.slice(0, 3).map(task => (
+                                                    <TaskItem 
+                                                        key={task.id} 
+                                                        task={task} 
+                                                        projectName={activeProject.name} 
+                                                        onToggle={handleTaskToggle} 
+                                                        onSelect={handleTaskSelect} 
+                                                        onDelete={tasksHook.deleteTask} 
+                                                    />
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="empty-list-message">Задач пока нет</p>
+                            )}
+                            {tasks.length > 3 && (
+                                <button className="view-all-btn" onClick={onNavigateToTasks}>
+                                    Показать все задачи ({tasks.length})
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="card project-section">
@@ -372,6 +548,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     </div>
                 </div>
             </main>
+            
+            {/* Модальное окно деталей задачи */}
+            {selectedTask && (
+                <TaskDetailsScreen
+                    task={selectedTask}
+                    onSave={handleTaskSave}
+                    onBack={handleTaskBack}
+                />
+            )}
         </>
     );
 };

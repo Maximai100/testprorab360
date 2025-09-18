@@ -36,6 +36,8 @@ export const useAppState = () => {
     const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
     const [showScratchpadModal, setShowScratchpadModal] = useState(false);
     const [showGlobalDocumentModal, setShowGlobalDocumentModal] = useState(false);
+    const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+    const [showEditTaskModal, setShowEditTaskModal] = useState(false);
     
     // Modal data
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
@@ -43,6 +45,7 @@ export const useAppState = () => {
     const [selectedNote, setSelectedNote] = useState<any>(null);
     const [selectedProject, setSelectedProject] = useState<any>(null);
     const [selectedTool, setSelectedTool] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
     const [actTotalAmount, setActTotalAmount] = useState<number>(0);
     
     // Search and filter states
@@ -107,6 +110,16 @@ export const useAppState = () => {
         if (activeView === 'projectDetail') {
             setActiveView('projects');
             setActiveProjectId(null);
+        } else if (activeView === 'projectTasks') {
+            // Возвращаемся в детали проекта, если есть активный проект
+            if (activeProjectId) {
+                setActiveView('projectDetail');
+            } else {
+                setActiveView('projects');
+            }
+        } else if (activeView === 'allTasks') {
+            // Возвращаемся на главный экран
+            setActiveView('workspace');
         } else if (activeView === 'estimate') {
             if (activeProjectId) {
                 setActiveView('projectDetail');
@@ -186,6 +199,14 @@ export const useAppState = () => {
             case 'globalDocument':
                 setShowGlobalDocumentModal(true);
                 break;
+            case 'addTask':
+                setSelectedProject(data || null);
+                setShowAddTaskModal(true);
+                break;
+            case 'editTask':
+                setSelectedTask(data || null);
+                setShowEditTaskModal(true);
+                break;
         }
     }, []);
     
@@ -249,6 +270,14 @@ export const useAppState = () => {
             case 'globalDocument':
                 setShowGlobalDocumentModal(false);
                 break;
+            case 'addTask':
+                setShowAddTaskModal(false);
+                setSelectedProject(null);
+                break;
+            case 'editTask':
+                setShowEditTaskModal(false);
+                setSelectedTask(null);
+                break;
         }
     }, []);
     
@@ -292,6 +321,8 @@ export const useAppState = () => {
         showToolDetailsModal,
         showScratchpadModal,
         showGlobalDocumentModal,
+        showAddTaskModal,
+        showEditTaskModal,
         
         // Modal data
         selectedPhoto,
@@ -299,6 +330,7 @@ export const useAppState = () => {
         selectedNote,
         selectedProject,
         selectedTool,
+        selectedTask,
         actTotalAmount,
         
         // Actions

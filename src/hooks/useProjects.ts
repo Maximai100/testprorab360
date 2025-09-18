@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
     Project, FinanceEntry, PhotoReport, Document, WorkStage, Note, 
-    Task, Tool, Consumable, ProjectFinancials, ProjectStatus 
+    Tool, Consumable, ProjectFinancials, ProjectStatus 
 } from '../types';
 import { dataService, dataUtils } from '../services/storageService';
 import { supabase } from '../supabaseClient';
@@ -14,7 +14,6 @@ export const useProjects = () => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [workStages, setWorkStages] = useState<WorkStage[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
-    const [tasks, setTasks] = useState<Task[]>([]);
     const [tools, setTools] = useState<Tool[]>([]);
     const [consumables, setConsumables] = useState<Consumable[]>([]);
     const [scratchpad, setScratchpad] = useState('');
@@ -28,7 +27,6 @@ export const useProjects = () => {
         setDocuments(dataService.getDocuments());
         setWorkStages(dataService.getWorkStages());
         setNotes(dataService.getNotes());
-        setTasks(dataService.getTasks());
         setTools(dataService.getTools());
         setConsumables(dataService.getConsumables());
         setScratchpad(dataService.getScratchpad());
@@ -61,9 +59,6 @@ export const useProjects = () => {
         dataService.setNotes(notes);
     }, [notes]);
     
-    useEffect(() => {
-        dataService.setTasks(tasks);
-    }, [tasks]);
     
     useEffect(() => {
         dataService.setTools(tools);
@@ -102,7 +97,6 @@ export const useProjects = () => {
         setDocuments(prev => prev.filter(d => d.projectId !== id));
         setWorkStages(prev => prev.filter(w => w.projectId !== id));
         setNotes(prev => prev.filter(n => n.projectId !== id));
-        setTasks(prev => prev.filter(t => t.projectId !== id));
     }, []);
     
     const getProjectById = useCallback((id: string) => {
@@ -279,39 +273,6 @@ export const useProjects = () => {
         return notes.filter(n => n.projectId === projectId);
     }, [notes]);
     
-    // Tasks management
-    const addTask = useCallback((title: string, projectId: string | null) => {
-        const newTask = dataUtils.createEntity({
-            title,
-            projectId,
-            isCompleted: false,
-            priority: 'medium' as const,
-            tags: [],
-            dueDate: null
-        });
-        setTasks(prev => [...prev, newTask]);
-        return newTask;
-    }, []);
-    
-    const updateTask = useCallback((id: string, updates: Partial<Task>) => {
-        setTasks(prev => prev.map(task => 
-            task.id === id ? dataUtils.updateTimestamps({ ...task, ...updates }) : task
-        ));
-    }, []);
-    
-    const toggleTask = useCallback((id: string) => {
-        setTasks(prev => prev.map(task => 
-            task.id === id ? dataUtils.updateTimestamps({ ...task, isCompleted: !task.isCompleted }) : task
-        ));
-    }, []);
-    
-    const deleteTask = useCallback((id: string) => {
-        setTasks(prev => prev.filter(t => t.id !== id));
-    }, []);
-    
-    const getTasksByProject = useCallback((projectId: string | null) => {
-        return tasks.filter(t => t.projectId === projectId);
-    }, [tasks]);
     
     // Tools management
     const addTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -429,7 +390,6 @@ export const useProjects = () => {
         documents,
         workStages,
         notes,
-        tasks,
         tools,
         consumables,
         scratchpad,
@@ -474,12 +434,6 @@ export const useProjects = () => {
         deleteNote,
         getNotesByProject,
         
-        // Tasks management
-        addTask,
-        updateTask,
-        toggleTask,
-        deleteTask,
-        getTasksByProject,
         
         // Tools management
         addTool,

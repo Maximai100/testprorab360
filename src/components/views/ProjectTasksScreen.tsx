@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Task, Project, ProjectTasksScreenProps } from '../../types';
-import { IconPlus, IconFilter, IconChevronRight } from '../common/Icon';
+import { IconPlus, IconFilter, IconChevronRight, IconTrash } from '../common/Icon';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
 import { formatDueDate } from '../../utils';
 import { TaskFilterModal } from '../modals/TaskFilterModal';
@@ -10,9 +10,16 @@ const priorityMap: Record<string, { color: string, name: string }> = {
     low: { color: '#808080', name: 'Низкий' },
     medium: { color: '#ffc107', name: 'Средний' },
     high: { color: '#e53935', name: 'Высокий' },
+    urgent: { color: '#d32f2f', name: 'Срочный' },
 };
 
-const TaskItem: React.FC<{ task: Task, projectName: string, onToggle: (id: string | number) => void, onSelect: (task: Task) => void }> = ({ task, projectName, onToggle, onSelect }) => (
+const TaskItem: React.FC<{ 
+    task: Task, 
+    projectName: string, 
+    onToggle: (id: string | number) => void, 
+    onSelect: (task: Task) => void,
+    onDelete: (id: string) => void
+}> = ({ task, projectName, onToggle, onSelect, onDelete }) => (
     <li className={task.isCompleted ? 'completed' : ''}>
         <input
             type="checkbox"
@@ -27,17 +34,31 @@ const TaskItem: React.FC<{ task: Task, projectName: string, onToggle: (id: strin
                 {task.priority && <span className="priority-dot" style={{ backgroundColor: priorityMap[task.priority].color }}></span>}
             </div>
         </div>
+        <div className="task-actions">
+            <button 
+                className="task-action-btn delete" 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Удалить задачу?')) {
+                        onDelete(task.id);
+                    }
+                }}
+                aria-label="Удалить задачу"
+            >
+                <IconTrash />
+            </button>
+        </div>
     </li>
 );
 
-export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, projects, projectId, onAddTask, onUpdateTask, onToggleTask, onBack }) => {
+export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, projects, projectId, onAddTask, onUpdateTask, onToggleTask, onDeleteTask, onBack }) => {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState<{ projectId: string | null; tag: string | null; }>({ projectId: null, tag: null });
 
-    const handleSaveTask = (title: string, selectedProjectId: string | number | null) => {
-        onAddTask(title, selectedProjectId);
+    const handleSaveTask = (title: string, selectedProjectId: string | number | null, priority?: string, dueDate?: string | null) => {
+        onAddTask(title, selectedProjectId, priority, dueDate);
     };
 
     const handleSelectTaskForEdit = (task: Task) => {
@@ -121,7 +142,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                             <IconChevronRight style={{transform: 'rotate(180deg)'}} />
                         </button>
                     )}
-                    <h1>{projectId ? 'Задачи проекта' : 'Все задачи'}</h1>
+                    <h1>{projectId ? `Задачи проекта "${projects.find(p => p.id === projectId)?.name || 'Неизвестный проект'}"` : 'Все задачи'}</h1>
                 </div>
                 <div className="header-actions">
                     <button onClick={() => setIsFilterModalOpen(true)} className="header-btn" aria-label="Фильтр"><IconFilter /></button>
@@ -141,7 +162,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Просроченные</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.overdue.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} />)}
+                                            {groupedTasks.overdue.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
                                         </ul>
                                     </div>
                                 )}
@@ -149,7 +170,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Сегодня</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.today.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} />)}
+                                            {groupedTasks.today.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
                                         </ul>
                                     </div>
                                 )}
@@ -157,7 +178,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Предстоящие</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.upcoming.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} />)}
+                                            {groupedTasks.upcoming.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
                                         </ul>
                                     </div>
                                 )}
@@ -165,7 +186,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Выполненные</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.completed.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} />)}
+                                            {groupedTasks.completed.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
                                         </ul>
                                     </div>
                                 )}
