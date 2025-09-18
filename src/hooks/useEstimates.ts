@@ -556,7 +556,13 @@ export const useEstimates = (session: Session | null) => {
       setTemplates(prev => prev.filter(t => t.lastModified !== timestamp));
     },
     saveAsTemplate: (estimateId: string) => {
+      console.log('🔧 useEstimates: saveAsTemplate вызвана для estimateId:', estimateId);
+      console.log('🔧 useEstimates: allEstimates.length:', allEstimates.length);
+      console.log('🔧 useEstimates: allEstimates:', allEstimates);
+      
       const estimate = allEstimates.find(e => e.id === estimateId);
+      console.log('🔧 useEstimates: найденная смета:', estimate);
+      
       if (estimate) {
         const template: EstimateTemplate = {
           items: estimate.items || [],
@@ -565,8 +571,19 @@ export const useEstimates = (session: Session | null) => {
           tax: estimate.tax,
           lastModified: Date.now()
         };
-        setTemplates(prev => [template, ...prev]);
-        console.log('Шаблон сохранен:', template);
+        console.log('🔧 useEstimates: созданный шаблон:', template);
+        console.log('🔧 useEstimates: количество позиций в шаблоне:', template.items.length);
+        
+        setTemplates(prev => {
+          const newTemplates = [template, ...prev];
+          console.log('🔧 useEstimates: обновленные шаблоны:', newTemplates);
+          console.log('🔧 useEstimates: количество шаблонов после сохранения:', newTemplates.length);
+          return newTemplates;
+        });
+        
+        console.log('🔧 useEstimates: Шаблон успешно сохранен');
+      } else {
+        console.error('🔧 useEstimates: ОШИБКА - смета не найдена для ID:', estimateId);
       }
     },
     addItemFromLibrary: () => {},

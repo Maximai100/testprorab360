@@ -21,7 +21,25 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
     }, []);
 
     const filteredEstimates = useMemo(() => estimates.filter(e => e.number.toLowerCase().includes(estimatesSearch.toLowerCase()) || (e.clientInfo && e.clientInfo.toLowerCase().includes(estimatesSearch.toLowerCase()))), [estimates, estimatesSearch]);
-    const filteredTemplates = useMemo(() => templates.map((t, i) => ({ ...t, index: i })).filter(t => t.items.some(item => item.name.toLowerCase().includes(estimatesSearch.toLowerCase()))), [templates, estimatesSearch]);
+    const filteredTemplates = useMemo(() => {
+        console.log('🔧 EstimatesListModal: Фильтрация шаблонов');
+        console.log('🔧 EstimatesListModal: templates.length:', templates.length);
+        console.log('🔧 EstimatesListModal: estimatesSearch:', estimatesSearch);
+        console.log('🔧 EstimatesListModal: templates:', templates);
+        
+        if (!estimatesSearch.trim()) {
+            // Если поиск пустой, показываем все шаблоны
+            const result = templates.map((t, i) => ({ ...t, index: i }));
+            console.log('🔧 EstimatesListModal: Показываем все шаблоны, результат:', result);
+            return result;
+        }
+        // Если есть поиск, фильтруем по названиям позиций
+        const result = templates.map((t, i) => ({ ...t, index: i })).filter(t => 
+            t.items.some(item => item.name.toLowerCase().includes(estimatesSearch.toLowerCase()))
+        );
+        console.log('🔧 EstimatesListModal: Фильтрованные шаблоны:', result);
+        return result;
+    }, [templates, estimatesSearch]);
 
     const { activeProjectId } = useProjectContext();
 
