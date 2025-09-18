@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Используем переменные окружения или fallback значения
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://prorab360.online'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE'
+// ВАЖНО: Замените эти значения на реальные данные вашего Supabase проекта!
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your_supabase_anon_key_here'
 
 // Логи для проверки
 console.log('🔧 Supabase конфигурация:');

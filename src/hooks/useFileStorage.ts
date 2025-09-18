@@ -97,10 +97,18 @@ export const useFileStorage = () => {
     storage_path: string;
   }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Ошибка получения пользователя:', authError);
+        throw new Error(`Ошибка авторизации: ${authError.message}`);
+      }
+      
       if (!user) {
         throw new Error('Пользователь не авторизован');
       }
+      
+      console.log('🔧 Создание документа для пользователя:', user.id);
 
       const { data, error } = await supabase
         .from('documents')
@@ -142,10 +150,18 @@ export const useFileStorage = () => {
     date?: string;
   }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Ошибка получения пользователя:', authError);
+        throw new Error(`Ошибка авторизации: ${authError.message}`);
+      }
+      
       if (!user) {
         throw new Error('Пользователь не авторизован');
       }
+      
+      console.log('🔧 Создание фотоотчета для пользователя:', user.id);
 
       const { data, error } = await supabase
         .from('photoreports')
