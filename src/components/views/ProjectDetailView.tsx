@@ -483,10 +483,27 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     </div>
                     <div className="project-section-body">
                         {projectPhotos.length > 0 ? (
-                            <div className="photo-grid">
-                                {projectPhotos.map(p => (
-                                    <div key={p.id} className="photo-thumbnail" onClick={() => onViewPhoto(p)}>
-                                        <img src={p.image} alt={p.caption || 'фото'}/>
+                            <div className="photo-reports-list">
+                                {projectPhotos.map(photoReport => (
+                                    <div key={photoReport.id} className="photo-report-item">
+                                        <div className="photo-report-header">
+                                            <h4>{photoReport.title}</h4>
+                                            <span className="photo-report-date">
+                                                {new Date(photoReport.date).toLocaleDateString('ru-RU')}
+                                            </span>
+                                        </div>
+                                        <div className="photo-grid">
+                                            {photoReport.photos.slice(0, 3).map((photo, index) => (
+                                                <div key={index} className="photo-thumbnail" onClick={() => onViewPhoto(photoReport)}>
+                                                    <img src={photo.url} alt={photo.caption || 'фото'}/>
+                                                </div>
+                                            ))}
+                                            {photoReport.photos.length > 3 && (
+                                                <div className="photo-thumbnail more-photos">
+                                                    <span>+{photoReport.photos.length - 3}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

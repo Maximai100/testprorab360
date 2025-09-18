@@ -59,6 +59,7 @@ import { useProjects } from './hooks/useProjects';
 import { useInventory } from './hooks/useInventory';
 import { useNotes } from './hooks/useNotes';
 import { useTasks } from './hooks/useTasks';
+import { useFileStorage } from './hooks/useFileStorage';
 import { dataService, storageService } from './services/storageService';
 
 const App: React.FC = () => {
@@ -106,6 +107,8 @@ const App: React.FC = () => {
     console.log('🔧 App: useNotes инициализирован');
     const tasksHook = useTasks(session);
     console.log('🔧 App: useTasks инициализирован');
+    const fileStorageHook = useFileStorage();
+    console.log('🔧 App: useFileStorage инициализирован');
     
     // Логирование состояния после инициализации хуков
     console.log('🚀 App: activeView:', appState?.activeView);
@@ -523,8 +526,27 @@ const App: React.FC = () => {
     }, [projectsHook]);
 
     // Photo report handlers
-    const handleAddPhotoReport = useCallback((reportData: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+    const handleAddPhotoReport = useCallback((photoReport: {
+        id: string;
+        title: string;
+        photos: Array<{
+            url: string;
+            path: string;
+            caption: string;
+        }>;
+        date: string;
+    }) => {
         if (appState.activeProjectId) {
+            // Создаем объект PhotoReport в старом формате для совместимости
+            const reportData: PhotoReport = {
+                id: photoReport.id,
+                projectId: appState.activeProjectId,
+                title: photoReport.title,
+                photos: photoReport.photos,
+                date: photoReport.date,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
             projectsHook.addPhotoReport(appState.activeProjectId, reportData);
         }
         appState.closeModal('photoReport');
@@ -537,19 +559,47 @@ const App: React.FC = () => {
     // Document handlers
     const handleAddDocument = useCallback((name: string, fileUrl: string) => {
         if (appState.activeProjectId) {
-            projectsHook.addDocument(appState.activeProjectId, { name, fileUrl, date: new Date().toISOString() });
+            // Создаем объект Document в старом формате для совместимости
+            const documentData: Document = {
+                id: generateUUID(),
+                projectId: appState.activeProjectId,
+                name,
+                fileUrl,
+                storagePath: '', // Будет заполнено в useFileStorage
+                date: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            projectsHook.addDocument(appState.activeProjectId, documentData);
         }
         appState.closeModal('documentUpload');
     }, [projectsHook, appState]);
 
     const handleAddGlobalDocument = useCallback((name: string, fileUrl: string) => {
-        projectsHook.addDocument(null, { name, fileUrl, date: new Date().toISOString() });
+        // Создаем объект Document в старом формате для совместимости
+        const documentData: Document = {
+            id: generateUUID(),
+            projectId: undefined,
+            name,
+            fileUrl,
+            storagePath: '', // Будет заполнено в useFileStorage
+            date: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        projectsHook.addDocument(null, documentData);
         appState.closeModal('globalDocument');
     }, [projectsHook, appState]);
 
-    const handleDeleteDocument = useCallback((id: string) => {
-        projectsHook.deleteDocument(id);
-    }, [projectsHook]);
+    const handleDeleteDocument = useCallback(async (id: string) => {
+        try {
+            await fileStorageHook.deleteDocument(id);
+            projectsHook.deleteDocument(id);
+        } catch (error) {
+            console.error('Ошибка при удалении документа:', error);
+            safeShowAlert('Произошла ошибка при удалении документа.');
+        }
+    }, [projectsHook, fileStorageHook]);
 
     const handleDeleteGlobalDocument = useCallback((id: string) => {
         projectsHook.deleteDocument(id);
@@ -1345,9 +1395,15 @@ const App: React.FC = () => {
                 <PhotoViewerModal
                     photo={appState.selectedPhoto}
                     onClose={() => appState.closeModal('photoViewer')}
-                    onDelete={(id) => {
-                        projectsHook.deletePhotoReport(id);
-                        appState.closeModal('photoViewer');
+                    onDelete={async (id) => {
+                        try {
+                            await fileStorageHook.deletePhotoReport(id);
+                            projectsHook.deletePhotoReport(id);
+                            appState.closeModal('photoViewer');
+                        } catch (error) {
+                            console.error('Ошибка при удалении фотоотчета:', error);
+                            safeShowAlert('Произошла ошибка при удалении фотоотчета.');
+                        }
                     }}
                 />
             )}

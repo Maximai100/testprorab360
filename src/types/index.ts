@@ -176,8 +176,11 @@ export interface PhotoReport {
     id: string; // Генерируется UUID
     projectId: string;
     title: string;
-    description: string;
-    photos: string[]; // Массив URL-адресов изображений
+    photos: Array<{
+        url: string;
+        path: string;
+        caption: string;
+    }>; // Массив объектов с информацией о фотографиях
     date: string; // ISO 8601 format
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
@@ -188,6 +191,7 @@ export interface Document {
     projectId?: string;
     name: string;
     fileUrl: string; // URL to the stored file
+    storagePath: string; // Путь к файлу в Supabase Storage
     date: string; // ISO 8601 format
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
@@ -308,7 +312,16 @@ export interface FinanceEntryModalProps {
 
 export interface PhotoReportModalProps {
     onClose: () => void;
-    onSave: (photo: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (photoReport: {
+        id: string;
+        title: string;
+        photos: Array<{
+            url: string;
+            path: string;
+            caption: string;
+        }>;
+        date: string;
+    }) => void;
     showAlert: (message: string) => void;
 }
 
