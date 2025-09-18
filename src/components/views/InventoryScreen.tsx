@@ -25,6 +25,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
     consumablesScratchpad,
     onToolsScratchpadChange,
     onConsumablesScratchpadChange,
+    notesHook,
 }) => {
     const [activeTab, setActiveTab] = useState('tools');
     const [newConsumableName, setNewConsumableName] = useState('');
@@ -128,8 +129,8 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <textarea 
                                     className="scratchpad-textarea"
                                     placeholder="Заметки по инструментам..."
-                                    value={toolsScratchpad}
-                                    onChange={(e) => onToolsScratchpadChange(e.target.value)}
+                                    value={notesHook.getNote('inventory_tools')}
+                                    onChange={(e) => notesHook.saveNote('inventory_tools', e.target.value)}
                                     rows={8}
                                 />
                             </div>
@@ -191,8 +192,8 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <textarea 
                                     className="scratchpad-textarea"
                                     placeholder="Заметки по расходникам..."
-                                    value={consumablesScratchpad}
-                                    onChange={(e) => onConsumablesScratchpadChange(e.target.value)}
+                                    value={notesHook.getNote('inventory_consumables')}
+                                    onChange={(e) => notesHook.saveNote('inventory_consumables', e.target.value)}
                                     rows={8}
                                 />
                             </div>

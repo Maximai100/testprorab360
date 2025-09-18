@@ -8,7 +8,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     activeProject, estimates, photoReports, documents, workStages, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject, handleDeleteProjectEstimate,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries, notesHook
 }) => {
 
 
@@ -362,8 +362,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <textarea 
                             className="scratchpad-textarea"
                             placeholder="Здесь можно хранить любую текстовую информацию по проекту..."
-                            value={activeProject.scratchpad || ''}
-                            onChange={(e) => onProjectScratchpadChange(activeProject.id, e.target.value)}
+                            value={notesHook.getNote('project', activeProject.id)}
+                            onChange={(e) => notesHook.saveNote('project', e.target.value, activeProject.id)}
                             rows={8}
                         />
                     </div>

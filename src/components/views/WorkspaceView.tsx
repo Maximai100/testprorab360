@@ -9,6 +9,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     onOpenGlobalDocumentModal,
     onDeleteGlobalDocument,
     onOpenScratchpad,
+    notesHook,
 }) => {
 
     return (
@@ -26,8 +27,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         </button>
                     </div>
                     <textarea 
-                        value={scratchpad} 
-                        onChange={(e) => onScratchpadChange(e.target.value)} 
+                        value={notesHook.getNote('global')} 
+                        onChange={(e) => notesHook.saveNote('global', e.target.value)} 
                         placeholder="Место для быстрых заметок..."
                         style={{ height: '100%', minHeight: '300px' }}
                     />
