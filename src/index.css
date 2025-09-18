@@ -71,9 +71,8 @@ body {
     overscroll-behavior-x: none; /* Prevents horizontal swipe gesture */
     overscroll-behavior-y: auto; /* Allow natural vertical scrolling */
     
-    /* Bottom navigation space */
-    padding-bottom: 80px; /* Fallback for browsers that don't support env() */
-    padding-bottom: calc(60px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+    /* Убеждаемся что body не влияет на позиционирование нижнего меню */
+    transform: none !important;
 }
 
 .app-container {
@@ -81,6 +80,7 @@ body {
     margin: 0 auto;
     padding: 16px;
     padding-top: 80px; /* Space for sticky header */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
 }
 
 header {
@@ -913,21 +913,22 @@ body.dark-theme .btn-ai {
 
 /* Bottom Navigation Bar */
 .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     display: flex;
     justify-content: space-around;
     background-color: var(--secondary-bg-color);
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 9999;
+    z-index: 9999 !important;
     max-width: 600px;
     margin: 0 auto;
     padding: 8px 0;
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
     height: auto;
+    transform: none !important;
 }
 body.dark-theme .bottom-nav {
     box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
