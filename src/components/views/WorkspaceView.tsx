@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { WorkspaceViewProps } from '../../types';
 import { IconDocument, IconDownload, IconExternalLink, IconTrash } from '../common/Icon';
 
@@ -11,6 +11,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     onOpenScratchpad,
     notesHook,
 }) => {
+    // Мемоизируем значение заметки для оптимизации
+    const globalNote = useMemo(() => notesHook.getNote('global'), [notesHook]);
 
     return (
         <>
@@ -27,7 +29,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                         </button>
                     </div>
                     <textarea 
-                        value={notesHook.getNote('global')} 
+                        value={globalNote} 
                         onChange={(e) => notesHook.saveNote('global', e.target.value)} 
                         placeholder="Место для быстрых заметок..."
                         style={{ height: '100%', minHeight: '300px' }}

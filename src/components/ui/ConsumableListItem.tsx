@@ -72,38 +72,32 @@ export const ConsumableListItem: React.FC<ConsumableListItemProps> = ({
         <IconCart />
       </div>
 
-      <div className="c-list-item-details">
-        <span className="c-list-item-title">{consumable.name}</span>
+      <div className="c-list-item-content">
+        <div className="c-list-item-main">
+          <span className="c-list-item-title">{consumable.name}</span>
+          <div className="c-list-item-controls">
+            <button className="c-quantity-button" onClick={handleDecrement}>-</button>
+            <span className="c-quantity-text">{`${consumable.quantity} ${consumable.unit}`}</span>
+            <button className="c-quantity-button" onClick={handleIncrement}>+</button>
+          </div>
+        </div>
+        
+        <div className="c-list-item-location">
+          <select
+            value={getCurrentValue()}
+            onChange={handleLocationChange}
+            className="c-location-select"
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="c-list-item-controls">
-        <button className="c-quantity-button" onClick={handleDecrement}>-</button>
-        <span className="c-quantity-text">{`${consumable.quantity} ${consumable.unit}`}</span>
-        <button className="c-quantity-button" onClick={handleIncrement}>+</button>
-        
-        <select
-          value={getCurrentValue()}
-          onChange={handleLocationChange}
-          style={{
-            padding: '4px 8px',
-            borderRadius: '4px',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--input-bg)',
-            color: 'var(--text-color)',
-            fontSize: '12px',
-            outline: 'none',
-            cursor: 'pointer',
-            minWidth: '80px',
-            marginRight: '8px'
-          }}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        
+      <div className="c-list-item-actions">
         <button className="c-delete-button" onClick={handleDelete}>
           <IconTrash />
         </button>

@@ -2117,18 +2117,71 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Consumables */
 .add-consumable-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
     margin-bottom: 20px;
 }
 
-.add-consumable-form input {
-    width: 100%;
+.form-row {
+    margin-bottom: 12px;
 }
 
-.add-consumable-form button {
-    grid-column: 1 / -1; /* Button spans full width */
+.form-input-long {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-m);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-m);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-input-long:focus {
+    border-color: var(--color-primary);
+}
+
+.form-input-small {
+    width: 100px;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-m);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-m);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-input-small:focus {
+    border-color: var(--color-primary);
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.add-button {
+    padding: 12px 24px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-m);
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-button:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.add-button:disabled {
+    background-color: var(--color-surface-2);
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
 }
 
 .consumables-list {

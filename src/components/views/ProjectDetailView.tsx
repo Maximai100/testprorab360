@@ -27,6 +27,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     }, [estimates, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
+    
+    // Мемоизируем значение заметки проекта для оптимизации
+    const projectNote = useMemo(() => notesHook.getNote('project', activeProject.id), [notesHook, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
     const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
     
@@ -362,7 +365,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <textarea 
                             className="scratchpad-textarea"
                             placeholder="Здесь можно хранить любую текстовую информацию по проекту..."
-                            value={notesHook.getNote('project', activeProject.id)}
+                            value={projectNote}
                             onChange={(e) => notesHook.saveNote('project', e.target.value, activeProject.id)}
                             rows={8}
                         />

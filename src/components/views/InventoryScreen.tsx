@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Tool, Project, InventoryScreenProps, Consumable, ToolLocation, ConsumableLocation } from '../../types';
 import { IconPlus, IconTrash, IconSettings, IconClipboard } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
@@ -31,6 +31,10 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
     const [newConsumableName, setNewConsumableName] = useState('');
     const [newConsumableQuantity, setNewConsumableQuantity] = useState<number | string>('');
     const [newConsumableUnit, setNewConsumableUnit] = useState('шт.');
+    
+    // Мемоизируем значения заметок для оптимизации
+    const toolsNote = useMemo(() => notesHook.getNote('inventory_tools'), [notesHook]);
+    const consumablesNote = useMemo(() => notesHook.getNote('inventory_consumables'), [notesHook]);
 
     const handleAddConsumable = () => {
         const quantity = typeof newConsumableQuantity === 'string' ? parseFloat(newConsumableQuantity) : newConsumableQuantity;
@@ -129,7 +133,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <textarea 
                                     className="scratchpad-textarea"
                                     placeholder="Заметки по инструментам..."
-                                    value={notesHook.getNote('inventory_tools')}
+                                    value={toolsNote}
                                     onChange={(e) => notesHook.saveNote('inventory_tools', e.target.value)}
                                     rows={8}
                                 />
@@ -142,26 +146,35 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                     <>
                         <div className="card project-section">
                             <div className="project-section-body">
-                                <div className="add-consumable-form" style={{ display: 'flex', gap: '8px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Наименование"
-                                        value={newConsumableName}
-                                        onChange={(e) => setNewConsumableName(e.target.value)}
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Количество"
-                                        value={newConsumableQuantity}
-                                        onChange={(e) => setNewConsumableQuantity(e.target.value)}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Ед. изм."
-                                        value={newConsumableUnit}
-                                        onChange={(e) => setNewConsumableUnit(e.target.value)}
-                                    />
-                                    <button onClick={handleAddConsumable} className="btn btn-primary">Добавить</button>
+                                <div className="add-consumable-form">
+                                    <div className="form-row">
+                                        <input
+                                            type="text"
+                                            placeholder="Наименование"
+                                            value={newConsumableName}
+                                            onChange={(e) => setNewConsumableName(e.target.value)}
+                                            className="form-input-long"
+                                        />
+                                    </div>
+                                    <div className="form-row">
+                                        <input
+                                            type="number"
+                                            placeholder="Количество"
+                                            value={newConsumableQuantity}
+                                            onChange={(e) => setNewConsumableQuantity(e.target.value)}
+                                            className="form-input-small"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="шт."
+                                            value={newConsumableUnit}
+                                            onChange={(e) => setNewConsumableUnit(e.target.value)}
+                                            className="form-input-small"
+                                        />
+                                    </div>
+                                    <div className="form-row">
+                                        <button onClick={handleAddConsumable} className="btn btn-primary add-button">Добавить</button>
+                                    </div>
                                 </div>
                                 <div className="consumables-list project-items-list">
                                     {consumables.length > 0 ? (
@@ -192,7 +205,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
                                 <textarea 
                                     className="scratchpad-textarea"
                                     placeholder="Заметки по расходникам..."
-                                    value={notesHook.getNote('inventory_consumables')}
+                                    value={consumablesNote}
                                     onChange={(e) => notesHook.saveNote('inventory_consumables', e.target.value)}
                                     rows={8}
                                 />

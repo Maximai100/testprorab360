@@ -74,6 +74,31 @@ export const useNotes = (session: Session | null) => {
             return;
         }
 
+        // Сначала обновляем локальное состояние для мгновенного отображения
+        const noteKey = `${context}_${entityId || 'null'}`;
+        const existingNote = notes.find(n => n.context === context && n.entityId === entityId);
+        
+        if (existingNote) {
+            // Обновляем существующую заметку в состоянии
+            setNotes(prev => prev.map(note => 
+                note.id === existingNote.id 
+                    ? { ...note, content }
+                    : note
+            ));
+        } else {
+            // Создаем временную заметку для отображения
+            const tempNote: Note = {
+                id: `temp_${Date.now()}`,
+                userId: session.user.id,
+                content,
+                context,
+                entityId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            setNotes(prev => [tempNote, ...prev]);
+        }
+
         // Создаем ключ для debouncing
         const debounceKey = `${context}_${entityId || 'null'}`;
         
@@ -88,8 +113,12 @@ export const useNotes = (session: Session | null) => {
             try {
                 console.log('📝 useNotes: Сохраняем заметку:', { context, entityId, contentLength: content.length });
 
-                // Ищем существующую заметку
-                const existingNote = notes.find(n => n.context === context && n.entityId === entityId);
+                // Ищем существующую заметку (не временную)
+                const existingNote = notes.find(n => 
+                    n.context === context && 
+                    n.entityId === entityId && 
+                    !n.id.startsWith('temp_')
+                );
 
                 if (existingNote) {
                     // Обновляем существующую заметку
@@ -133,7 +162,7 @@ export const useNotes = (session: Session | null) => {
                         throw error;
                     }
 
-                    // Добавляем в состояние
+                    // Заменяем временную заметку на реальную
                     const newNote: Note = {
                         id: data.id,
                         userId: data.user_id,
@@ -144,7 +173,11 @@ export const useNotes = (session: Session | null) => {
                         updatedAt: data.updated_at,
                     };
 
-                    setNotes(prev => [newNote, ...prev]);
+                    setNotes(prev => prev.map(note => 
+                        note.context === context && note.entityId === entityId && note.id.startsWith('temp_')
+                            ? newNote
+                            : note
+                    ));
                     console.log('📝 useNotes: Заметка создана:', newNote.id);
                 }
 
@@ -152,7 +185,7 @@ export const useNotes = (session: Session | null) => {
                 console.error('📝 useNotes: Ошибка при сохранении заметки:', error);
                 setError(error instanceof Error ? error.message : 'Ошибка сохранения заметки');
             }
-        }, 1000); // Debounce 1 секунда
+        }, 500); // Debounce 500ms для более быстрого сохранения
 
         // Сохраняем таймаут
         saveTimeouts.current.set(debounceKey, timeout);
