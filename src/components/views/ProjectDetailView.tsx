@@ -170,7 +170,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     return (
         <>
             <header className="project-detail-header">
-                <button onClick={() => {setActiveView('projects'); setActiveProjectId(null);}} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>
+                <button onClick={() => {setActiveView('projects');}} className="back-btn"><IconChevronRight style={{transform: 'rotate(180deg)'}} /></button>
                 <h1>{activeProject.name}</h1>
                 <div className="header-actions">
                     <button onClick={() => handleOpenProjectModal(activeProject)} className="header-btn" aria-label="Редактировать"><IconEdit/></button>

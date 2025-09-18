@@ -219,6 +219,13 @@ const App: React.FC = () => {
 
     // Get project context
     const { setActiveProjectId: setContextActiveProjectId, activeProjectId: contextProjectId } = useProjectContext();
+    
+    // Синхронизируем activeProjectId между appState и context
+    useEffect(() => {
+        if (appState.activeProjectId !== contextProjectId) {
+            setContextActiveProjectId(appState.activeProjectId);
+        }
+    }, [appState.activeProjectId, contextProjectId, setContextActiveProjectId]);
 
     // Load initial data
     useEffect(() => {
@@ -1212,9 +1219,12 @@ const App: React.FC = () => {
                 <button 
                     onClick={() => {
                         // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
+                        console.log('🔍 Навигация к проектам: activeProjectId =', appState.activeProjectId);
                         if (appState.activeProjectId) {
+                            console.log('🔍 Переходим к деталям проекта:', appState.activeProjectId);
                             appState.navigateToView('projectDetail');
                         } else {
+                            console.log('🔍 Переходим к списку проектов');
                             appState.navigateToView('projects');
                         }
                     }} 
@@ -1225,8 +1235,8 @@ const App: React.FC = () => {
                 </button>
                 <button 
                     onClick={() => {
-                        appState.setActiveProjectId(null);
-                        setContextActiveProjectId(null);
+                        // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
+                        console.log('🔍 Переход к смете: activeProjectId =', appState.activeProjectId);
                         estimatesHook.createNewEstimate();
                         appState.setActiveView('estimate');
                     }} 

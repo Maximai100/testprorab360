@@ -7,6 +7,11 @@ export const useAppState = () => {
     // App navigation state
     const [activeView, setActiveView] = useState<string>('workspace');
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+    
+    // Отладочная информация для activeProjectId
+    useEffect(() => {
+        console.log('🔍 activeProjectId изменился на:', activeProjectId);
+    }, [activeProjectId]);
     const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
     
     // Theme state
@@ -97,6 +102,7 @@ export const useAppState = () => {
     }, []);
     
     const navigateToProject = useCallback((projectId: string) => {
+        console.log('🔍 navigateToProject: устанавливаем activeProjectId =', projectId);
         setActiveProjectId(projectId);
         setActiveView('projectDetail');
     }, []);
@@ -109,7 +115,7 @@ export const useAppState = () => {
     const goBack = useCallback(() => {
         if (activeView === 'projectDetail') {
             setActiveView('projects');
-            setActiveProjectId(null);
+            // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
         } else if (activeView === 'projectTasks') {
             // Возвращаемся в детали проекта, если есть активный проект
             if (activeProjectId) {
