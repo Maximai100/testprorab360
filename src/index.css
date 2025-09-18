@@ -1801,7 +1801,7 @@ input[type=number] { -moz-appearance: textfield; }
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
+    font-size: 16px;
     padding: 4px 0;
     min-height: 32px;
 }
@@ -1907,7 +1907,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 .task-list li .task-title {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .task-list li .task-meta {

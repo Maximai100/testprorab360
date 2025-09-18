@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry, Task } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconCheckSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
 import { formatDueDate } from '../../utils';
@@ -260,7 +260,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         <h3>Задачи ({tasks.length})</h3>
                         <div className="header-actions">
                             <button className="add-in-header-btn" onClick={() => appState.openModal('addTask', { id: activeProject.id, name: activeProject.name })}><IconPlus/></button>
-                            <button className="add-in-header-btn" onClick={onNavigateToTasks}><IconCheckSquare/></button>
                         </div>
                     </div>
                     <div className="project-section-body">
@@ -303,7 +302,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                     )}
                                     {groupedTasks.upcoming.length > 0 && (
                                         <div className="task-group">
-                                            <h4>Предстоящие</h4>
                                             <ul className="task-list">
                                                 {groupedTasks.upcoming.slice(0, 3).map(task => (
                                                     <TaskItem 
