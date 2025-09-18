@@ -1,7 +1,7 @@
 // Service Worker для автоматического обновления PWA
-const CACHE_NAME = 'smeta-app-cache-v2';
-const STATIC_CACHE_NAME = 'smeta-static-v2';
-const DYNAMIC_CACHE_NAME = 'smeta-dynamic-v2';
+const CACHE_NAME = 'smeta-app-cache-v3';
+const STATIC_CACHE_NAME = 'smeta-static-v3';
+const DYNAMIC_CACHE_NAME = 'smeta-dynamic-v3';
 
 // Статические ресурсы для кэширования
 const STATIC_ASSETS = [
@@ -67,25 +67,40 @@ self.addEventListener('fetch', (event) => {
   // Пропускаем запросы к внешним доменам
   if (url.origin !== location.origin) return;
   
+  // Пропускаем запросы к TypeScript файлам и файлам разработки
+  if (url.pathname.includes('.ts') || 
+      url.pathname.includes('.tsx') || 
+      url.pathname.includes('?t=') || // Vite HMR параметры
+      url.pathname.includes('/src/') ||
+      url.pathname.includes('/node_modules/')) {
+    return; // Не перехватываем эти запросы
+  }
+  
   event.respondWith(handleRequest(request));
 });
 
 // Стратегия кэширования
 async function handleRequest(request) {
-  const url = new URL(request.url);
-  
-  // Для HTML файлов - Network First (всегда проверяем обновления)
-  if (request.destination === 'document' || url.pathname === '/') {
-    return networkFirst(request);
+  try {
+    const url = new URL(request.url);
+    
+    // Для HTML файлов - Network First (всегда проверяем обновления)
+    if (request.destination === 'document' || url.pathname === '/') {
+      return networkFirst(request);
+    }
+    
+    // Для статических ресурсов - Cache First
+    if (isStaticAsset(request)) {
+      return cacheFirst(request);
+    }
+    
+    // Для остальных - Stale While Revalidate
+    return staleWhileRevalidate(request);
+  } catch (error) {
+    console.log('SW: Error in handleRequest:', error);
+    // В случае ошибки, просто делаем обычный fetch
+    return fetch(request);
   }
-  
-  // Для статических ресурсов - Cache First
-  if (isStaticAsset(request)) {
-    return cacheFirst(request);
-  }
-  
-  // Для остальных - Stale While Revalidate
-  return staleWhileRevalidate(request);
 }
 
 // Network First - сначала сеть, потом кэш
@@ -131,26 +146,42 @@ async function cacheFirst(request) {
 
 // Stale While Revalidate - возвращаем кэш, но обновляем в фоне
 async function staleWhileRevalidate(request) {
-  const cache = await caches.open(DYNAMIC_CACHE_NAME);
-  const cachedResponse = await cache.match(request);
-  
-  // Обновляем кэш в фоне
-  const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  }).catch(() => {
-    // Игнорируем ошибки сети для фонового обновления
-  });
-  
-  // Возвращаем кэшированный ответ или ждем сеть
-  return cachedResponse || fetchPromise;
+  try {
+    const cache = await caches.open(DYNAMIC_CACHE_NAME);
+    const cachedResponse = await cache.match(request);
+    
+    // Обновляем кэш в фоне
+    const fetchPromise = fetch(request).then((networkResponse) => {
+      if (networkResponse.ok) {
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    }).catch((error) => {
+      console.log('SW: Background fetch failed:', request.url, error);
+      // Игнорируем ошибки сети для фонового обновления
+    });
+    
+    // Возвращаем кэшированный ответ или ждем сеть
+    return cachedResponse || fetchPromise;
+  } catch (error) {
+    console.log('SW: Error in staleWhileRevalidate:', error);
+    // В случае ошибки, просто делаем обычный fetch
+    return fetch(request);
+  }
 }
 
 // Проверяем, является ли ресурс статическим
 function isStaticAsset(request) {
   const url = new URL(request.url);
+  
+  // Исключаем файлы разработки
+  if (url.pathname.includes('/src/') || 
+      url.pathname.includes('/node_modules/') ||
+      url.pathname.includes('.ts') ||
+      url.pathname.includes('.tsx')) {
+    return false;
+  }
+  
   return url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/);
 }
 

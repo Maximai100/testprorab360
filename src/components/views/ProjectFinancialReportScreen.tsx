@@ -33,7 +33,7 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
   });
 
   // Фильтруем данные по проекту и датам
-  const projectEstimates = estimates.filter(e => e.projectId === project.id);
+  const projectEstimates = estimates.filter(e => e.project_id === project.id);
   const projectFinanceEntries = financeEntries.filter(f => {
     if (f.projectId !== project.id) return false;
     

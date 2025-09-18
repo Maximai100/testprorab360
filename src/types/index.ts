@@ -3,7 +3,7 @@ export type ToolLocation = 'on_base' | 'in_repair' | 'on_project';
 export type FinanceCategory = 'materials' | 'labor' | 'transport' | 'tools_rental' | 'other';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type ToolCondition = 'excellent' | 'good' | 'needs_service';
-export type WorkStageStatus = 'planned' | 'in_progress' | 'completed';
+export type WorkStageStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ItemType = 'material' | 'work';
 export type LibraryItemCategory = 'electrics' | 'plumbing' | 'finishing_materials';
 export type NoteContext = 'global' | 'project' | 'inventory_tools' | 'inventory_consumables';
@@ -168,6 +168,7 @@ export interface FinanceEntry {
     description: string;
     date: string; // ISO 8601 format
     category?: FinanceCategory;
+    receipt_url?: string; // URL чека или изображения
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
 }
@@ -253,8 +254,6 @@ export interface SettingsModalProps {
     onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveLogo: () => void;
     onSave: () => void;
-    onBackup: () => void;
-    onRestore: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
 }
 
@@ -305,9 +304,17 @@ export interface NewProjectModalProps {
 
 export interface FinanceEntryModalProps {
     onClose: () => void;
-    onSave: (entry: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (entry: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>, receiptFile?: File) => void;
     showAlert: (message: string) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
+}
+
+export interface ImageViewerModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    imageUrl: string;
+    title: string;
+    alt?: string;
 }
 
 export interface PhotoReportModalProps {
@@ -323,6 +330,7 @@ export interface PhotoReportModalProps {
         date: string;
     }) => void;
     showAlert: (message: string) => void;
+    projectId: string; // ID проекта для фотоотчета
 }
 
 export interface PhotoViewerModalProps {
@@ -363,6 +371,7 @@ export interface ActGenerationModalProps {
     project: Project;
     profile: CompanyProfile;
     totalAmount: number;
+    workStages: WorkStage[];
     showAlert: (message: string) => void;
 }
 
@@ -374,14 +383,14 @@ export interface AISuggestModalProps {
 
 export interface AddToolModalProps {
     onClose: () => void;
-    onSave: (tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (tool: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>, imageFile?: File) => void;
     projects?: Project[];
 }
 
 export interface ToolDetailsModalProps {
     tool: Tool | null;
     onClose: () => void;
-    onSave: (tool: Tool) => void;
+    onSave: (tool: Tool, imageFile?: File) => void;
     onDelete: (toolId: string) => void;
     projects: Project[];
 }
@@ -508,6 +517,22 @@ export interface ProjectDetailViewProps {
     appState: {
         openModal: (modalType: string, data?: any) => void;
         closeModal: (modalType: string) => void;
+    };
+    projectDataHook?: {
+        loadProjectData: (projectId: string) => Promise<void>;
+        financeEntries: FinanceEntry[];
+        workStages: WorkStage[];
+        addFinanceEntry: (projectId: string, entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>, receiptFile?: File) => Promise<FinanceEntry>;
+        updateFinanceEntry: (id: string, updates: Partial<FinanceEntry>, receiptFile?: File) => Promise<void>;
+        deleteFinanceEntry: (id: string) => Promise<void>;
+        getFinanceEntriesByProject: (projectId: string) => FinanceEntry[];
+        addWorkStage: (projectId: string, stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => Promise<WorkStage>;
+        updateWorkStage: (id: string, updates: Partial<WorkStage>) => Promise<void>;
+        deleteWorkStage: (id: string) => Promise<void>;
+        getWorkStagesByProject: (projectId: string) => WorkStage[];
+        calculateProjectFinancials: (projectId: string, estimates: any[]) => ProjectFinancials;
+        loading: boolean;
+        error: string | null;
     };
 }
 

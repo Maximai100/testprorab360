@@ -1,9 +1,11 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Note, ProjectFinancials, FinanceEntry, Task } from '../../types';
-import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose } from '../common/Icon';
+import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose, IconExternalLink } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
+import ImageViewerModal from '../modals/ImageViewerModal';
 import { formatDueDate } from '../../utils';
+import './ProjectDetailView.css';
 
 
 // Карта приоритетов для задач
@@ -53,14 +55,25 @@ const TaskItem: React.FC<{
     </li>
 );
 
-export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: ProjectFinancials, onProjectScratchpadChange: (projectId: string, content: string) => void, financeEntries: FinanceEntry[] }> = ({
+export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     activeProject, estimates, photoReports, documents, workStages, tasks, formatCurrency, statusMap, setActiveView, setActiveProjectId,
     handleOpenProjectModal, handleDeleteProject, handleLoadEstimate, handleAddNewEstimateForProject, handleDeleteProjectEstimate,
     onOpenFinanceModal, onDeleteFinanceEntry, onOpenPhotoReportModal, onViewPhoto, onOpenDocumentModal, onDeleteDocument,
-    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries, notesHook, tasksHook, appState
+    onOpenWorkStageModal, onDeleteWorkStage, onOpenActModal, onNavigateToTasks, onProjectScratchpadChange, onExportWorkSchedulePDF, onOpenEstimatesListModal, financials, financeEntries, notesHook, tasksHook, appState, projectDataHook
 }) => {
     // Состояние для выбранной задачи
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    
+    // Состояние для просмотра чеков
+    const [receiptViewer, setReceiptViewer] = useState<{
+        isOpen: boolean;
+        imageUrl: string;
+        title: string;
+    }>({
+        isOpen: false,
+        imageUrl: '',
+        title: ''
+    });
 
     // Обработчики для задач
     const handleTaskSelect = useCallback((task: Task) => {
@@ -79,6 +92,31 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     const handleTaskToggle = useCallback(async (taskId: string) => {
         await tasksHook.toggleTask(taskId);
     }, [tasksHook]);
+
+    // Обработчики для просмотра чеков
+    const handleViewReceipt = useCallback((receiptUrl: string, description: string) => {
+        setReceiptViewer({
+            isOpen: true,
+            imageUrl: receiptUrl,
+            title: `Чек: ${description}`
+        });
+    }, []);
+
+    const handleCloseReceiptViewer = useCallback(() => {
+        setReceiptViewer({
+            isOpen: false,
+            imageUrl: '',
+            title: ''
+        });
+    }, []);
+
+    // Загружаем данные проекта при монтировании компонента
+    useEffect(() => {
+        if (activeProject?.id && projectDataHook?.loadProjectData) {
+            console.log('🔧 ProjectDetailView: Загружаем данные проекта:', activeProject.id);
+            projectDataHook.loadProjectData(activeProject.id);
+        }
+    }, [activeProject?.id, projectDataHook]);
 
     // Группировка задач (точно такая же как в ProjectTasksScreen)
     const groupedTasks = useMemo(() => {
@@ -136,7 +174,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
     
     // Мемоизируем значение заметки проекта для оптимизации
-    const projectNote = useMemo(() => notesHook.getNote('project', activeProject.id), [notesHook, activeProject.id]);
+    const projectNote = useMemo(() => {
+        const note = notesHook.getNote('project', activeProject.id);
+        console.log('🔧 ProjectDetailView: projectNote получена:', { 
+            note, 
+            projectId: activeProject.id,
+            projectName: activeProject.name 
+        });
+        return note;
+    }, [notesHook, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
     const projectFinances = useMemo(() => financeEntries.filter(f => f.projectId === activeProject.id), [financeEntries, activeProject.id]);
     
@@ -321,7 +367,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                 <p className="empty-list-message">Задач пока нет</p>
                             )}
                             {tasks.length > 3 && (
-                                <button className="view-all-btn" onClick={onNavigateToTasks}>
+                                <button className="btn btn-secondary" onClick={onNavigateToTasks}>
                                     Показать все задачи ({tasks.length})
                                 </button>
                             )}
@@ -396,7 +442,23 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                                       subtitle={f.category}
                                       amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
                                       amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
-                                      onDelete={() => onDeleteFinanceEntry(f.id)}
+                                      actions={
+                                        <div className="finance-actions">
+                                          {f.receipt_url && (
+                                            <button
+                                              className="receipt-btn"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleViewReceipt(f.receipt_url!, f.description || (f.type === 'expense' ? 'Расход' : 'Оплата'));
+                                              }}
+                                              title="Просмотреть чек"
+                                            >
+                                              <IconCamera />
+                                            </button>
+                                          )}
+                                          <button onClick={() => onDeleteFinanceEntry(f.id)} className="delete-btn" aria-label="Удалить"><IconTrash/></button>
+                                        </div>
+                                      }
                                     />
                                 ))}
                                 {isFinancesCollapsed && projectFinances.length > 3 && (
@@ -548,19 +610,33 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                         )}
                     </div>
                 </div>
-                <div className="card project-section">
-                    <div className="project-section-header">
-                        <h3>Блокнот</h3>
+                <div className="card scratchpad-card">
+                    <div className="card-header">
+                        <h2>Блокнот</h2>
+                        <button 
+                            onClick={() => {
+                                console.log('🔧 Открытие полноэкранного блокнота проекта:', { 
+                                    projectNote, 
+                                    projectId: activeProject.id 
+                                });
+                                appState.navigateToView('scratchpad', { 
+                                    content: projectNote, 
+                                    onSave: (content: string) => notesHook.saveNote('project', content, activeProject.id),
+                                    previousView: 'projectDetail'
+                                });
+                            }} 
+                            className="expand-btn" 
+                            aria-label="Развернуть блокнот"
+                        >
+                            <IconExternalLink />
+                        </button>
                     </div>
-                    <div className="project-section-body">
-                        <textarea 
-                            className="scratchpad-textarea"
-                            placeholder="Здесь можно хранить любую текстовую информацию по проекту..."
-                            value={projectNote}
-                            onChange={(e) => notesHook.saveNote('project', e.target.value, activeProject.id)}
-                            rows={8}
-                        />
-                    </div>
+                    <textarea 
+                        value={projectNote}
+                        onChange={(e) => notesHook.saveNote('project', e.target.value, activeProject.id)}
+                        placeholder="Здесь можно хранить любую текстовую информацию по проекту..."
+                        style={{ height: '200px', minHeight: '200px' }}
+                    />
                 </div>
             </main>
             
@@ -572,6 +648,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps & { financials: 
                     onBack={handleTaskBack}
                 />
             )}
+            
+            {/* Модальное окно просмотра чеков */}
+            <ImageViewerModal
+                isOpen={receiptViewer.isOpen}
+                onClose={handleCloseReceiptViewer}
+                imageUrl={receiptViewer.imageUrl}
+                title={receiptViewer.title}
+                alt="Чек"
+            />
         </>
     );
 };

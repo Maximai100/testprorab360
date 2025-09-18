@@ -68,7 +68,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
             purchase_price: purchasePrice ? parseFloat(purchasePrice) : undefined,
         };
         
-        onSave(toolData);
+        onSave(toolData, imageFile || undefined);
         onClose();
     };
 
@@ -136,16 +136,19 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
                         >
                             📷 Выбрать изображение
                         </button>
-                        {imagePreview && (
+                        
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Предпросмотр</label>
+                        {imagePreview ? (
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <img
                                     src={imagePreview}
-                                    alt="Предпросмотр"
+                                    alt="Предпросмотр изображения инструмента"
                                     style={{
-                                        maxWidth: '200px',
-                                        maxHeight: '150px',
-                                        borderRadius: '6px',
-                                        objectFit: 'cover'
+                                        width: '200px',
+                                        height: '150px',
+                                        borderRadius: '8px',
+                                        objectFit: 'cover',
+                                        border: '1px solid var(--border-color)'
                                     }}
                                 />
                                 <button
@@ -162,11 +165,31 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onSave, pro
                                         width: '24px',
                                         height: '24px',
                                         cursor: 'pointer',
-                                        fontSize: '12px'
+                                        fontSize: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
                                     ×
                                 </button>
+                            </div>
+                        ) : (
+                            <div 
+                                style={{
+                                    width: '200px',
+                                    height: '150px',
+                                    border: '2px dashed var(--border-color)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '14px',
+                                    backgroundColor: 'var(--input-bg)'
+                                }}
+                            >
+                                Изображение не выбрано
                             </div>
                         )}
                     </div>

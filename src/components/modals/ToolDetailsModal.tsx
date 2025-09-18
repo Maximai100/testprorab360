@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ToolDetailsModalProps, ToolCondition } from '../../types';
+import { ToolDetailsModalProps, ToolCondition, Tool } from '../../types';
 import { IconClose, IconTrash } from '../common/Icon';
 
 const conditionMap: Record<ToolCondition, string> = {
@@ -38,6 +38,15 @@ export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({
         }
     }, []);
 
+    // Инициализация предпросмотра изображения при загрузке инструмента
+    useEffect(() => {
+        if (tool?.image_url) {
+            setImagePreview(tool.image_url);
+        } else {
+            setImagePreview('');
+        }
+    }, [tool]);
+
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -74,7 +83,7 @@ export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({
             purchase_price: purchasePrice ? parseFloat(purchasePrice) : undefined,
         };
         
-        onSave(updatedTool);
+        onSave(updatedTool, imageFile || undefined);
         onClose();
     };
 
@@ -153,16 +162,19 @@ export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({
                         >
                             📷 Выбрать изображение
                         </button>
-                        {imagePreview && (
+                        
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Предпросмотр</label>
+                        {imagePreview ? (
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <img
                                     src={imagePreview}
-                                    alt="Предпросмотр"
+                                    alt="Предпросмотр изображения инструмента"
                                     style={{
-                                        maxWidth: '200px',
-                                        maxHeight: '150px',
-                                        borderRadius: '6px',
-                                        objectFit: 'cover'
+                                        width: '200px',
+                                        height: '150px',
+                                        borderRadius: '8px',
+                                        objectFit: 'cover',
+                                        border: '1px solid var(--border-color)'
                                     }}
                                 />
                                 <button
@@ -179,11 +191,31 @@ export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({
                                         width: '24px',
                                         height: '24px',
                                         cursor: 'pointer',
-                                        fontSize: '12px'
+                                        fontSize: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
                                     ×
                                 </button>
+                            </div>
+                        ) : (
+                            <div 
+                                style={{
+                                    width: '200px',
+                                    height: '150px',
+                                    border: '2px dashed var(--border-color)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '14px',
+                                    backgroundColor: 'var(--input-bg)'
+                                }}
+                            >
+                                Изображение не выбрано
                             </div>
                         )}
                     </div>

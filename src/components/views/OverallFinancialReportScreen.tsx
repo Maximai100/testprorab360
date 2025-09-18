@@ -72,7 +72,7 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
   // Финансовые показатели по проектам
   const projectFinancials = projects.map(project => {
-    const projectEstimates = estimates.filter(e => e.projectId === project.id);
+    const projectEstimates = estimates.filter(e => e.project_id === project.id);
     const projectFinanceEntries = filteredFinanceEntries.filter(f => f.projectId === project.id);
 
     const projectEstimatesAmount = projectEstimates.reduce((sum, estimate) => {
@@ -238,8 +238,8 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
         {/* Общие финансовые показатели */}
         <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconTrendingUp style={{ marginRight: 'var(--spacing-s)' }} />
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
+            <IconTrendingUp />
             Общие финансовые показатели
           </h3>
 
@@ -416,8 +416,8 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
         {/* График финансов по проектам */}
         <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconTrendingUp style={{ marginRight: 'var(--spacing-s)' }} />
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
+            <IconTrendingUp />
             Финансы по проектам
           </h3>
 
@@ -452,8 +452,8 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
         {/* Статус проектов */}
         <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconProject style={{ marginRight: 'var(--spacing-s)' }} />
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
+            <IconProject />
             Статус проектов
           </h3>
 
@@ -495,8 +495,8 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
         {/* Расходы по категориям */}
         <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconCreditCard style={{ marginRight: 'var(--spacing-s)' }} />
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
+            <IconCreditCard />
             Расходы по категориям (все проекты)
           </h3>
 
@@ -523,8 +523,8 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
 
         {/* Список проектов с финансовыми показателями */}
         <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconProject style={{ marginRight: 'var(--spacing-s)' }} />
+          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
+            <IconProject />
             Детализация по проектам
           </h3>
 

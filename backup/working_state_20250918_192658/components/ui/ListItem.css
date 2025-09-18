@@ -1,0 +1,88 @@
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-m);
+  background-color: var(--color-surface-1);
+  padding: var(--spacing-m);
+  border-radius: var(--border-radius-m);
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.list-item:hover {
+  background-color: var(--color-surface-2);
+}
+
+.list-item-icon-wrapper {
+  flex-shrink: 0; /* Иконка не будет сжиматься */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-surface-2); /* Цвет фона по умолчанию */
+  color: var(--color-text-primary);
+}
+
+.list-item-details {
+  flex-grow: 1; /* Детали занимают все доступное пространство */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Скрываем текст, который не помещается */
+}
+
+.list-item-title {
+  font-size: var(--font-size-m);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-subtitle {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.list-item-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-s);
+}
+
+.list-item-amount {
+  font-size: var(--font-size-m);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.list-item-delete-button {
+  background: none;
+  border: none;
+  padding: var(--spacing-s);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.list-item-delete-button:hover {
+  background-color: var(--color-danger);
+  color: var(--color-text-primary);
+}
+
+.list-item-delete-button .icon-wrapper {
+  width: 24px;
+  height: 24px;
+}

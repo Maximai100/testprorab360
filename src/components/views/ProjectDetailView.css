@@ -1,0 +1,76 @@
+/* Стили для кнопок в финансовых записях */
+.finance-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipt-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--hint-color);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.receipt-btn:hover {
+  background-color: var(--secondary-bg-color);
+  color: var(--text-color);
+}
+
+.receipt-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--hint-color);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.delete-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .finance-actions {
+    gap: 4px;
+  }
+  
+  .receipt-btn,
+  .delete-btn {
+    padding: 3px;
+    min-width: 24px;
+    height: 24px;
+  }
+  
+  .receipt-btn svg,
+  .delete-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+}

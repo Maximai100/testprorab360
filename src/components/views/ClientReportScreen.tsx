@@ -28,7 +28,7 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
   });
 
   // Фильтруем данные по проекту
-  const projectEstimates = estimates.filter(e => e.projectId === project.id);
+  const projectEstimates = estimates.filter(e => e.project_id === project.id);
   const projectFinanceEntries = financeEntries.filter(f => f.projectId === project.id);
   const projectWorkStages = workStages.filter(w => w.projectId === project.id);
 
@@ -48,7 +48,7 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
   // Получаем завершенные этапы работ
   const completedWorkStages = projectWorkStages
     .filter(stage => stage.status === 'completed')
-    .sort((a, b) => new Date(b.completionDate || 0).getTime() - new Date(a.completionDate || 0).getTime());
+    .sort((a, b) => new Date(b.endDate || 0).getTime() - new Date(a.endDate || 0).getTime());
 
   // Имитируем фотоотчет (в будущем здесь будут реальные фото)
   const mockPhotos = [
@@ -202,12 +202,12 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
                 <ListItem
                   key={stage.id}
                   icon={<IconCheckCircle />}
-                  title={stage.name}
-                  subtitle={stage.completionDate ? 
-                    `Завершено: ${new Date(stage.completionDate).toLocaleDateString('ru-RU')}` : 
+                  title={stage.title}
+                  subtitle={stage.endDate ? 
+                    `Завершено: ${new Date(stage.endDate).toLocaleDateString('ru-RU')}` : 
                     'Завершено'
                   }
-                  amountText={stage.budget ? formatCurrency(stage.budget) : undefined}
+                  amountText={stage.progress ? `${stage.progress}%` : undefined}
                   amountColor="var(--color-success)"
                 />
               ))}

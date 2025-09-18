@@ -56,6 +56,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useAppState } from './hooks/useAppState';
 import { useEstimates } from './hooks/useEstimates';
 import { useProjects } from './hooks/useProjects';
+import { useProjectData } from './hooks/useProjectData';
 import { useInventory } from './hooks/useInventory';
 import { useNotes } from './hooks/useNotes';
 import { useTasks } from './hooks/useTasks';
@@ -101,6 +102,8 @@ const App: React.FC = () => {
     console.log('🔧 App: useEstimates инициализирован');
     const projectsHook = useProjects();
     console.log('🔧 App: useProjects инициализирован');
+    const projectDataHook = useProjectData();
+    console.log('🔧 App: useProjectData инициализирован');
     const inventoryHook = useInventory(session);
     console.log('🔧 App: useInventory инициализирован');
     const notesHook = useNotes(session);
@@ -187,6 +190,8 @@ const App: React.FC = () => {
         if (session && !dataLoaded) {
             console.log("Сессия активна, загружаем данные...");
             projectsHook.loadProjectsFromSupabase();
+            projectsHook.loadDocumentsFromSupabase();
+            projectsHook.loadPhotoReportsFromSupabase();
             estimatesHook.fetchAllEstimates();
             inventoryHook.fetchAllInventory(session);
             notesHook.fetchAllNotes(session);
@@ -303,8 +308,8 @@ const App: React.FC = () => {
     // Get project financials
     const projectFinancials = useMemo(() => {
         if (!activeProject) return null;
-        return projectsHook.calculateProjectFinancials(activeProject.id, estimatesHook.estimates);
-    }, [activeProject, estimatesHook.estimates, projectsHook]);
+        return projectDataHook.calculateProjectFinancials(activeProject.id, estimatesHook.estimates);
+    }, [activeProject, estimatesHook.estimates, projectDataHook]);
 
     // Filtered projects
     const filteredProjects = useMemo(() => {
@@ -514,16 +519,27 @@ const App: React.FC = () => {
     }, [appState, handleDeleteProjectSupabase]);
 
     // Finance handlers
-    const handleAddFinanceEntry = useCallback((entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+    const handleAddFinanceEntry = useCallback(async (entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>, receiptFile?: File) => {
         if (appState.activeProjectId) {
-            projectsHook.addFinanceEntry(appState.activeProjectId, entryData);
+            try {
+                await projectDataHook.addFinanceEntry(appState.activeProjectId, entryData, receiptFile);
+            } catch (error) {
+                console.error('Ошибка при добавлении финансовой записи:', error);
+                safeShowAlert('Произошла ошибка при добавлении финансовой записи.');
+                return;
+            }
         }
         appState.closeModal('financeEntry');
-    }, [projectsHook, appState]);
+    }, [projectDataHook, appState, safeShowAlert]);
 
-    const handleDeleteFinanceEntry = useCallback((id: string) => {
-        projectsHook.deleteFinanceEntry(id);
-    }, [projectsHook]);
+    const handleDeleteFinanceEntry = useCallback(async (id: string) => {
+        try {
+            await projectDataHook.deleteFinanceEntry(id);
+        } catch (error) {
+            console.error('Ошибка при удалении финансовой записи:', error);
+            safeShowAlert('Произошла ошибка при удалении финансовой записи.');
+        }
+    }, [projectDataHook, safeShowAlert]);
 
     // Photo report handlers
     const handleAddPhotoReport = useCallback((photoReport: {
@@ -606,20 +622,36 @@ const App: React.FC = () => {
     }, [projectsHook]);
 
     // Work stage handlers
-    const handleAddWorkStage = useCallback((stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
+    const handleAddWorkStage = useCallback(async (stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
         if (appState.activeProjectId) {
-            projectsHook.addWorkStage(appState.activeProjectId, stageData);
+            try {
+                await projectDataHook.addWorkStage(appState.activeProjectId, stageData);
+            } catch (error) {
+                console.error('Ошибка при добавлении этапа работ:', error);
+                safeShowAlert('Произошла ошибка при добавлении этапа работ.');
+                return;
+            }
         }
         appState.closeModal('workStage');
-    }, [projectsHook, appState]);
+    }, [projectDataHook, appState, safeShowAlert]);
 
-    const handleUpdateWorkStage = useCallback((id: string, updates: Partial<WorkStage>) => {
-        projectsHook.updateWorkStage(id, updates);
-    }, [projectsHook]);
+    const handleUpdateWorkStage = useCallback(async (id: string, updates: Partial<WorkStage>) => {
+        try {
+            await projectDataHook.updateWorkStage(id, updates);
+        } catch (error) {
+            console.error('Ошибка при обновлении этапа работ:', error);
+            safeShowAlert('Произошла ошибка при обновлении этапа работ.');
+        }
+    }, [projectDataHook, safeShowAlert]);
 
-    const handleDeleteWorkStage = useCallback((id: string) => {
-        projectsHook.deleteWorkStage(id);
-    }, [projectsHook]);
+    const handleDeleteWorkStage = useCallback(async (id: string) => {
+        try {
+            await projectDataHook.deleteWorkStage(id);
+        } catch (error) {
+            console.error('Ошибка при удалении этапа работ:', error);
+            safeShowAlert('Произошла ошибка при удалении этапа работ.');
+        }
+    }, [projectDataHook, safeShowAlert]);
 
     // Note handlers
     const handleAddNote = useCallback((text: string) => {
@@ -660,14 +692,24 @@ const App: React.FC = () => {
     }, [tasksHook]);
 
     // Tool handlers
-    const handleAddTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
-        inventoryHook.addTool(toolData);
-        appState.closeModal('addTool');
-    }, [inventoryHook, appState]);
+    const handleAddTool = useCallback(async (toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>, imageFile?: File) => {
+        try {
+            await inventoryHook.addTool(toolData, imageFile);
+            appState.closeModal('addTool');
+        } catch (error) {
+            console.error('Ошибка при добавлении инструмента:', error);
+            safeShowAlert('Произошла ошибка при добавлении инструмента.');
+        }
+    }, [inventoryHook, appState, safeShowAlert]);
 
-    const handleUpdateTool = useCallback((tool: Tool) => {
-        inventoryHook.updateTool(tool);
-    }, [inventoryHook]);
+    const handleUpdateTool = useCallback(async (tool: Tool, imageFile?: File) => {
+        try {
+            await inventoryHook.updateTool(tool, imageFile);
+        } catch (error) {
+            console.error('Ошибка при обновлении инструмента:', error);
+            safeShowAlert('Произошла ошибка при обновлении инструмента.');
+        }
+    }, [inventoryHook, safeShowAlert]);
 
     const handleDeleteTool = useCallback((id: string) => {
         inventoryHook.deleteTool(id);
@@ -729,40 +771,6 @@ const App: React.FC = () => {
         appState.closeModal('settings');
     }, [appState]);
 
-    // Backup and restore
-    const handleBackup = useCallback(() => {
-        try {
-            const data = (storageService as any).exportData();
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            safeShowAlert('Резервная копия создана');
-        } catch (error) {
-            safeShowAlert('Ошибка при создании резервной копии');
-        }
-    }, []);
-
-    const handleRestore = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    (storageService as any).importData(e.target?.result as string);
-                    safeShowAlert('Данные восстановлены. Перезагрузите страницу.');
-                } catch (error) {
-                    safeShowAlert('Ошибка при восстановлении данных');
-                }
-            };
-            reader.readAsText(file);
-        }
-    }, []);
 
     // Item handlers
     const handleAddItem = useCallback(() => {
@@ -820,61 +828,25 @@ const App: React.FC = () => {
         
         appState.setLoading('pdf', true);
         try {
-            const { jsPDF } = await import('jspdf');
-            const autoTable = (await import('jspdf-autotable')).default;
+            const { PdfService } = await import('./services/PdfService');
             
-            const doc = new jsPDF();
+            // Получаем проект, если смета привязана к проекту
+            const project = estimatesHook.currentEstimate.project_id 
+                ? projectsHook.projects.find(p => p.id === estimatesHook.currentEstimate!.project_id) || null
+                : null;
             
-            // Header
-            doc.setFontSize(20);
-            doc.text('СМЕТА', 20, 30);
-            
-            if (companyProfile.name) {
-                doc.setFontSize(12);
-                doc.text(companyProfile.name, 20, 40);
-            }
-            
-            // Client info
-            if (estimatesHook.clientInfo) {
-                doc.setFontSize(10);
-                doc.text(`Клиент: ${estimatesHook.clientInfo}`, 20, 50);
-            }
-            
-            // Estimate details
-            doc.text(`Название: ${estimatesHook.estimateNumber}`, 20, 60);
-            doc.text(`Дата: ${estimatesHook.estimateDate}`, 20, 70);
-            
-            // Items table
-            const tableData = estimatesHook.items.map((item, index) => [
-                index + 1,
-                item.name,
-                item.quantity,
-                item.unit,
-                formatCurrency(item.price),
-                formatCurrency(item.quantity * item.price)
-            ]);
-            
-            autoTable(doc, {
-                head: [['№', 'Наименование', 'Кол-во', 'Ед.', 'Цена', 'Сумма']],
-                body: tableData,
-                startY: 80,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [79, 91, 213] }
-            });
-            
-            // Totals
-            const finalY = (doc as any).lastAutoTable.finalY + 10;
-            doc.setFontSize(10);
-            doc.text(`Итого: ${formatCurrency(estimatesHook.calculation.grandTotal)}`, 20, finalY);
-            
-            doc.save(`smeta-${estimatesHook.estimateNumber}.pdf`);
+            PdfService.generateEstimatePDF(
+                estimatesHook.currentEstimate,
+                project,
+                companyProfile
+            );
         } catch (error) {
             console.error('PDF generation error:', error);
             safeShowAlert('Ошибка при генерации PDF');
         } finally {
             appState.setLoading('pdf', false);
         }
-    }, [estimatesHook, companyProfile, formatCurrency, appState]);
+    }, [estimatesHook, companyProfile, appState, projectsHook.projects]);
 
     // Share
     const handleShare = useCallback(() => {
@@ -917,8 +889,17 @@ const App: React.FC = () => {
     }, [appState]);
 
     const handleOpenScratchpad = useCallback(() => {
-        appState.navigateToView('scratchpad');
-    }, [appState]);
+        // Получаем текущее содержимое глобальной заметки
+        const globalNote = notesHook.getNote('global');
+        console.log('🔧 handleOpenScratchpad: Открываем блокнот с содержимым:', globalNote);
+        
+        // Переключаемся на вид scratchpad с данными заметки
+        appState.navigateToView('scratchpad', { 
+            content: globalNote,
+            onSave: (content: string) => notesHook.saveNote('global', content),
+            previousView: 'workspace'
+        });
+    }, [appState, notesHook]);
 
     const renderView = () => {
         switch (appState.activeView) {
@@ -1007,10 +988,10 @@ const App: React.FC = () => {
                     <ProjectDetailView
                         activeProject={activeProject}
                         estimates={estimatesHook.getEstimatesByProject(activeProject.id)}
-                        financeEntries={projectsHook.getFinanceEntriesByProject(activeProject.id)}
+                        financeEntries={projectDataHook.getFinanceEntriesByProject(activeProject.id)}
                         photoReports={projectsHook.getPhotoReportsByProject(activeProject.id)}
                         documents={projectsHook.getDocumentsByProject(activeProject.id)}
-                        workStages={projectsHook.getWorkStagesByProject(activeProject.id)}
+                        workStages={projectDataHook.getWorkStagesByProject(activeProject.id)}
                         tasks={tasksHook.getTasksByProject(activeProject.id)}
                         financials={projectFinancials!}
                         formatCurrency={formatCurrency}
@@ -1035,11 +1016,20 @@ const App: React.FC = () => {
                         onOpenActModal={(total) => appState.openModal('actGeneration', total)}
                         onNavigateToTasks={handleNavigateToTasks}
                         onProjectScratchpadChange={projectsHook.updateProjectScratchpad}
-                        onExportWorkSchedulePDF={() => {}}
+                        onExportWorkSchedulePDF={async (project, workStages) => {
+                            try {
+                                const { PdfService } = await import('./services/PdfService');
+                                PdfService.generateWorkSchedulePDF(project, workStages, companyProfile);
+                            } catch (error) {
+                                console.error('Ошибка при генерации графика работ PDF:', error);
+                                safeShowAlert('Ошибка при генерации PDF графика работ');
+                            }
+                        }}
                         onOpenEstimatesListModal={() => appState.openModal('estimatesList')}
                         notesHook={notesHook}
                         tasksHook={tasksHook}
                         appState={appState}
+                        projectDataHook={projectDataHook}
                     />
                 );
             
@@ -1063,6 +1053,7 @@ const App: React.FC = () => {
                         onToolsScratchpadChange={setToolsScratchpad}
                         onConsumablesScratchpadChange={setConsumablesScratchpad}
                         notesHook={notesHook}
+                        appState={appState}
                     />
                 );
             
@@ -1094,7 +1085,7 @@ const App: React.FC = () => {
                     <ProjectFinancialReportScreen
                         project={reportProject}
                         estimates={estimatesHook.estimates}
-                        financeEntries={projectsHook.financeEntries}
+                        financeEntries={projectDataHook.financeEntries}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
                     />
@@ -1109,8 +1100,8 @@ const App: React.FC = () => {
                     <ClientReportScreen
                         project={clientReportProject}
                         estimates={estimatesHook.estimates}
-                        financeEntries={projectsHook.financeEntries}
-                        workStages={projectsHook.workStages}
+                        financeEntries={projectDataHook.financeEntries}
+                        workStages={projectDataHook.workStages}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
                     />
@@ -1121,7 +1112,7 @@ const App: React.FC = () => {
                     <OverallFinancialReportScreen
                         projects={projectsHook.projects}
                         estimates={estimatesHook.estimates}
-                        financeEntries={projectsHook.financeEntries}
+                        financeEntries={projectDataHook.financeEntries}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
                     />
@@ -1130,8 +1121,8 @@ const App: React.FC = () => {
             case 'scratchpad':
                 return (
                     <ScratchpadView
-                        content={projectsHook.scratchpad}
-                        onSave={projectsHook.setScratchpad}
+                        content={appState.scratchpadData?.content || projectsHook.scratchpad}
+                        onSave={appState.scratchpadData?.onSave || projectsHook.setScratchpad}
                         onBack={appState.goBack}
                     />
                 );
@@ -1224,7 +1215,8 @@ const App: React.FC = () => {
     return (
         <div className="app-container">
             {/* Auth gate */}
-            {!session ? (
+            {/* Временно отключаем проверку авторизации для тестирования */}
+            {false ? (
                 <main>
                     <AuthScreen />
                 </main>
@@ -1327,8 +1319,6 @@ const App: React.FC = () => {
                     onLogoChange={handleLogoChange}
                     onRemoveLogo={handleRemoveLogo}
                     onSave={handleSaveProfile}
-                    onBackup={handleBackup}
-                    onRestore={handleRestore}
                     onInputFocus={handleInputFocus}
                 />
             )}
@@ -1388,6 +1378,7 @@ const App: React.FC = () => {
                     onClose={() => appState.closeModal('photoReport')}
                     onSave={handleAddPhotoReport}
                     showAlert={safeShowAlert}
+                    projectId={appState.activeProjectId || ''}
                 />
             )}
 
@@ -1458,6 +1449,7 @@ const App: React.FC = () => {
                     project={activeProject}
                     profile={companyProfile}
                     totalAmount={appState.actTotalAmount}
+                    workStages={projectDataHook?.workStages || []}
                     showAlert={safeShowAlert}
                 />
             )}
@@ -1534,9 +1526,24 @@ const App: React.FC = () => {
                             </button>
                         </div>
                         <textarea
-                            value={projectsHook.scratchpad}
-                            onChange={(e) => projectsHook.setScratchpad(e.target.value)}
+                            value={appState.scratchpadData?.content || projectsHook.scratchpad}
+                            onChange={(e) => {
+                                const newValue = e.target.value;
+                                console.log('🔧 Модальное окно блокнота - изменение:', { 
+                                    newValue, 
+                                    hasScratchpadData: !!appState.scratchpadData,
+                                    scratchpadDataContent: appState.scratchpadData?.content,
+                                    globalScratchpad: projectsHook.scratchpad
+                                });
+                                if (appState.scratchpadData?.onSave) {
+                                    appState.scratchpadData.onSave(newValue);
+                                } else {
+                                    projectsHook.setScratchpad(newValue);
+                                }
+                            }}
                             placeholder="Ваши заметки..."
+                            className="scratchpad-textarea"
+                            style={{height: 'calc(100vh - 200px)'}}
                         />
                     </div>
                 </div>

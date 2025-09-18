@@ -2,8 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { CompanyProfile, SettingsModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, onProfileChange, onLogoChange, onRemoveLogo, onSave, onBackup, onRestore, onInputFocus }) => {
-    const restoreInputRef = useRef<HTMLInputElement>(null);
+export const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, onProfileChange, onLogoChange, onRemoveLogo, onSave, onInputFocus }) => {
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -17,10 +16,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, 
             }
         }
     }, []);
-
-    const handleRestoreClick = () => {
-        restoreInputRef.current?.click();
-    };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -46,9 +41,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, 
                 </div>
                 <div className="modal-footer">
                     <button onClick={onSave} className="btn btn-primary">Сохранить</button>
-                    <button onClick={onBackup} className="btn btn-secondary">Резервное копирование</button>
-                    <button onClick={handleRestoreClick} className="btn btn-secondary">Восстановить</button>
-                    <input type="file" accept=".json" style={{ display: 'none' }} ref={restoreInputRef} onChange={onRestore} />
                 </div>
             </div>
         </div>

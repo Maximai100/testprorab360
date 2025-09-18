@@ -2,9 +2,11 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ActGenerationModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 import { numberToWordsRu } from '../../utils';
+import { PdfService } from '../../services/PdfService';
 
-export const ActGenerationModal: React.FC<ActGenerationModalProps> = ({ onClose, project, profile, totalAmount, showAlert }) => {
+export const ActGenerationModal: React.FC<ActGenerationModalProps> = ({ onClose, project, profile, totalAmount, workStages, showAlert }) => {
     const [copyButtonText, setCopyButtonText] = useState('Копировать');
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -56,6 +58,23 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
         });
     };
 
+    const handleGeneratePDF = async () => {
+        setIsGeneratingPDF(true);
+        try {
+            await PdfService.generateActPDF(
+                project,
+                workStages,
+                profile,
+                totalAmount
+            );
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            showAlert('Ошибка при генерации PDF');
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
@@ -71,7 +90,14 @@ ${profile.details ? `Реквизиты: ${profile.details}` : ''}
                     />
                 </div>
                 <div className="modal-footer">
-                    <button onClick={handleCopy} className="btn btn-primary">{copyButtonText}</button>
+                    <button onClick={handleCopy} className="btn btn-secondary">{copyButtonText}</button>
+                    <button 
+                        onClick={handleGeneratePDF} 
+                        className="btn btn-primary" 
+                        disabled={isGeneratingPDF}
+                    >
+                        {isGeneratingPDF ? 'Генерация...' : 'Скачать PDF'}
+                    </button>
                 </div>
             </div>
         </div>
