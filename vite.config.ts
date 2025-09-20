@@ -2,13 +2,15 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
+const devPort = Number(process.env.VITE_DEV_PORT ?? process.env.PORT ?? 5173);
+
 export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173,
+    port: devPort,
     hmr: {
-      port: 5173,
+      port: devPort,
       host: 'localhost'
     },
     // Disable caching for development

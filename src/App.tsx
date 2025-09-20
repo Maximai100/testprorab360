@@ -828,14 +828,14 @@ const App: React.FC = () => {
         
         appState.setLoading('pdf', true);
         try {
-            const { PdfService } = await import('./services/PdfService');
+            const PdfServiceInstance = await import('./services/PdfService');
             
             // Получаем проект, если смета привязана к проекту
             const project = estimatesHook.currentEstimate.project_id 
                 ? projectsHook.projects.find(p => p.id === estimatesHook.currentEstimate!.project_id) || null
                 : null;
             
-            PdfService.generateEstimatePDF(
+            PdfServiceInstance.default.generateEstimatePDF(
                 estimatesHook.currentEstimate,
                 project,
                 companyProfile
@@ -1018,8 +1018,8 @@ const App: React.FC = () => {
                         onProjectScratchpadChange={projectsHook.updateProjectScratchpad}
                         onExportWorkSchedulePDF={async (project, workStages) => {
                             try {
-                                const { PdfService } = await import('./services/PdfService');
-                                PdfService.generateWorkSchedulePDF(project, workStages, companyProfile);
+                                const PdfServiceInstance = await import('./services/PdfService');
+                                PdfServiceInstance.default.generateWorkSchedulePDF(project, workStages, companyProfile);
                             } catch (error) {
                                 console.error('Ошибка при генерации графика работ PDF:', error);
                                 safeShowAlert('Ошибка при генерации PDF графика работ');
