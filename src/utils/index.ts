@@ -99,6 +99,28 @@ export const readFileAsDataURL = (file: File): Promise<string> => {
     });
 };
 
+export const downloadFileFromUrl = async (fileUrl: string, fileName?: string): Promise<void> => {
+    try {
+        const response = await fetch(fileUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName || 'file';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('downloadFileFromUrl: error downloading file', error);
+        throw error;
+    }
+};
+
 // --- NUMBER TO WORDS UTILITY ---
 export const numberToWordsRu = (number: number): string => {
     const toWords = (n: number): string => {

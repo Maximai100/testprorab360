@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { WorkspaceViewProps } from '../../types';
 import { IconPaperclip, IconDownload, IconExternalLink, IconTrash } from '../common/Icon';
+import { downloadFileFromUrl, safeShowAlert } from '../../utils';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     scratchpad,
@@ -17,6 +18,15 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
         console.log('🔧 WorkspaceView: globalNote получена:', note);
         return note;
     }, [notesHook]);
+
+    const handleDownloadDocument = useCallback(async (fileUrl: string, fileName: string) => {
+        try {
+            await downloadFileFromUrl(fileUrl, fileName);
+        } catch (error) {
+            console.error('WorkspaceView: не удалось скачать файл', error);
+            safeShowAlert('Не удалось скачать файл. Попробуйте ещё раз.');
+        }
+    }, []);
 
     return (
         <>
@@ -49,7 +59,9 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                     <ul className="document-list">
                         {globalDocuments.map(doc => (
                             <li key={doc.id} className="document-list-item">
-                                <IconPaperclip />
+                                <span className="icon-wrapper">
+                                    <IconPaperclip />
+                                </span>
                                 <div className="doc-info">
                                     <span>{doc.name}</span>
                                     <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
@@ -62,7 +74,14 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                                     >
                                         <IconExternalLink />
                                     </button>
-                                    <a href={doc.fileUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload /></a>
+                                    <button
+                                        type="button"
+                                        className="btn-icon"
+                                        aria-label="Скачать"
+                                        onClick={() => handleDownloadDocument(doc.fileUrl, doc.name)}
+                                    >
+                                        <IconDownload />
+                                    </button>
                                     <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
                                 </div>
                             </li>

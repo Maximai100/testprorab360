@@ -5,7 +5,7 @@ import { ListItem } from '../ui/ListItem';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
 import TaskDetailsModal from '../modals/TaskDetailsModal';
 import ImageViewerModal from '../modals/ImageViewerModal';
-import { formatDueDate, financeCategoryToRu } from '../../utils';
+import { formatDueDate, financeCategoryToRu, downloadFileFromUrl, safeShowAlert } from '../../utils';
 import './ProjectDetailView.css';
 import { FinanceEntryModal } from '../modals/FinanceEntryModal';
 
@@ -95,6 +95,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     const handleTaskToggle = useCallback(async (taskId: string) => {
         await tasksHook.toggleTask(taskId);
     }, [tasksHook]);
+
+    const handleProjectDocumentDownload = useCallback(async (fileUrl: string, fileName: string) => {
+        try {
+            await downloadFileFromUrl(fileUrl, fileName);
+        } catch (error) {
+            console.error('ProjectDetailView: не удалось скачать документ', error);
+            safeShowAlert('Не удалось скачать документ. Попробуйте ещё раз.');
+        }
+    }, []);
 
     // Обработчики для просмотра чеков
     const handleViewReceipt = useCallback((receiptUrl: string, description: string) => {
@@ -623,7 +632,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                         actions={
                                             <>
                                                 <button className="btn-icon" aria-label="Открыть" onClick={() => window.open(doc.fileUrl, '_blank', 'noopener,noreferrer')}><IconExternalLink/></button>
-                                                <a href={doc.fileUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload/></a>
+                                                <button
+                                                    type="button"
+                                                    className="btn-icon"
+                                                    aria-label="Скачать"
+                                                    onClick={() => handleProjectDocumentDownload(doc.fileUrl, doc.name)}
+                                                >
+                                                    <IconDownload />
+                                                </button>
                                                 <button onClick={() => onDeleteDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash/></button>
                                             </>
                                         }

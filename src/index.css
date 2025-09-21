@@ -1726,8 +1726,13 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 .document-list-item .icon-wrapper {
-    width: 24px;
-    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--color-surface-2);
     color: var(--hint-color);
     flex-shrink: 0;
 }
