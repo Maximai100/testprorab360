@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { WorkspaceViewProps } from '../../types';
-import { IconDocument, IconDownload, IconExternalLink, IconTrash } from '../common/Icon';
+import { IconPaperclip, IconDownload, IconExternalLink, IconTrash } from '../common/Icon';
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     scratchpad,
@@ -49,13 +49,20 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                     <ul className="document-list">
                         {globalDocuments.map(doc => (
                             <li key={doc.id} className="document-list-item">
-                                <IconDocument />
+                                <IconPaperclip />
                                 <div className="doc-info">
                                     <span>{doc.name}</span>
                                     <small>{new Date(doc.date).toLocaleDateString('ru-RU')}</small>
                                 </div>
                                 <div className="doc-actions">
-                                    <a href={doc.dataUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload /></a>
+                                    <button
+                                        className="btn-icon"
+                                        aria-label="Открыть"
+                                        onClick={() => window.open(doc.fileUrl, '_blank', 'noopener,noreferrer')}
+                                    >
+                                        <IconExternalLink />
+                                    </button>
+                                    <a href={doc.fileUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload /></a>
                                     <button onClick={() => onDeleteGlobalDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash /></button>
                                 </div>
                             </li>

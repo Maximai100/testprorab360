@@ -2,6 +2,7 @@ import React from 'react';
 import { Project, FinanceEntry } from '../../types';
 import { ListItem } from '../ui/ListItem';
 import { IconTrendingUp, IconCreditCard, IconChevronRight, IconProject } from '../common/Icon';
+import { financeCategoryToRu } from '../../utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface OverallFinancialReportScreenProps {
@@ -236,179 +237,45 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
           </div>
         </div>
 
-        {/* Общие финансовые показатели */}
-        <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-s)' }}>
-            <IconTrendingUp />
-            Общие финансовые показатели
-          </h3>
-
-          <div style={{ display: 'grid', gap: 'var(--spacing-m)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalEstimatesAmount)}
+        {/* Общие финансовые показатели — единый дашборд */}
+        <div className="card project-section financial-dashboard">
+          <div className="project-section-header">
+            <h3>Финансовый дашборд</h3>
+          </div>
+          <div className="project-section-body">
+            <div className="dashboard-grid-final">
+              <div className="dashboard-column">
+                <div className="dashboard-item">
+                  <span className="dashboard-value">{formatCurrency(totalEstimatesAmount)}</span>
+                  <span className="dashboard-label">Сумма смет</span>
+                </div>
+                <div className="dashboard-item">
+                  <span className="dashboard-value payment-value">{formatCurrency(totalIncome)}</span>
+                  <span className="dashboard-label">Оплачено</span>
+                </div>
               </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Общая сумма смет
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-primary)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalIncome)}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Общие доходы
+              <div className="dashboard-column">
+                <div className="dashboard-item expenses-card">
+                  <span className="dashboard-value expense-value">{formatCurrency(totalExpenses)}</span>
+                  <span className="dashboard-label">Расходы</span>
+                  <div className="dashboard-breakdown">
+                    {Object.entries(expensesByCategory)
+                      .sort(([,a], [,b]) => b - a)
+                      .map(([category, amount]) => (
+                        <div key={category} className="breakdown-item">
+                          <span>{financeCategoryToRu(category)}</span>
+                          <span>{formatCurrency(amount)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalExpenses)}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Общие расходы
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: totalProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalProfit)}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Общая прибыль
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: overallProfitability >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {overallProfitability.toFixed(1)}%
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Общая рентабельность
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {projects.filter(p => p.status === 'in_progress').length}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Активных проектов
+            <div className="dashboard-item profit-card-final">
+              <span className="dashboard-label">Прибыль</span>
+              <div className="profit-details-final">
+                <span className="dashboard-value profit-value">{formatCurrency(totalProfit)}</span>
+                <span className="dashboard-label">Рентабельность {`${overallProfitability.toFixed(0)}%`}</span>
               </div>
             </div>
           </div>
@@ -508,7 +375,7 @@ export const OverallFinancialReportScreen: React.FC<OverallFinancialReportScreen
                   <ListItem
                     key={category}
                     icon={<IconCreditCard />}
-                    title={category}
+                    title={financeCategoryToRu(category)}
                     amountText={formatCurrency(amount)}
                     amountColor="var(--color-danger)"
                   />

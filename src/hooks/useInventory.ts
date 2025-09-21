@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Tool, Consumable } from '../types';
 import type { Session } from '@supabase/supabase-js';
 import { useFileStorage } from './useFileStorage';
+import { dataService } from '../services/storageService';
 
 export const useInventory = (session: Session | null) => {
     const [tools, setTools] = useState<Tool[]>([]);
@@ -28,32 +29,31 @@ export const useInventory = (session: Session | null) => {
         try {
             console.log('🔧 useInventory: Загружаем данные инвентаря для пользователя:', session.user.id);
 
-            // Загружаем инструменты
-            const { data: toolsData, error: toolsError } = await supabase
-                .from('tools')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false });
+            // Загружаем инструменты и расходники параллельно
+            const [toolsRes, consumablesRes] = await Promise.all([
+                supabase
+                    .from('tools')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('consumables')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .order('created_at', { ascending: false })
+            ]);
 
-            if (toolsError) {
-                console.error('🔧 useInventory: Ошибка загрузки инструментов:', toolsError);
-                throw toolsError;
+            if (toolsRes.error) {
+                console.error('🔧 useInventory: Ошибка загрузки инструментов:', toolsRes.error);
+                throw toolsRes.error;
             }
-
-            // Загружаем расходники
-            const { data: consumablesData, error: consumablesError } = await supabase
-                .from('consumables')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false });
-
-            if (consumablesError) {
-                console.error('🔧 useInventory: Ошибка загрузки расходников:', consumablesError);
-                throw consumablesError;
+            if (consumablesRes.error) {
+                console.error('🔧 useInventory: Ошибка загрузки расходников:', consumablesRes.error);
+                throw consumablesRes.error;
             }
 
             // Преобразуем данные из Supabase в формат приложения
-            const transformedTools: Tool[] = (toolsData || []).map(tool => {
+            const transformedTools: Tool[] = ((toolsRes.data as any[]) || []).map(tool => {
                 // Преобразуем location из формата базы данных в формат приложения
                 let appLocation = tool.location || undefined;
                 if (tool.location && tool.location.startsWith('project_')) {
@@ -76,7 +76,7 @@ export const useInventory = (session: Session | null) => {
                 };
             });
 
-            const transformedConsumables: Consumable[] = (consumablesData || []).map(consumable => ({
+            const transformedConsumables: Consumable[] = ((consumablesRes.data as any[]) || []).map(consumable => ({
                 id: consumable.id,
                 name: consumable.name,
                 quantity: consumable.quantity || 0,
@@ -89,6 +89,9 @@ export const useInventory = (session: Session | null) => {
 
             setTools(transformedTools);
             setConsumables(transformedConsumables);
+            // Кешируем
+            dataService.setTools(transformedTools);
+            dataService.setConsumables(transformedConsumables);
 
             console.log('🔧 useInventory: Данные загружены успешно');
             console.log('🔧 useInventory: Инструменты:', transformedTools.length);
@@ -100,6 +103,14 @@ export const useInventory = (session: Session | null) => {
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    // Кеш‑первый показ
+    useEffect(() => {
+        const cachedTools = dataService.getTools();
+        if (cachedTools && cachedTools.length) setTools(cachedTools);
+        const cachedConsumables = dataService.getConsumables();
+        if (cachedConsumables && cachedConsumables.length) setConsumables(cachedConsumables);
     }, []);
 
     // Добавление нового инструмента

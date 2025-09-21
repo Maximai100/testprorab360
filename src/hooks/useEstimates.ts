@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Estimate, Item, LibraryItem, CalculationResults, EstimateStatus, EstimateTemplate } from '../types';
+import { dataService } from '../services/storageService';
 import { supabase } from '../supabaseClient';
 import { generateNewEstimateNumber } from '../utils';
 import type { Session } from '@supabase/supabase-js';
@@ -75,6 +76,14 @@ export const useEstimates = (session: Session | null) => {
         localStorage.removeItem('estimateTemplates');
         setTemplates([]);
       }
+    }
+  }, []);
+
+  // Кеш‑первый показ смет
+  useEffect(() => {
+    const cached = dataService.getEstimates();
+    if (cached && cached.length) {
+      setAllEstimates(cached as any);
     }
   }, []);
 
@@ -659,6 +668,7 @@ export const useEstimates = (session: Session | null) => {
         console.log('🔧 useEstimates: преобразованные данные:', transformedData);
         
         setAllEstimates(transformedData);
+        dataService.setEstimates(transformedData as any);
         console.log('🔧 useEstimates: setAllEstimates вызван');
       } catch (error) {
         console.error('🔧 useEstimates: Ошибка в fetchAllEstimates:', error);

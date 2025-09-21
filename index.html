@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="format-detection" content="telephone=no">
     <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/logo.png" type="image/png">
     <meta name="theme-color" content="#3390ec">
     
     <!-- Prevent caching for development -->
@@ -77,44 +78,24 @@
         console.log('📏 Высота окна:', window.innerHeight);
       }, 1000);
 
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').then(function(registration) {
-            console.log('SW registered successfully');
-            
-            // Проверяем обновления при загрузке
-            registration.update();
-            
-            // Слушаем обновления Service Worker
-            registration.addEventListener('updatefound', function() {
-              console.log('SW: New version found, updating...');
-              const newWorker = registration.installing;
-              
-              newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('SW: New version installed, reloading...');
-                  // Автоматически перезагружаем страницу для применения обновлений
-                  window.location.reload();
-                }
-              });
+      // Регистрируем Service Worker только вне localhost, чтобы избежать ошибок в dev
+      (function registerSW() {
+        try {
+          const isLocal = /localhost|127\.0\.0\.1|::1/.test(location.hostname);
+          if (!('serviceWorker' in navigator) || isLocal) return;
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+              console.log('SW registered');
+              // Не форсируем перезагрузку страницы при обновлении SW в продакшене,
+              // чтобы исключить потенциальные циклы перезагрузки.
+            }).catch(function(err){
+              console.warn('SW registration failed', err);
             });
-            
-            // Слушаем сообщения от Service Worker
-            navigator.serviceWorker.addEventListener('message', function(event) {
-              if (event.data.type === 'UPDATE_AVAILABLE') {
-                console.log('SW: Update available, reloading...');
-                window.location.reload();
-              }
-            });
-            
-          }).catch(function(err){
-            console.warn('SW registration failed', err);
           });
-          
-          // Автоматическая проверка обновлений отключена
-          // Обновления будут проверяться только при загрузке страницы
-        });
-      }
+        } catch (e) {
+          console.warn('SW registration skipped:', e);
+        }
+      })();
     </script>
     <script type="module" src="src/index.tsx"></script>
 </body>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Task } from '../types';
 import { supabase } from '../supabaseClient';
 import type { Session } from '@supabase/supabase-js';
+import { dataService } from '../services/storageService';
 
 export const useTasks = (session: Session | null) => {
     console.log('useTasks: Хук useTasks инициализируется');
@@ -51,6 +52,8 @@ export const useTasks = (session: Session | null) => {
                 }));
 
                 setTasks(mappedTasks);
+                // Кешируем для мгновенного старта
+                dataService.setTasks(mappedTasks);
             } else {
                 setTasks([]);
             }
@@ -60,6 +63,12 @@ export const useTasks = (session: Session | null) => {
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    // Кеш‑первый показ задач
+    useEffect(() => {
+        const cached = dataService.getTasks();
+        if (cached && cached.length) setTasks(cached);
     }, []);
 
     // Добавление новой задачи
@@ -76,7 +85,20 @@ export const useTasks = (session: Session | null) => {
         }
 
         try {
-            console.log('🔄 useTasks: Создаем новую задачу:', taskData);
+            console.log('🔄 useTasks: Создаем новую задачу (оптимистично):', taskData);
+            const now = new Date().toISOString();
+            const optimistic: Task = {
+                id: `temp_${Date.now()}`,
+                title: taskData.title,
+                projectId: taskData.projectId || null,
+                isCompleted: false,
+                priority: taskData.priority || 'medium',
+                tags: taskData.tags || [],
+                dueDate: taskData.dueDate || null,
+                createdAt: now,
+                updatedAt: now,
+            };
+            setTasks(prev => [optimistic, ...prev]);
 
             const insertData = {
                 user_id: session.user.id,
@@ -94,13 +116,7 @@ export const useTasks = (session: Session | null) => {
                 .select()
                 .single();
 
-            if (error) {
-                console.error('❌ useTasks: Ошибка создания задачи:', error);
-                setError(error.message);
-                return null;
-            }
-
-            console.log('✅ useTasks: Задача создана:', data);
+            if (error) throw error;
 
             const newTask: Task = {
                 id: data.id,
@@ -114,10 +130,12 @@ export const useTasks = (session: Session | null) => {
                 updatedAt: data.updated_at,
             };
 
-            setTasks(prev => [newTask, ...prev]);
+            setTasks(prev => prev.map(t => t.id === optimistic.id ? newTask : t));
             return newTask;
         } catch (err) {
             console.error('❌ useTasks: Ошибка при создании задачи:', err);
+            // Откат
+            setTasks(prev => prev.filter(t => !t.id.startsWith('temp_')));
             setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
             return null;
         }
@@ -140,6 +158,12 @@ export const useTasks = (session: Session | null) => {
             if (updates.priority !== undefined) updateData.priority = updates.priority;
             if (updates.tags !== undefined) updateData.tags = updates.tags;
             if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate;
+            // Оптимистичное обновление
+            let prevTask: Task | undefined;
+            setTasks(prev => {
+                prevTask = prev.find(t => t.id === taskId);
+                return prev.map(t => t.id === taskId ? ({ ...t, ...updates, updatedAt: new Date().toISOString() } as Task) : t);
+            });
 
             const { data, error } = await supabase
                 .from('tasks')
@@ -152,6 +176,8 @@ export const useTasks = (session: Session | null) => {
             if (error) {
                 console.error('❌ useTasks: Ошибка обновления задачи:', error);
                 setError(error.message);
+                // Откат
+                setTasks(prev => prev.map(t => t.id === taskId ? (prevTask as Task) : t));
                 return null;
             }
 
@@ -190,6 +216,9 @@ export const useTasks = (session: Session | null) => {
 
         try {
             console.log('🔄 useTasks: Удаляем задачу:', taskId);
+            // Оптимистичное удаление
+            const prevTasks = tasks;
+            setTasks(prev => prev.filter(task => task.id !== taskId));
 
             const { error } = await supabase
                 .from('tasks')
@@ -200,6 +229,8 @@ export const useTasks = (session: Session | null) => {
             if (error) {
                 console.error('❌ useTasks: Ошибка удаления задачи:', error);
                 setError(error.message);
+                // Откат
+                setTasks(prevTasks);
                 return false;
             }
 
@@ -222,7 +253,15 @@ export const useTasks = (session: Session | null) => {
             return null;
         }
 
-        return await updateTask(taskId, { isCompleted: !task.isCompleted });
+        // Оптимистичный тоггл без ожидания
+        const prev = task.isCompleted;
+        setTasks(prevState => prevState.map(t => t.id === taskId ? { ...t, isCompleted: !prev } : t));
+        try {
+            return await updateTask(taskId, { isCompleted: !prev });
+        } catch (e) {
+            // Откат вернёт updateTask
+            return null;
+        }
     }, [tasks, updateTask]);
 
     // Получение задач по проекту

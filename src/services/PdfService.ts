@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Estimate, Project, CompanyProfile, WorkStage, Item } from '../types';
-import { robotoNormalBase64 } from '../pdfFonts';
 
 // Расширяем типы для jsPDF с autotable
 declare module 'jspdf' {
@@ -13,15 +12,52 @@ declare module 'jspdf' {
 class PdfService {
   private static readonly FONT_NAME = 'Roboto';
 
-  private static registerFonts(doc: jsPDF): void {
-    const docWithFlag = doc as jsPDF & { _robotoRegistered?: boolean };
+  // Cache loaded base64 font data to avoid repeated fetches
+  private static fontCache: { regular?: string; bold?: string } = {};
 
-    if (!docWithFlag._robotoRegistered) {
-      doc.addFileToVFS('Roboto-Regular.ttf', robotoNormalBase64);
-      doc.addFont('Roboto-Regular.ttf', PdfService.FONT_NAME, 'normal', 'Identity-H');
-      doc.addFont('Roboto-Regular.ttf', PdfService.FONT_NAME, 'bold', 'Identity-H');
-      docWithFlag._robotoRegistered = true;
+  private static async loadFontBase64(url: string): Promise<string> {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to load font at ${url}: ${res.status} ${res.statusText}`);
     }
+    const buffer = await res.arrayBuffer();
+    // Convert ArrayBuffer to base64 in chunks to avoid call stack limits
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const sub = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(sub) as unknown as number[]);
+    }
+    return btoa(binary);
+  }
+
+  private static async ensureFontsLoaded(): Promise<void> {
+    if (this.fontCache.regular && this.fontCache.bold) return;
+    const base = (import.meta as any).env?.BASE_URL ?? '/';
+    const prefix = base.endsWith('/') ? base : base + '/';
+    const [regular, bold] = await Promise.all([
+      this.loadFontBase64(`${prefix}fonts/Roboto-Regular.ttf`),
+      this.loadFontBase64(`${prefix}fonts/Roboto-Bold.ttf`),
+    ]);
+    this.fontCache.regular = regular;
+    this.fontCache.bold = bold;
+  }
+
+  private static addFontsToDoc(doc: jsPDF): void {
+    const docWithFlag = doc as jsPDF & { _robotoRegistered?: boolean };
+    if (docWithFlag._robotoRegistered) return;
+
+    // At this point fonts must be in cache
+    if (this.fontCache.regular) {
+      doc.addFileToVFS('Roboto-Regular.ttf', this.fontCache.regular);
+      doc.addFont('Roboto-Regular.ttf', PdfService.FONT_NAME, 'normal');
+    }
+    if (this.fontCache.bold) {
+      doc.addFileToVFS('Roboto-Bold.ttf', this.fontCache.bold);
+      doc.addFont('Roboto-Bold.ttf', PdfService.FONT_NAME, 'bold');
+    }
+    docWithFlag._robotoRegistered = true;
   }
 
   private static formatCurrency(value: number): string {
@@ -38,26 +74,29 @@ class PdfService {
   }
 
   // Приватный статический метод для инициализации документа со шрифтом
-  private static initializeDoc(): jsPDF {
+  private static async initializeDoc(): Promise<jsPDF> {
     const doc = new jsPDF();
+    await PdfService.ensureFontsLoaded();
+    PdfService.addFontsToDoc(doc);
     PdfService.ensureCyrillicSupport(doc);
     return doc;
   }
 
   private static ensureCyrillicSupport(doc: jsPDF, style: 'normal' | 'bold' = 'normal'): void {
-    PdfService.registerFonts(doc);
+    // Ensure fonts added to this doc instance (idempotent)
+    PdfService.addFontsToDoc(doc);
     doc.setFont(PdfService.FONT_NAME, style);
   }
 
   /**
    * Генерирует PDF для сметы
    */
-  static generateEstimatePDF(
+  static async generateEstimatePDF(
     estimate: Estimate,
     project: Project | null,
     companyProfile: CompanyProfile
-  ): void {
-    const doc = PdfService.initializeDoc();
+  ): Promise<void> {
+    const doc = await PdfService.initializeDoc();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -191,19 +230,20 @@ class PdfService {
 
     const fileName = `Смета_${estimate.number}_${PdfService.formatDate(estimate.date)}.pdf`;
     doc.save(fileName);
+    return Promise.resolve();
   }
 
 
   /**
    * Генерирует PDF для акта выполненных работ
    */
-  static generateActPDF(
+  static async generateActPDF(
     project: Project,
     workStages: WorkStage[],
     companyProfile: CompanyProfile,
     totalAmount: number
-  ): void {
-    const doc = PdfService.initializeDoc();
+  ): Promise<void> {
+    const doc = await PdfService.initializeDoc();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -310,18 +350,19 @@ class PdfService {
 
     const fileName = `Акт_${actNumber}_${currentDate}.pdf`;
     doc.save(fileName);
+    return Promise.resolve();
   }
 
 
   /**
    * Генерирует PDF для графика работ
    */
-  static generateWorkSchedulePDF(
+  static async generateWorkSchedulePDF(
     project: Project,
     workStages: WorkStage[],
     companyProfile: CompanyProfile
-  ): void {
-    const doc = PdfService.initializeDoc();
+  ): Promise<void> {
+    const doc = await PdfService.initializeDoc();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -366,16 +407,16 @@ class PdfService {
       const tableData = workStages.map((stage: WorkStage, index: number) => [
         index + 1,
         stage.title,
-        stage.description || '',
         PdfService.formatDate(stage.startDate),
         stage.endDate ? PdfService.formatDate(stage.endDate) : 'В процессе',
         stage.status === 'completed' ? 'Завершен'
           : stage.status === 'in_progress' ? 'В работе'
-          : 'Планируется'
+          : 'Планируется',
+        `${Math.round(stage.progress ?? 0)}%`
       ]);
 
       autoTable(doc, {
-        head: [['№', 'Наименование этапа', 'Описание', 'Дата начала', 'Дата завершения', 'Статус']],
+        head: [['№', 'Наименование этапа', 'Дата начала', 'Дата завершения', 'Статус', 'Прогресс']],
         body: tableData,
         startY: yPosition,
         styles: {
@@ -392,11 +433,11 @@ class PdfService {
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
-          1: { cellWidth: 50, font: PdfService.FONT_NAME },
-          2: { cellWidth: 40, font: PdfService.FONT_NAME },
+          1: { cellWidth: 65, font: PdfService.FONT_NAME },
+          2: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
           3: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
-          4: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
-          5: { halign: 'center', cellWidth: 25, font: PdfService.FONT_NAME },
+          4: { halign: 'center', cellWidth: 25, font: PdfService.FONT_NAME },
+          5: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
         },
       });
     } else {
@@ -417,6 +458,7 @@ class PdfService {
 
     const fileName = `График_работ_${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_${PdfService.formatDate(new Date().toISOString())}.pdf`;
     doc.save(fileName);
+    return Promise.resolve();
   }
 
 }

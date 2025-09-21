@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { Note, NoteContext } from '../types';
+import { dataService } from '../services/storageService';
 
 export const useNotes = (session: Session | null) => {
     const [notes, setNotes] = useState<Note[]>([]);
@@ -47,6 +48,8 @@ export const useNotes = (session: Session | null) => {
             }));
 
             setNotes(transformedNotes);
+            // Кешируем для мгновенного старта
+            dataService.setNotes(transformedNotes);
             console.log('📝 useNotes: Заметки загружены успешно:', transformedNotes.length);
 
         } catch (error) {
@@ -55,6 +58,12 @@ export const useNotes = (session: Session | null) => {
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    // Кеш‑первый старт
+    useEffect(() => {
+        const cached = dataService.getNotes();
+        if (cached && cached.length) setNotes(cached);
     }, []);
 
     // Получение заметки по контексту и entity_id

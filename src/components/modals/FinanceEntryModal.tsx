@@ -3,12 +3,13 @@ import { FinanceEntryModalProps, FinanceCategory } from '../../types';
 import { IconClose } from '../common/Icon';
 import { resizeImage } from '../../utils';
 
-export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, onSave, showAlert, onInputFocus }) => {
-    const [type, setType] = useState<'income' | 'expense'>('expense');
-    const [amount, setAmount] = useState('');
-    const [description, setDescription] = useState('');
-    const [category, setCategory] = useState<FinanceCategory>('other');
-    const [receiptImage, setReceiptImage] = useState<string | null>(null);
+export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, onSave, showAlert, onInputFocus, initial }) => {
+    const [type, setType] = useState<'income' | 'expense'>(initial?.type || 'expense');
+    const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
+    const [description, setDescription] = useState(initial?.description || '');
+    const [category, setCategory] = useState<FinanceCategory>((initial?.category as FinanceCategory) || 'other');
+    const [dateStr, setDateStr] = useState(() => initial?.date ? new Date(initial.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const [receiptImage, setReceiptImage] = useState<string | null>(initial?.receipt_url || null);
     const [receiptFile, setReceiptFile] = useState<File | null>(null);
     const [amountError, setAmountError] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -66,15 +67,20 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
             type,
             amount: parseFloat(amount),
             description,
-            date: new Date().toISOString(),
+            date: new Date(dateStr).toISOString(),
             category,
         }, receiptFile || undefined);
     };
 
+    const canSave = (() => {
+        const v = parseFloat(amount);
+        return !Number.isNaN(v) && v > 0 && Boolean(type) && Boolean(category) && Boolean(dateStr);
+    })();
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" ref={modalRef}>
-                <div className="modal-header"><h2>Добавить транзакцию</h2><button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button></div>
+                <div className="modal-header"><h2>{initial ? 'Редактировать транзакцию' : 'Добавить транзакцию'}</h2><button onClick={onClose} className="close-btn" aria-label="Закрыть"><IconClose/></button></div>
                 <div className="modal-body">
                     <label>Тип</label>
                     <select value={type} onChange={e => setType(e.target.value as 'income' | 'expense')}>
@@ -89,6 +95,8 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                         <option value="tools_rental">Аренда инструмента</option>
                         <option value="other">Другое</option>
                     </select>
+                    <label>Дата</label>
+                    <input type="date" value={dateStr} onChange={e => setDateStr(e.target.value)} />
                     <label>Сумма (РУБ)</label>
                     <input 
                         type="number" 
@@ -119,7 +127,7 @@ export const FinanceEntryModal: React.FC<FinanceEntryModalProps> = ({ onClose, o
                         </>
                     )}
                 </div>
-                <div className="modal-footer"><button onClick={handleSave} className="btn btn-primary">Сохранить</button></div>
+                <div className="modal-footer"><button onClick={handleSave} className="btn btn-primary" disabled={!canSave} aria-disabled={!canSave}>Сохранить</button></div>
             </div>
         </div>
     );

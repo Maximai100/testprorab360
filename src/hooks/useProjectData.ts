@@ -30,34 +30,33 @@ export const useProjectData = () => {
                 return;
             }
 
-            // Загружаем финансовые записи
-            const { data: financeData, error: financeError } = await supabase
-                .from('finance_entries')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('project_id', projectId)
-                .order('created_at', { ascending: false });
+            // Загружаем параллельно: финансы и этапы работ
+            const [financeRes, stagesRes] = await Promise.all([
+                supabase
+                    .from('finance_entries')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('work_stages')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false })
+            ]);
 
-            if (financeError) {
-                console.error('useProjectData: Ошибка загрузки финансовых записей:', financeError);
-                throw financeError;
+            if (financeRes.error) {
+                console.error('useProjectData: Ошибка загрузки финансовых записей:', financeRes.error);
+                throw financeRes.error;
             }
-
-            // Загружаем этапы работ
-            const { data: workStagesData, error: workStagesError } = await supabase
-                .from('work_stages')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('project_id', projectId)
-                .order('created_at', { ascending: false });
-
-            if (workStagesError) {
-                console.error('useProjectData: Ошибка загрузки этапов работ:', workStagesError);
-                throw workStagesError;
+            if (stagesRes.error) {
+                console.error('useProjectData: Ошибка загрузки этапов работ:', stagesRes.error);
+                throw stagesRes.error;
             }
 
             // Преобразуем данные в формат приложения
-            const mappedFinanceEntries: FinanceEntry[] = (financeData || []).map((row: any) => ({
+            const mappedFinanceEntries: FinanceEntry[] = ((financeRes.data as any[]) || []).map((row: any) => ({
                 id: row.id,
                 projectId: row.project_id,
                 type: row.type,
@@ -70,7 +69,7 @@ export const useProjectData = () => {
                 updatedAt: row.updated_at,
             }));
 
-            const mappedWorkStages: WorkStage[] = (workStagesData || []).map((row: any) => ({
+            const mappedWorkStages: WorkStage[] = ((stagesRes.data as any[]) || []).map((row: any) => ({
                 id: row.id,
                 projectId: row.project_id,
                 title: row.title,
@@ -122,17 +121,30 @@ export const useProjectData = () => {
             }
         }
         
+        // Оптимистично добавляем
+        const id = generateUUID();
+        const now = new Date().toISOString();
+        const optimistic: FinanceEntry = {
+            id,
+            projectId,
+            type: entryData.type,
+            amount: entryData.amount,
+            description: entryData.description,
+            date: entryData.date,
+            category: entryData.category,
+            receipt_url: receiptUrl,
+            createdAt: now,
+            updatedAt: now,
+        };
+        setFinanceEntries(prev => [optimistic, ...prev]);
+
         try {
-            // Получаем текущего пользователя
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                throw new Error('Пользователь не авторизован');
-            }
-            
-            // Создаем запись в Supabase
-            const { data, error } = await supabase
+            if (!user) throw new Error('Пользователь не авторизован');
+            const { error } = await supabase
                 .from('finance_entries')
                 .insert({
+                    id,
                     user_id: user.id,
                     project_id: projectId,
                     type: entryData.type,
@@ -141,34 +153,16 @@ export const useProjectData = () => {
                     date: entryData.date,
                     category: entryData.category || null,
                     receipt_url: receiptUrl || null,
+                    created_at: now,
+                    updated_at: now,
                 })
-                .select()
+                .select('id')
                 .single();
-            
-            if (error) {
-                console.error('Ошибка создания финансовой записи:', error);
-                throw error;
-            }
-            
-            // Преобразуем данные в формат приложения
-            const newEntry: FinanceEntry = {
-                id: data.id,
-                projectId: data.project_id,
-                type: data.type,
-                amount: data.amount,
-                description: data.description,
-                date: data.date,
-                category: data.category || undefined,
-                receipt_url: data.receipt_url || undefined,
-                createdAt: data.created_at,
-                updatedAt: data.updated_at,
-            };
-            
-            setFinanceEntries(prev => [...prev, newEntry]);
-            console.log('📄 Финансовая запись создана:', newEntry);
-            return newEntry;
-            
+            if (error) throw error;
+            return optimistic;
         } catch (error) {
+            // Откат
+            setFinanceEntries(prev => prev.filter(e => e.id !== id));
             console.error('Ошибка при создании финансовой записи:', error);
             throw error;
         }
@@ -203,6 +197,13 @@ export const useProjectData = () => {
                 throw new Error('Пользователь не авторизован');
             }
             
+            // Оптимистичное обновление
+            let prevEntry: FinanceEntry | undefined;
+            setFinanceEntries(prev => {
+                prevEntry = prev.find(e => e.id === id);
+                return prev.map(e => e.id === id ? ({ ...e, ...updates, receipt_url: receiptUrl ?? e.receipt_url, updatedAt: new Date().toISOString() } as FinanceEntry) : e);
+            });
+
             // Обновляем запись в Supabase
             const updateData: any = {};
             if (updates.type !== undefined) updateData.type = updates.type;
@@ -212,40 +213,20 @@ export const useProjectData = () => {
             if (updates.category !== undefined) updateData.category = updates.category;
             if (receiptUrl !== undefined) updateData.receipt_url = receiptUrl;
             
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('finance_entries')
                 .update(updateData)
                 .eq('id', id)
                 .eq('user_id', user.id)
-                .select()
+                .select('id')
                 .single();
-            
-            if (error) {
-                console.error('Ошибка обновления финансовой записи:', error);
-                throw error;
-            }
-            
-            // Преобразуем данные в формат приложения
-            const updatedEntry: FinanceEntry = {
-                id: data.id,
-                projectId: data.project_id,
-                type: data.type,
-                amount: data.amount,
-                description: data.description,
-                date: data.date,
-                category: data.category || undefined,
-                receipt_url: data.receipt_url || undefined,
-                createdAt: data.created_at,
-                updatedAt: data.updated_at,
-            };
-            
-            setFinanceEntries(prev => prev.map(entry => 
-                entry.id === id ? updatedEntry : entry
-            ));
-            console.log('📄 Финансовая запись обновлена:', updatedEntry);
+            if (error) throw error;
+            console.log('📄 Финансовая запись обновлена (оптимистично):', id);
             
         } catch (error) {
             console.error('Ошибка при обновлении финансовой записи:', error);
+            // Откатываем локально
+            setFinanceEntries(prev => prev.map(e => e.id === id ? (prevEntry as FinanceEntry) : e));
             throw error;
         }
     }, [uploadFileWithFallback]);

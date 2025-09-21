@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Task, Project, ProjectTasksScreenProps } from '../../types';
-import { IconPlus, IconFilter, IconChevronRight, IconTrash } from '../common/Icon';
-import { TaskDetailsScreen } from './TaskDetailsScreen';
+import { IconPlus, IconFilter, IconChevronRight } from '../common/Icon';
+import TaskDetailsModal from '../modals/TaskDetailsModal';
+import { ListItem } from '../ui/ListItem';
 import { formatDueDate } from '../../utils';
 import { TaskFilterModal } from '../modals/TaskFilterModal';
 import { AddTaskModal } from '../modals/AddTaskModal';
@@ -13,43 +14,7 @@ const priorityMap: Record<string, { color: string, name: string }> = {
     urgent: { color: '#d32f2f', name: 'Срочный' },
 };
 
-const TaskItem: React.FC<{ 
-    task: Task, 
-    projectName: string, 
-    onToggle: (id: string | number) => void, 
-    onSelect: (task: Task) => void,
-    onDelete: (id: string) => void
-}> = ({ task, projectName, onToggle, onSelect, onDelete }) => (
-    <li className={task.isCompleted ? 'completed' : ''}>
-        <input
-            type="checkbox"
-            checked={task.isCompleted}
-            onChange={() => onToggle(task.id)}
-        />
-        <div className="task-info" onClick={() => onSelect(task)}>
-            <span className="task-title">{task.title}</span>
-            <div className="task-meta">
-                <span className="task-project">{projectName || 'Без проекта'}</span>
-                {task.dueDate && <span className="task-duedate">{formatDueDate(task.dueDate)}</span>}
-                {task.priority && <span className="priority-dot" style={{ backgroundColor: priorityMap[task.priority].color }}></span>}
-            </div>
-        </div>
-        <div className="task-actions">
-            <button 
-                className="task-action-btn delete" 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Удалить задачу?')) {
-                        onDelete(task.id);
-                    }
-                }}
-                aria-label="Удалить задачу"
-            >
-                <IconTrash />
-            </button>
-        </div>
-    </li>
-);
+// Рендер реализован ниже через универсальный ListItem
 
 export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, projects, projectId, onAddTask, onUpdateTask, onToggleTask, onDeleteTask, onBack }) => {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -123,15 +88,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
         return groups;
     }, [filteredTasks]);
 
-    if (editingTask) {
-        return (
-            <TaskDetailsScreen 
-                task={editingTask} 
-                onSave={handleUpdateTask} 
-                onBack={() => setEditingTask(null)} 
-            />
-        );
-    }
+    // Модалка редактирования будет отрисована внизу return
 
     return (
         <>
@@ -162,7 +119,19 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Просроченные</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.overdue.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
+                                            {groupedTasks.overdue.map(task => (
+                                                <ListItem
+                                                    key={task.id}
+                                                    icon={<></>}
+                                                    onIconClick={() => onToggleTask(task.id)}
+                                                    iconChecked={task.isCompleted}
+                                                    iconBgColor={priorityMap[task.priority || 'medium'].color}
+                                                    title={task.title}
+                                                    subtitle={`${projects.find(p => p.id === task.projectId)?.name || ''}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                    onClick={() => handleSelectTaskForEdit(task)}
+                                                    onDelete={() => onDeleteTask(task.id)}
+                                                />
+                                            ))}
                                         </ul>
                                     </div>
                                 )}
@@ -170,7 +139,19 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Сегодня</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.today.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
+                                            {groupedTasks.today.map(task => (
+                                                <ListItem
+                                                    key={task.id}
+                                                    icon={<></>}
+                                                    onIconClick={() => onToggleTask(task.id)}
+                                                    iconChecked={task.isCompleted}
+                                                    iconBgColor={priorityMap[task.priority || 'medium'].color}
+                                                    title={task.title}
+                                                    subtitle={`${projects.find(p => p.id === task.projectId)?.name || ''}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                    onClick={() => handleSelectTaskForEdit(task)}
+                                                    onDelete={() => onDeleteTask(task.id)}
+                                                />
+                                            ))}
                                         </ul>
                                     </div>
                                 )}
@@ -178,7 +159,19 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Предстоящие</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.upcoming.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
+                                            {groupedTasks.upcoming.map(task => (
+                                                <ListItem
+                                                    key={task.id}
+                                                    icon={<></>}
+                                                    onIconClick={() => onToggleTask(task.id)}
+                                                    iconChecked={task.isCompleted}
+                                                    iconBgColor={priorityMap[task.priority || 'medium'].color}
+                                                    title={task.title}
+                                                    subtitle={`${projects.find(p => p.id === task.projectId)?.name || ''}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                    onClick={() => handleSelectTaskForEdit(task)}
+                                                    onDelete={() => onDeleteTask(task.id)}
+                                                />
+                                            ))}
                                         </ul>
                                     </div>
                                 )}
@@ -186,7 +179,20 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                                     <div className="task-group">
                                         <h4>Выполненные</h4>
                                         <ul className="task-list">
-                                            {groupedTasks.completed.map(task => <TaskItem key={task.id} task={task} projectName={projects.find(p => p.id === task.projectId)?.name || ''} onToggle={onToggleTask} onSelect={handleSelectTaskForEdit} onDelete={onDeleteTask} />)}
+                                            {groupedTasks.completed.map(task => (
+                                                <ListItem
+                                                    key={task.id}
+                                                    icon={<></>}
+                                                    onIconClick={() => onToggleTask(task.id)}
+                                                    iconChecked={true}
+                                                    iconBgColor={priorityMap[task.priority || 'medium'].color}
+                                                    title={task.title}
+                                                    titleStrike={true}
+                                                    subtitle={`${projects.find(p => p.id === task.projectId)?.name || ''}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                    onClick={() => handleSelectTaskForEdit(task)}
+                                                    onDelete={() => onDeleteTask(task.id)}
+                                                />
+                                            ))}
                                         </ul>
                                     </div>
                                 )}
@@ -210,6 +216,13 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
                     onSave={handleSaveTask}
                     projects={projects}
                     initialProjectId={projectId}
+                />
+            )}
+            {editingTask && (
+                <TaskDetailsModal
+                    task={editingTask}
+                    onClose={() => setEditingTask(null)}
+                    onSave={handleUpdateTask}
                 />
             )}
         </>

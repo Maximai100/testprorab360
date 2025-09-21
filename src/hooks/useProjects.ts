@@ -23,9 +23,13 @@ export const useProjects = () => {
     // Инициализируем хук для работы с файлами
     const { uploadFileWithFallback } = useFileStorage();
     
-    // Load data from storage (only for non-Supabase data)
+    // Load data from storage (show cached instantly while Supabase loads)
     useEffect(() => {
-        // Не загружаем проекты из локального хранилища, они будут загружены из Supabase
+        // Показываем кеш проектов сразу
+        const cachedProjects = dataService.getProjects();
+        if (cachedProjects && cachedProjects.length) {
+            setProjects(cachedProjects);
+        }
         setFinanceEntries(dataService.getFinanceEntries());
         setPhotoReports(dataService.getPhotoReports());
         setDocuments(dataService.getDocuments());
@@ -108,14 +112,30 @@ export const useProjects = () => {
     }, [projects]);
     
     // Load projects from Supabase
+    // Простой ретрай с экспоненциальной паузой — лечит временные ошибки PGRST002
+    const withRetry = async <T,>(fn: () => Promise<T>, attempts = 3, baseDelay = 500): Promise<T> => {
+        let lastErr: any;
+        for (let i = 0; i < attempts; i++) {
+            try { return await fn(); } catch (err: any) {
+                lastErr = err;
+                const code = err?.code || err?.message;
+                // Ретрай только на временные ошибки PostgREST/схемы/сети
+                if (code !== 'PGRST002' && code !== 'PGRST003' && !String(code).includes('fetch') && !String(code).includes('network')) break;
+                await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, i)));
+            }
+        }
+        throw lastErr;
+    };
+
     const loadProjectsFromSupabase = useCallback(async () => {
         try {
             console.log('🔄 loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
             console.log('🔄 loadProjectsFromSupabase: Выполняем запрос к Supabase...');
-            const { data: projectsData, error } = await supabase
+            const { data: projectsData, error } = await withRetry(() => supabase
                 .from('projects')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+            );
             console.log('🔄 loadProjectsFromSupabase: Запрос к Supabase завершен');
 
             if (error) {
@@ -139,6 +159,8 @@ export const useProjects = () => {
                 console.log('loadProjectsFromSupabase: Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
                 console.log('loadProjectsFromSupabase: Устанавливаем проекты в состояние...');
                 setProjects(mappedProjects);
+                // Сохраняем кеш для мгновенного старта в следующий раз
+                dataService.setProjects(mappedProjects);
                 console.log('loadProjectsFromSupabase: Проекты установлены в состояние');
             } else {
                 console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');

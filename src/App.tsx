@@ -54,6 +54,8 @@ import type { Session } from '@supabase/supabase-js';
 
 // Import new hooks
 import { useAppState } from './hooks/useAppState';
+import useLibrary from './hooks/useLibrary';
+import useCompanyProfile from './hooks/useCompanyProfile';
 import { useEstimates } from './hooks/useEstimates';
 import { useProjects } from './hooks/useProjects';
 import { useProjectData } from './hooks/useProjectData';
@@ -112,6 +114,18 @@ const App: React.FC = () => {
     console.log('🔧 App: useTasks инициализирован');
     const fileStorageHook = useFileStorage();
     console.log('🔧 App: useFileStorage инициализирован');
+
+    const loadProjectsFromSupabaseRef = projectsHook.loadProjectsFromSupabase;
+    const loadDocumentsFromSupabaseRef = projectsHook.loadDocumentsFromSupabase;
+    const loadPhotoReportsFromSupabaseRef = projectsHook.loadPhotoReportsFromSupabase;
+    const setProjectsRef = projectsHook.setProjects;
+
+    const fetchAllEstimatesFromHook = estimatesHook.fetchAllEstimates;
+    const setEstimatesRef = estimatesHook.setEstimates;
+
+    const fetchAllInventoryRef = inventoryHook.fetchAllInventory;
+    const fetchAllNotesRef = notesHook.fetchAllNotes;
+    const fetchAllTasksRef = tasksHook.fetchAllTasks;
     
     // Логирование состояния после инициализации хуков
     console.log('🚀 App: activeView:', appState?.activeView);
@@ -167,9 +181,14 @@ const App: React.FC = () => {
     useEffect(() => {
         // Получаем текущую сессию при инициализации
         const getInitialSession = async () => {
-            const { data: { session: initialSession } } = await supabase.auth.getSession();
-            setSession(initialSession);
-            console.log('🔧 App: Начальная сессия:', initialSession ? 'есть' : 'нет');
+            try {
+                const { data: { session: initialSession } } = await supabase.auth.getSession();
+                setSession(initialSession);
+                console.log('🔧 App: Начальная сессия:', initialSession ? 'есть' : 'нет');
+            } catch (e) {
+                console.error('🔧 App: Ошибка получения сессии Supabase:', e);
+                setSession(null);
+            }
         };
         
         getInitialSession();
@@ -183,35 +202,97 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-    // Флаг для предотвращения множественных вызовов
+    // Флаги для предотвращения множественных вызовов
     const [dataLoaded, setDataLoaded] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
+    const [projectsLoaded, setProjectsLoaded] = useState(false);
 
+    // Загружаем проекты всегда (даже без сессии), если ещё не загружали
     useEffect(() => {
-        if (session && !dataLoaded) {
-            console.log("Сессия активна, загружаем данные...");
-            projectsHook.loadProjectsFromSupabase();
-            projectsHook.loadDocumentsFromSupabase();
-            projectsHook.loadPhotoReportsFromSupabase();
-            estimatesHook.fetchAllEstimates();
-            inventoryHook.fetchAllInventory(session);
-            notesHook.fetchAllNotes(session);
-            tasksHook.fetchAllTasks(session);
-            setDataLoaded(true);
-        } else if (!session && dataLoaded) {
-            console.log("Сессия отсутствует, очищаем данные...");
-            projectsHook.setProjects([]);
-            estimatesHook.setEstimates([]);
-            inventoryHook.fetchAllInventory(null);
-            notesHook.fetchAllNotes(null);
-            setDataLoaded(false);
+        if (!projectsLoaded) {
+            console.log('Загружаем проекты без зависимости от сессии...');
+            loadProjectsFromSupabaseRef();
+            setProjectsLoaded(true);
         }
-    }, [session, dataLoaded]); // Добавляем dataLoaded в зависимости
+    }, [projectsLoaded, loadProjectsFromSupabaseRef]);
+
+    // Остальные данные загружаем только при активной сессии
+    useEffect(() => {
+        if (!session) {
+            if (dataLoaded || isDataLoading) {
+                console.log("Сессия отсутствует, очищаем данные...");
+                setProjectsRef([]);
+                setEstimatesRef([]);
+                fetchAllInventoryRef(null);
+                fetchAllNotesRef(null);
+                setDataLoaded(false);
+                setIsDataLoading(false);
+            }
+            return;
+        }
+
+        if (dataLoaded || isDataLoading) {
+            return;
+        }
+
+        console.log("Сессия активна, загружаем данные...");
+        setIsDataLoading(true);
+
+        let cancelled = false;
+
+        const loadAllData = async () => {
+            try {
+                await Promise.all([
+                    loadProjectsFromSupabaseRef(),
+                    loadDocumentsFromSupabaseRef(),
+                    loadPhotoReportsFromSupabaseRef(),
+                    fetchAllEstimatesFromHook(),
+                    fetchAllInventoryRef(session),
+                    fetchAllNotesRef(session),
+                    fetchAllTasksRef(session),
+                ]);
+
+                if (!cancelled) {
+                    setDataLoaded(true);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    console.error('Ошибка при загрузке данных приложения:', error);
+                    setDataLoaded(false);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsDataLoading(false);
+                }
+            }
+        };
+
+        loadAllData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        session,
+        dataLoaded,
+        isDataLoading,
+        loadProjectsFromSupabaseRef,
+        loadDocumentsFromSupabaseRef,
+        loadPhotoReportsFromSupabaseRef,
+        setProjectsRef,
+        fetchAllEstimatesFromHook,
+        setEstimatesRef,
+        fetchAllInventoryRef,
+        fetchAllNotesRef,
+        fetchAllTasksRef,
+    ]);
 
     // Проекты теперь управляются через projectsHook
 
     // Additional state that's not yet moved to hooks
-    const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({ name: '', details: '', logo: null });
+    const libraryHook = useLibrary(session);
+    const companyProfileHook = useCompanyProfile(session);
+    
     const [inventoryNotes, setInventoryNotes] = useState<InventoryNote[]>([]);
     const [toolsScratchpad, setToolsScratchpad] = useState('');
     const [consumablesScratchpad, setConsumablesScratchpad] = useState('');
@@ -237,19 +318,17 @@ const App: React.FC = () => {
 
     // Load initial data
     useEffect(() => {
-        setLibraryItems(dataService.getLibraryItems());
-        setCompanyProfile(dataService.getCompanyProfile());
         setInventoryNotes(dataService.getInventoryNotes());
     }, []);
 
     // Save data when it changes
+    // Загружаем справочник и профиль при наличии сессии
     useEffect(() => {
-        dataService.setLibraryItems(libraryItems);
-    }, [libraryItems]);
+        libraryHook.fetchLibraryItems(session);
+        companyProfileHook.fetchProfile(session);
+    }, [session]);
 
-    useEffect(() => {
-        dataService.setCompanyProfile(companyProfile);
-    }, [companyProfile]);
+    
 
     useEffect(() => {
         dataService.setInventoryNotes(inventoryNotes);
@@ -298,6 +377,90 @@ const App: React.FC = () => {
             return <IconSun />;
         }
     }, [appState.themeMode]);
+
+    // Update document title based on company profile name
+    useEffect(() => {
+        const name = companyProfileHook.profile?.name?.trim();
+        document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
+    }, [companyProfileHook.profile?.name]);
+
+    // Helper to set or update favicon link tag
+    const setFaviconHref = useCallback((href: string, sizes?: string) => {
+        let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            link.type = 'image/png';
+            if (sizes) link.sizes = sizes;
+            document.head.appendChild(link);
+        }
+        if (sizes) link.sizes = sizes;
+        link.href = href;
+
+        // Also set apple-touch-icon for iOS
+        let apple = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
+        if (!apple) {
+            apple = document.createElement('link');
+            apple.rel = 'apple-touch-icon';
+            document.head.appendChild(apple);
+        }
+        apple.href = href;
+    }, []);
+
+    // Generate a small favicon from logo URL and apply it
+    useEffect(() => {
+        const defaultIcon = '/logo.png';
+        const logoUrl = companyProfileHook.profile?.logo || '';
+        let cancelled = false;
+
+        const generateFavicon = (src: string, size = 64): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        resolve(src);
+                        return;
+                    }
+                    ctx.clearRect(0, 0, size, size);
+                    const ratio = Math.min(size / img.width, size / img.height);
+                    const drawW = img.width * ratio;
+                    const drawH = img.height * ratio;
+                    const dx = (size - drawW) / 2;
+                    const dy = (size - drawH) / 2;
+                    ctx.drawImage(img, dx, dy, drawW, drawH);
+                    try {
+                        resolve(canvas.toDataURL('image/png'));
+                    } catch (e) {
+                        resolve(src);
+                    }
+                };
+                img.onerror = () => reject(new Error('logo load error'));
+                // small cache-buster to ensure favicon updates
+                const withBuster = src ? `${src}${src.includes('?') ? '&' : '?'}_fav=${Date.now()}` : src;
+                img.src = withBuster;
+            });
+        };
+
+        (async () => {
+            try {
+                if (logoUrl) {
+                    const dataUrl = await generateFavicon(logoUrl, 64);
+                    if (!cancelled) setFaviconHref(dataUrl, '64x64');
+                    return;
+                }
+            } catch (_e) {
+                // Fallback below
+            }
+            if (!cancelled) setFaviconHref(defaultIcon, '64x64');
+        })();
+
+        return () => { cancelled = true; };
+    }, [companyProfileHook.profile?.logo, setFaviconHref]);
 
     // Get active project
     const activeProject = useMemo(() => {
@@ -520,16 +683,16 @@ const App: React.FC = () => {
 
     // Finance handlers
     const handleAddFinanceEntry = useCallback(async (entryData: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>, receiptFile?: File) => {
+        // Закрываем модалку сразу — оптимистичное UX
+        appState.closeModal('financeEntry');
         if (appState.activeProjectId) {
             try {
                 await projectDataHook.addFinanceEntry(appState.activeProjectId, entryData, receiptFile);
             } catch (error) {
                 console.error('Ошибка при добавлении финансовой записи:', error);
                 safeShowAlert('Произошла ошибка при добавлении финансовой записи.');
-                return;
             }
         }
-        appState.closeModal('financeEntry');
     }, [projectDataHook, appState, safeShowAlert]);
 
     const handleDeleteFinanceEntry = useCallback(async (id: string) => {
@@ -729,9 +892,7 @@ const App: React.FC = () => {
     }, [inventoryHook]);
 
     // Library handlers
-    const handleLibraryItemsChange = useCallback((items: LibraryItem[]) => {
-        setLibraryItems(items);
-    }, []);
+    // Library handlers are provided by libraryHook (add/update/delete)
 
     const handleAddItemToEstimate = useCallback((item: LibraryItem) => {
         // Добавляем элемент из библиотеки в текущую смету
@@ -750,26 +911,24 @@ const App: React.FC = () => {
 
     // Profile handlers
     const handleProfileChange = useCallback((field: keyof CompanyProfile, value: string) => {
-        setCompanyProfile(prev => ({ ...prev, [field]: value }));
-    }, []);
+        companyProfileHook.setProfile(prev => ({ ...prev, [field]: value }));
+    }, [companyProfileHook]);
 
     const handleLogoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            readFileAsDataURL(file).then(dataUrl => {
-                setCompanyProfile(prev => ({ ...prev, logo: dataUrl }));
-            });
+            companyProfileHook.uploadLogo(file);
         }
-    }, []);
+    }, [companyProfileHook]);
 
     const handleRemoveLogo = useCallback(() => {
-        setCompanyProfile(prev => ({ ...prev, logo: null }));
-    }, []);
+        companyProfileHook.removeLogo();
+    }, [companyProfileHook]);
 
     const handleSaveProfile = useCallback(() => {
-        // Profile is already saved via useEffect
+        companyProfileHook.saveProfile(companyProfileHook.profile);
         appState.closeModal('settings');
-    }, [appState]);
+    }, [companyProfileHook, appState]);
 
 
     // Item handlers
@@ -835,10 +994,10 @@ const App: React.FC = () => {
                 ? projectsHook.projects.find(p => p.id === estimatesHook.currentEstimate!.project_id) || null
                 : null;
             
-            PdfServiceInstance.default.generateEstimatePDF(
+            await PdfServiceInstance.default.generateEstimatePDF(
                 estimatesHook.currentEstimate,
                 project,
-                companyProfile
+                companyProfileHook.profile
             );
         } catch (error) {
             console.error('PDF generation error:', error);
@@ -846,7 +1005,7 @@ const App: React.FC = () => {
         } finally {
             appState.setLoading('pdf', false);
         }
-    }, [estimatesHook, companyProfile, appState, projectsHook.projects]);
+    }, [estimatesHook, companyProfileHook.profile, appState, projectsHook.projects]);
 
     // Share
     const handleShare = useCallback(() => {
@@ -1019,7 +1178,7 @@ const App: React.FC = () => {
                         onExportWorkSchedulePDF={async (project, workStages) => {
                             try {
                                 const PdfServiceInstance = await import('./services/PdfService');
-                                PdfServiceInstance.default.generateWorkSchedulePDF(project, workStages, companyProfile);
+                                await PdfServiceInstance.default.generateWorkSchedulePDF(project, workStages, companyProfileHook.profile);
                             } catch (error) {
                                 console.error('Ошибка при генерации графика работ PDF:', error);
                                 safeShowAlert('Ошибка при генерации PDF графика работ');
@@ -1215,8 +1374,7 @@ const App: React.FC = () => {
     return (
         <div className="app-container">
             {/* Auth gate */}
-            {/* Временно отключаем проверку авторизации для тестирования */}
-            {false ? (
+            {(!session) ? (
                 <main>
                     <AuthScreen />
                 </main>
@@ -1225,8 +1383,13 @@ const App: React.FC = () => {
             {/* Global Header */}
             <header className="app-header">
                 <div className="app-header-left">
-                    <img src="/logo.png" alt="Логотип" className="app-logo" />
-                    <h1>Прораб</h1>
+                    <img
+                        src={companyProfileHook.profile.logo || '/logo.png'}
+                        alt="Логотип"
+                        className="app-logo"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
+                    />
+                    <h1>{(companyProfileHook.profile.name && companyProfileHook.profile.name.trim()) ? companyProfileHook.profile.name : 'Прораб'}</h1>
                 </div>
                 <div className="app-header-right">
                     <button onClick={appState.handleThemeChange} className="header-btn" aria-label="Сменить тему">
@@ -1314,7 +1477,7 @@ const App: React.FC = () => {
             {appState.showSettingsModal && (
                 <SettingsModal
                     onClose={() => appState.closeModal('settings')}
-                    profile={companyProfile}
+                    profile={companyProfileHook.profile}
                     onProfileChange={handleProfileChange}
                     onLogoChange={handleLogoChange}
                     onRemoveLogo={handleRemoveLogo}
@@ -1344,8 +1507,10 @@ const App: React.FC = () => {
             {appState.showLibraryModal && (
                 <LibraryModal
                     onClose={() => appState.closeModal('library')}
-                    libraryItems={libraryItems}
-                    onLibraryItemsChange={handleLibraryItemsChange}
+                    libraryItems={libraryHook.libraryItems}
+                    onAddLibraryItem={libraryHook.addLibraryItem}
+                    onUpdateLibraryItem={libraryHook.updateLibraryItem}
+                    onDeleteLibraryItem={libraryHook.deleteLibraryItem}
                     onAddItemToEstimate={handleAddItemToEstimate}
                     formatCurrency={formatCurrency}
                     onInputFocus={handleInputFocus}
@@ -1447,7 +1612,7 @@ const App: React.FC = () => {
                 <ActGenerationModal
                     onClose={() => appState.closeModal('actGeneration')}
                     project={activeProject}
-                    profile={companyProfile}
+                    profile={companyProfileHook.profile}
                     totalAmount={appState.actTotalAmount}
                     workStages={projectDataHook?.workStages || []}
                     showAlert={safeShowAlert}

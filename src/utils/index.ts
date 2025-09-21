@@ -182,3 +182,16 @@ export const formatDueDate = (dueDate: Date | string | null): string => {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     return `${day}.${month}`;
 };
+
+// Map finance category code to Russian label
+export const financeCategoryToRu = (category: string): string => {
+    const map: Record<string, string> = {
+        materials: 'Материалы',
+        labor: 'Работы',
+        transport: 'Транспорт',
+        tools_rental: 'Аренда инструмента',
+        other: 'Другое',
+        'Без категории': 'Без категории',
+    };
+    return map[category] || category;
+};

@@ -3,9 +3,11 @@ import { ProjectDetailViewProps, Estimate, PhotoReport, Document, WorkStage, Not
 import { IconChevronRight, IconEdit, IconTrash, IconDocument, IconPlus, IconCreditCard, IconCalendar, IconPaperclip, IconDownload, IconMessageSquare, IconTrendingUp, IconCamera, IconChevronDown, IconFolder, IconClose, IconExternalLink } from '../common/Icon';
 import { ListItem } from '../ui/ListItem';
 import { TaskDetailsScreen } from './TaskDetailsScreen';
+import TaskDetailsModal from '../modals/TaskDetailsModal';
 import ImageViewerModal from '../modals/ImageViewerModal';
-import { formatDueDate } from '../../utils';
+import { formatDueDate, financeCategoryToRu } from '../../utils';
 import './ProjectDetailView.css';
+import { FinanceEntryModal } from '../modals/FinanceEntryModal';
 
 
 // Карта приоритетов для задач
@@ -63,7 +65,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 }) => {
     // Состояние для выбранной задачи
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    
+    const [editingFinance, setEditingFinance] = useState<FinanceEntry | null>(null);
+
     // Состояние для просмотра чеков
     const [receiptViewer, setReceiptViewer] = useState<{
         isOpen: boolean;
@@ -110,31 +113,29 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         });
     }, []);
 
+    const loadProjectData = projectDataHook?.loadProjectData;
+
     // Загружаем данные проекта при монтировании компонента
     useEffect(() => {
-        if (activeProject?.id && projectDataHook?.loadProjectData) {
+        if (activeProject?.id && loadProjectData) {
             console.log('🔧 ProjectDetailView: Загружаем данные проекта:', activeProject.id);
-            projectDataHook.loadProjectData(activeProject.id);
+            loadProjectData(activeProject.id);
         }
-    }, [activeProject?.id, projectDataHook]);
+    }, [activeProject?.id, loadProjectData]);
 
-    // Группировка задач (точно такая же как в ProjectTasksScreen)
+    // Группировка задач (показываем только НЕ выполненные в блоке проекта)
     const groupedTasks = useMemo(() => {
         const groups = {
             overdue: [] as Task[],
             today: [] as Task[],
             upcoming: [] as Task[],
-            completed: [] as Task[],
         };
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        tasks.forEach(task => {
-            if (task.isCompleted) {
-                groups.completed.push(task);
-                return;
-            }
+        const activeTasksOnly = tasks.filter(t => !t.isCompleted);
+        activeTasksOnly.forEach(task => {
 
             if (task.dueDate) {
                 const dueDate = new Date(task.dueDate);
@@ -248,7 +249,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     <div className="dashboard-breakdown">
                                         {financials.expensesBreakdown.map(item => (
                                             <div key={item.categoryName} className="breakdown-item">
-                                                <span>{item.categoryName}</span>
+                                                <span>{financeCategoryToRu(item.categoryName)}</span>
                                                 <span>{formatCurrency(item.amount)}</span>
                                             </div>
                                         ))}
@@ -303,70 +304,84 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </div>
                 <div className="card project-section">
                      <div className="project-section-header">
-                        <h3>Задачи ({tasks.length})</h3>
+                        <h3>Задачи ({tasks.filter(t => !t.isCompleted).length})</h3>
                         <div className="header-actions">
                             <button className="add-in-header-btn" onClick={() => appState.openModal('addTask', { id: activeProject.id, name: activeProject.name })}><IconPlus/></button>
                         </div>
                     </div>
                     <div className="project-section-body">
                         <div className="project-items-list">
-                            {tasks.length > 0 ? (
+                            {tasks.filter(t => !t.isCompleted).length > 0 ? (
                                 <div className="task-groups-container">
                                     {groupedTasks.overdue.length > 0 && (
                                         <div className="task-group">
                                             <h4>Просроченные</h4>
-                                            <ul className="task-list">
+                                            <div className="project-items-list">
                                                 {groupedTasks.overdue.slice(0, 3).map(task => (
-                                                    <TaskItem 
-                                                        key={task.id} 
-                                                        task={task} 
-                                                        projectName={activeProject.name} 
-                                                        onToggle={handleTaskToggle} 
-                                                        onSelect={handleTaskSelect} 
-                                                        onDelete={tasksHook.deleteTask} 
+                                                    <ListItem
+                                                        key={task.id}
+                                                        icon={<></>}
+                                                        onIconClick={() => handleTaskToggle(task.id)}
+                                                        iconAriaLabel="Переключить выполнено"
+                                                        iconChecked={false}
+                                                        iconBgColor={priorityMap[task.priority || 'medium']?.color}
+                                                        title={task.title}
+                                                        subtitle={`${activeProject.name}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                        onClick={() => handleTaskSelect(task)}
+                                                        onDelete={() => tasksHook.deleteTask(task.id)}
                                                     />
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                     )}
                                     {groupedTasks.today.length > 0 && (
                                         <div className="task-group">
                                             <h4>Сегодня</h4>
-                                            <ul className="task-list">
+                                            <div className="project-items-list">
                                                 {groupedTasks.today.slice(0, 3).map(task => (
-                                                    <TaskItem 
-                                                        key={task.id} 
-                                                        task={task} 
-                                                        projectName={activeProject.name} 
-                                                        onToggle={handleTaskToggle} 
-                                                        onSelect={handleTaskSelect} 
-                                                        onDelete={tasksHook.deleteTask} 
+                                                    <ListItem
+                                                        key={task.id}
+                                                        icon={<></>}
+                                                        onIconClick={() => handleTaskToggle(task.id)}
+                                                        iconChecked={false}
+                                                        iconAriaLabel="Переключить выполнено"
+                                                        iconBgColor={priorityMap[task.priority || 'medium']?.color}
+                                                        title={task.title}
+                                                        subtitle={`${activeProject.name}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                        onClick={() => handleTaskSelect(task)}
+                                                        onDelete={() => tasksHook.deleteTask(task.id)}
                                                     />
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                     )}
                                     {groupedTasks.upcoming.length > 0 && (
                                         <div className="task-group">
-                                            <ul className="task-list">
+                                            <h4>Предстоящие</h4>
+                                            <div className="project-items-list">
                                                 {groupedTasks.upcoming.slice(0, 3).map(task => (
-                                                    <TaskItem 
-                                                        key={task.id} 
-                                                        task={task} 
-                                                        projectName={activeProject.name} 
-                                                        onToggle={handleTaskToggle} 
-                                                        onSelect={handleTaskSelect} 
-                                                        onDelete={tasksHook.deleteTask} 
+                                                    <ListItem
+                                                        key={task.id}
+                                                        icon={<></>}
+                                                        onIconClick={() => handleTaskToggle(task.id)}
+                                                        iconChecked={false}
+                                                        iconAriaLabel="Переключить выполнено"
+                                                        iconBgColor={priorityMap[task.priority || 'medium']?.color}
+                                                        title={task.title}
+                                                        subtitle={`${activeProject.name}${task.dueDate ? ' • ' + formatDueDate(task.dueDate) : ''}`}
+                                                        onClick={() => handleTaskSelect(task)}
+                                                        onDelete={() => tasksHook.deleteTask(task.id)}
                                                     />
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                     )}
+                                    {/* Выполненные задачи в блоке проекта не показываем */}
                                 </div>
                             ) : (
                                 <p className="empty-list-message">Задач пока нет</p>
                             )}
-                            {tasks.length > 3 && (
+                            {tasks.filter(t => !t.isCompleted).length > 3 && (
                                 <button className="btn btn-secondary" onClick={onNavigateToTasks}>
                                     Показать все задачи ({tasks.length})
                                 </button>
@@ -439,7 +454,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                       }
                                       iconBgColor={f.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
                                       title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
-                                      subtitle={f.category}
+                                      subtitle={`${financeCategoryToRu(f.category || 'other')}${f.date ? ' • ' + new Date(f.date).toLocaleDateString('ru-RU') : ''}`}
                                       amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
                                       amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
                                       actions={
@@ -456,7 +471,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                               <IconCamera />
                                             </button>
                                           )}
-                                          <button onClick={() => onDeleteFinanceEntry(f.id)} className="delete-btn" aria-label="Удалить"><IconTrash/></button>
+                                          <button onClick={() => setEditingFinance(f)} className="edit-btn" aria-label="Редактировать"><IconEdit/></button>
+                                          <button onClick={(e) => { e.stopPropagation(); onDeleteFinanceEntry(f.id); }} className="delete-btn" aria-label="Удалить"><IconTrash/></button>
                                         </div>
                                       }
                                     />
@@ -476,6 +492,18 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         )}
                     </div>
                 </div>
+                {editingFinance && (
+                    <FinanceEntryModal
+                        onClose={() => setEditingFinance(null)}
+                        onSave={async (entry, receiptFile) => {
+                            await projectDataHook.updateFinanceEntry(editingFinance.id, entry, receiptFile);
+                            setEditingFinance(null);
+                        }}
+                        showAlert={safeShowAlert}
+                        onInputFocus={() => {}}
+                        initial={editingFinance}
+                    />
+                )}
                  <div className="card project-section">
                     <div className="project-section-header">
                         <h3>График работ ({projectWorkStages.length})</h3>
@@ -594,8 +622,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                         subtitle={new Date(doc.date).toLocaleDateString('ru-RU')}
                                         actions={
                                             <>
-                                                <a href={doc.fileUrl} download={doc.name} className="btn btn-secondary" aria-label="Скачать"><IconDownload/></a>
-                                                <button onClick={() => onDeleteDocument(doc.id)} className="btn btn-tertiary" aria-label="Удалить"><IconTrash/></button>
+                                                <button className="btn-icon" aria-label="Открыть" onClick={() => window.open(doc.fileUrl, '_blank', 'noopener,noreferrer')}><IconExternalLink/></button>
+                                                <a href={doc.fileUrl} download={doc.name} className="btn-icon" aria-label="Скачать" rel="noopener noreferrer"><IconDownload/></a>
+                                                <button onClick={() => onDeleteDocument(doc.id)} className="btn-icon" aria-label="Удалить"><IconTrash/></button>
                                             </>
                                         }
                                     />
@@ -639,16 +668,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     />
                 </div>
             </main>
-            
-            {/* Модальное окно деталей задачи */}
-            {selectedTask && (
-                <TaskDetailsScreen
-                    task={selectedTask}
-                    onSave={handleTaskSave}
-                    onBack={handleTaskBack}
-                />
-            )}
-            
             {/* Модальное окно просмотра чеков */}
             <ImageViewerModal
                 isOpen={receiptViewer.isOpen}
@@ -657,6 +676,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 title={receiptViewer.title}
                 alt="Чек"
             />
+            {/* Модальное окно редактирования задачи */}
+            {selectedTask && (
+                <TaskDetailsModal
+                    task={selectedTask}
+                    onClose={() => setSelectedTask(null)}
+                    onSave={handleTaskSave}
+                />
+            )}
         </>
     );
 };

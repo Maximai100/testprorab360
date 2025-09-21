@@ -8,6 +8,9 @@ type ListItemProps = {
   icon: React.ReactNode;
   iconBgColor?: string;
   iconWrapperClassName?: string;
+  onIconClick?: () => void;
+  iconAriaLabel?: string;
+  iconChecked?: boolean;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   amountText?: string;
@@ -15,12 +18,16 @@ type ListItemProps = {
   onDelete?: () => void;
   onClick?: () => void;
   actions?: React.ReactNode;
+  titleStrike?: boolean;
 };
 
 export const ListItem: React.FC<ListItemProps> = ({
   icon,
   iconBgColor,
   iconWrapperClassName,
+  onIconClick,
+  iconAriaLabel,
+  iconChecked,
   title,
   subtitle,
   amountText,
@@ -28,6 +35,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   onDelete,
   onClick,
   actions,
+  titleStrike,
 }) => {
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Останавливаем всплытие, чтобы не сработал onClick на всем элементе
@@ -43,18 +51,33 @@ export const ListItem: React.FC<ListItemProps> = ({
 
   return (
     <div className="list-item" onClick={onClick}>
-      <div className={`list-item-icon-wrapper ${iconWrapperClassName || ''}`} style={{ backgroundColor: iconBgColor }}>
-        {icon}
-      </div>
+      {onIconClick ? (
+        <button
+          className={`list-item-icon-button ${iconChecked ? 'checked' : ''} ${iconWrapperClassName || ''}`}
+          aria-label={iconAriaLabel || 'toggle'}
+          onClick={(e) => { e.stopPropagation(); onIconClick(); }}
+          style={{ backgroundColor: iconBgColor }}
+        >
+          {icon}
+        </button>
+      ) : (
+        <div className={`list-item-icon-wrapper ${iconWrapperClassName || ''}`} style={{ backgroundColor: iconBgColor }}>
+          {icon}
+        </div>
+      )}
 
       <div className="list-item-details">
-        <span className="list-item-title">{title}</span>
+        <span className={`list-item-title ${titleStrike ? 'strike' : ''}`}>{title}</span>
         {subtitle && <span className="list-item-subtitle">{subtitle}</span>}
       </div>
 
       <div className="list-item-actions">
         {actions ? (
-          actions
+          // Предотвращаем всплытие кликов из пользовательских действий,
+          // чтобы не срабатывал onClick всего элемента по ошибке
+          <div onClick={(e) => e.stopPropagation()}>
+            {actions}
+          </div>
         ) : (
           <>
             {amountText && (

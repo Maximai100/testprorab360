@@ -5,17 +5,17 @@ import { dataService } from '../services/storageService';
 export const useAppState = () => {
     console.log('🎯 useAppState: Хук useAppState инициализируется');
     // App navigation state
-    const [activeView, setActiveView] = useState<string>('workspace');
-    const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+    const [activeView, setActiveView] = useState<string>(() => dataService.getActiveView());
+    const [activeProjectId, setActiveProjectId] = useState<string | null>(() => dataService.getActiveProjectId());
     
     // Отладочная информация для activeProjectId
     useEffect(() => {
         console.log('🔍 activeProjectId изменился на:', activeProjectId);
     }, [activeProjectId]);
-    const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
+    const [activeEstimateId, setActiveEstimateId] = useState<string | null>(() => dataService.getActiveEstimateId());
     
     // Theme state
-    const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+    const [themeMode, setThemeMode] = useState<ThemeMode>(() => dataService.getThemeMode());
     
     // UI state
     const [isDirty, setIsDirty] = useState(false);
@@ -58,15 +58,7 @@ export const useAppState = () => {
     const [projectSearch, setProjectSearch] = useState('');
     const [projectStatusFilter, setProjectStatusFilter] = useState<'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled'>('in_progress');
     
-    // Load initial state from localStorage
-    useEffect(() => {
-        console.log('🎯 useAppState: Загружаем состояние из localStorage');
-        setActiveView(dataService.getActiveView());
-        setActiveProjectId(dataService.getActiveProjectId());
-        setActiveEstimateId(dataService.getActiveEstimateId());
-        setThemeMode(dataService.getThemeMode());
-        console.log('🎯 useAppState: Состояние загружено из localStorage');
-    }, []);
+    // Initial state is read synchronously from localStorage via useState initializers above
     
     // Save state to localStorage when it changes
     useEffect(() => {

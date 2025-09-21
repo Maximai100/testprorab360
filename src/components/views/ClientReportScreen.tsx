@@ -2,6 +2,7 @@ import React from 'react';
 import { Project, FinanceEntry, WorkStage } from '../../types';
 import { ListItem } from '../ui/ListItem';
 import { IconTrendingUp, IconCheckCircle, IconImage, IconShare, IconChevronRight } from '../common/Icon';
+import { financeCategoryToRu } from '../../utils';
 
 interface ClientReportScreenProps {
   project: Project;
@@ -94,96 +95,41 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
           </p>
         </div>
 
-        {/* Финансовая сводка (только для клиента) */}
-        <div className="card">
-          <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconTrendingUp style={{ marginRight: 'var(--spacing-s)' }} />
-            Финансовая сводка
-          </h3>
-
-          <div style={{ display: 'grid', gap: 'var(--spacing-m)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalEstimateAmount)}
+        {/* Финансовая сводка — унифицированный дашборд */}
+        <div className="card project-section financial-dashboard">
+          <div className="project-section-header">
+            <h3>Финансовый дашборд</h3>
+          </div>
+          <div className="project-section-body">
+            <div className="dashboard-grid-final">
+              <div className="dashboard-column">
+                <div className="dashboard-item">
+                  <span className="dashboard-value">{formatCurrency(totalEstimateAmount)}</span>
+                  <span className="dashboard-label">Сумма смет</span>
+                </div>
+                <div className="dashboard-item">
+                  <span className="dashboard-value payment-value">{formatCurrency(totalPaidByClient)}</span>
+                  <span className="dashboard-label">Оплачено клиентом</span>
+                </div>
               </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Итоговая сумма по смете
+              <div className="dashboard-column">
+                <div className="dashboard-item expenses-card">
+                  <span className="dashboard-value expense-value">{formatCurrency(Math.max(remainingToPay, 0))}</span>
+                  <span className="dashboard-label">Остаток к оплате</span>
+                  <div className="dashboard-breakdown">
+                    <div className="breakdown-item">
+                      <span>Статус</span>
+                      <span>{remainingToPay > 0 ? 'К оплате' : 'Оплачено полностью'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: 'var(--color-primary)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(totalPaidByClient)}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Оплачено клиентом
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: 'var(--color-surface-2)',
-              borderRadius: 'var(--border-radius-m)',
-              padding: 'var(--spacing-l)',
-              textAlign: 'center',
-              border: '1px solid var(--color-separator)'
-            }}>
-              <div style={{
-                fontSize: 'var(--font-size-xxl)',
-                fontWeight: '700',
-                color: remainingToPay > 0 ? 'var(--color-danger)' : 'var(--color-success)',
-                marginBottom: 'var(--spacing-s)',
-                backgroundColor: 'var(--color-surface-1)',
-                padding: 'var(--spacing-m)',
-                borderRadius: 'var(--border-radius-s)',
-                display: 'inline-block'
-              }}>
-                {formatCurrency(Math.abs(remainingToPay))}
-                {remainingToPay > 0 ? ' (к оплате)' : ' (оплачено полностью)'}
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-s)',
-                color: 'var(--color-text-secondary)',
-                fontWeight: '500'
-              }}>
-                Остаток к оплате
+            <div className="dashboard-item profit-card-final">
+              <span className="dashboard-label">Итог</span>
+              <div className="profit-details-final">
+                <span className="dashboard-value profit-value">{formatCurrency(totalPaidByClient)}</span>
+                <span className="dashboard-label">Оплачено из {formatCurrency(totalEstimateAmount)}</span>
               </div>
             </div>
           </div>

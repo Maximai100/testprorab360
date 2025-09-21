@@ -1,0 +1,88 @@
+{
+  "hash": "5a7f53d8",
+  "configHash": "2fe88f29",
+  "lockfileHash": "445edd56",
+  "browserHash": "b61399ac",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "4d226b98",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "c2d46a98",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "8470ac64",
+      "needsInterop": true
+    },
+    "@supabase/supabase-js": {
+      "src": "../../node_modules/@supabase/supabase-js/dist/module/index.js",
+      "file": "@supabase_supabase-js.js",
+      "fileHash": "74c7e169",
+      "needsInterop": false
+    },
+    "@google/genai": {
+      "src": "../../node_modules/@google/genai/dist/web/index.mjs",
+      "file": "@google_genai.js",
+      "fileHash": "50b4b9be",
+      "needsInterop": false
+    },
+    "recharts": {
+      "src": "../../node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "c297c46d",
+      "needsInterop": false
+    },
+    "jspdf": {
+      "src": "../../node_modules/jspdf/dist/jspdf.es.min.js",
+      "file": "jspdf.js",
+      "fileHash": "39027f48",
+      "needsInterop": false
+    },
+    "jspdf-autotable": {
+      "src": "../../node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.js",
+      "file": "jspdf-autotable.js",
+      "fileHash": "58dc5f86",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "browser-J6IYAAS7": {
+      "file": "browser-J6IYAAS7.js"
+    },
+    "html2canvas.esm-UNIREIKG": {
+      "file": "html2canvas__esm-UNIREIKG.js"
+    },
+    "purify.es-PFY64W4W": {
+      "file": "purify__es-PFY64W4W.js"
+    },
+    "index.es-KMAQOYXF": {
+      "file": "index__es-KMAQOYXF.js"
+    },
+    "chunk-7W32CK3N": {
+      "file": "chunk-7W32CK3N.js"
+    },
+    "chunk-NGRJJM7Z": {
+      "file": "chunk-NGRJJM7Z.js"
+    },
+    "chunk-L3FOL4I5": {
+      "file": "chunk-L3FOL4I5.js"
+    },
+    "chunk-DYBARNVN": {
+      "file": "chunk-DYBARNVN.js"
+    },
+    "chunk-EZTFGPRW": {
+      "file": "chunk-EZTFGPRW.js"
+    },
+    "chunk-EWTE5DHJ": {
+      "file": "chunk-EWTE5DHJ.js"
+    }
+  }
+}

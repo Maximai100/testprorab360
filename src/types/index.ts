@@ -286,7 +286,9 @@ export interface EstimatesListModalProps {
 export interface LibraryModalProps {
     onClose: () => void;
     libraryItems: LibraryItem[];
-    onLibraryItemsChange: (items: LibraryItem[]) => void;
+    onAddLibraryItem: (item: Omit<LibraryItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onUpdateLibraryItem: (id: string, item: Partial<Omit<LibraryItem, 'id' | 'createdAt' | 'updatedAt'>>) => void;
+    onDeleteLibraryItem: (id: string) => void;
     onAddItemToEstimate: (item: LibraryItem) => void;
     formatCurrency: (value: number) => string;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
@@ -307,6 +309,7 @@ export interface FinanceEntryModalProps {
     onSave: (entry: Omit<FinanceEntry, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>, receiptFile?: File) => void;
     showAlert: (message: string) => void;
     onInputFocus: (e: React.FocusEvent<HTMLElement>) => void;
+    initial?: FinanceEntry; // для режима редактирования
 }
 
 export interface ImageViewerModalProps {

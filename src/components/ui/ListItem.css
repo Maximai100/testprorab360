@@ -27,6 +27,34 @@
   color: var(--color-text-primary);
 }
 
+.list-item-icon-button {
+  background: var(--color-surface-2);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.list-item-icon-button:hover {
+  background: var(--color-surface-3, #222);
+}
+
+.list-item-icon-button.checked {
+  background: var(--color-text-primary);
+  color: var(--color-surface-1);
+}
+
+.list-item-title.strike {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+
 .list-item-details {
   flex-grow: 1; /* Детали занимают все доступное пространство */
   display: flex;
