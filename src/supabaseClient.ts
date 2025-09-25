@@ -11,8 +11,17 @@ if (supabaseAnonKey.includes('supabase-demo')) {
   console.error('📋 Для исправления:')
   console.error('1. Откройте Supabase Dashboard → Settings → API')
   console.error('2. Скопируйте "anon public" ключ')
-  console.error('3. Создайте файл .env с VITE_SUPABASE_ANON_KEY=ваш_ключ')
-  console.error('4. Перезапустите приложение')
+  console.error('3. Добавьте переменную окружения VITE_SUPABASE_ANON_KEY в Vercel')
+  console.error('4. Передеплойте проект')
+}
+
+// Диагностика для продакшена
+if (typeof window !== 'undefined') {
+  console.log('🔍 Supabase диагностика:')
+  console.log('🔍 URL:', supabaseUrl)
+  console.log('🔍 Key (первые 20 символов):', supabaseAnonKey.substring(0, 20) + '...')
+  console.log('🔍 Environment:', import.meta.env.MODE)
+  console.log('🔍 Is Demo Key:', supabaseAnonKey.includes('supabase-demo'))
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -20,10 +29,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // Увеличиваем таймауты для продакшена
+    flowType: 'pkce',
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
+    },
+  },
+  // Настройки для продакшена
+  db: {
+    schema: 'public',
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
     },
   },
 })
