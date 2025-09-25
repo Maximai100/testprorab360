@@ -1632,10 +1632,10 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 .app-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     max-width: 600px; /* Match app container */
     margin: 0 auto;
     display: flex;
@@ -1649,6 +1649,25 @@ input[type=number] { -moz-appearance: textfield; }
     gap: 10px;
     z-index: 500;
     height: 64px; /* Fixed height */
+    
+    /* Критически важные стили для стабилизации на мобильных */
+    transform: translate3d(0, 0, 0) !important;
+    will-change: transform !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    
+    /* Стабильная высота и предотвращение "прыжков" */
+    min-height: 64px !important;
+    max-height: 64px !important;
+    
+    /* Дополнительная стабилизация для iOS */
+    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    
+    /* Предотвращаем изменение позиции при скролле */
+    position: fixed !important;
+    top: 0 !important;
 }
 
 .app-header-left {
@@ -3033,7 +3052,29 @@ input[type=number] { -moz-appearance: textfield; }
         -webkit-backface-visibility: hidden;
     }
     
-    /* Дополнительная стабилизация для нижнего меню */
+    /* Дополнительная стабилизация для верхнего и нижнего меню */
+    .app-header {
+        /* Принудительно используем GPU для рендеринга */
+        transform: translate3d(0, 0, 0) !important;
+        /* Предотвращаем изменение позиции при скролле */
+        position: fixed !important;
+        top: 0 !important;
+        /* Стабильная высота */
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        
+        /* Дополнительная стабилизация для мобильных */
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        will-change: transform !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+        
+        /* Предотвращаем "прыжки" при скролле */
+        overflow: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
     .bottom-nav {
         /* Принудительно используем GPU для рендеринга */
         transform: translate3d(0, 0, 0) !important;
@@ -3058,6 +3099,26 @@ input[type=number] { -moz-appearance: textfield; }
     
     /* Специальные стили для iOS Safari */
     @supports (-webkit-touch-callout: none) {
+        .app-header {
+            /* Дополнительная стабилизация для iOS */
+            -webkit-transform: translate3d(0, 0, 0) !important;
+            transform: translate3d(0, 0, 0) !important;
+            will-change: transform !important;
+            backface-visibility: hidden !important;
+            -webkit-backface-visibility: hidden !important;
+            
+            /* Фиксированная позиция */
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            
+            /* Стабильная высота */
+            height: 64px !important;
+            min-height: 64px !important;
+            max-height: 64px !important;
+        }
+        
         .bottom-nav {
             /* Дополнительная стабилизация для iOS */
             -webkit-transform: translate3d(0, 0, 0) !important;

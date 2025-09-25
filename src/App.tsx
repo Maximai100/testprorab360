@@ -389,9 +389,36 @@ const App: React.FC = () => {
         document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
     }, [companyProfileHook.profile?.name]);
 
-    // Стабилизация нижнего меню в мобильной версии
+    // Стабилизация верхнего и нижнего меню в мобильной версии
     useEffect(() => {
-        const stabilizeBottomNav = () => {
+        const stabilizeMenus = () => {
+            // Стабилизируем верхнее меню
+            const appHeader = document.querySelector('.app-header');
+            if (appHeader) {
+                // Принудительно устанавливаем стабильную позицию
+                appHeader.style.transform = 'translate3d(0, 0, 0)';
+                appHeader.style.willChange = 'transform';
+                appHeader.style.backfaceVisibility = 'hidden';
+                appHeader.style.webkitBackfaceVisibility = 'hidden';
+                appHeader.style.webkitTransform = 'translate3d(0, 0, 0)';
+                
+                // Фиксированная высота
+                appHeader.style.height = '64px';
+                appHeader.style.minHeight = '64px';
+                appHeader.style.maxHeight = '64px';
+                
+                // Предотвращаем изменение позиции
+                appHeader.style.position = 'fixed';
+                appHeader.style.top = '0';
+                appHeader.style.left = '0';
+                appHeader.style.right = '0';
+                
+                // Дополнительная стабилизация для iOS
+                appHeader.style.overflow = 'hidden';
+                appHeader.style.webkitOverflowScrolling = 'touch';
+            }
+            
+            // Стабилизируем нижнее меню
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) {
                 // Принудительно устанавливаем стабильную позицию
@@ -419,29 +446,29 @@ const App: React.FC = () => {
         };
 
         // Стабилизируем при загрузке
-        stabilizeBottomNav();
+        stabilizeMenus();
 
         // Стабилизируем при изменении размера окна
-        window.addEventListener('resize', stabilizeBottomNav);
-        window.addEventListener('orientationchange', stabilizeBottomNav);
+        window.addEventListener('resize', stabilizeMenus);
+        window.addEventListener('orientationchange', stabilizeMenus);
 
         // Стабилизируем при скролле
-        window.addEventListener('scroll', stabilizeBottomNav, { passive: true });
+        window.addEventListener('scroll', stabilizeMenus, { passive: true });
         
         // Стабилизируем при изменении viewport
-        window.addEventListener('touchstart', stabilizeBottomNav, { passive: true });
-        window.addEventListener('touchmove', stabilizeBottomNav, { passive: true });
+        window.addEventListener('touchstart', stabilizeMenus, { passive: true });
+        window.addEventListener('touchmove', stabilizeMenus, { passive: true });
         
         // Стабилизируем при изменении видимости
-        document.addEventListener('visibilitychange', stabilizeBottomNav);
+        document.addEventListener('visibilitychange', stabilizeMenus);
 
         return () => {
-            window.removeEventListener('resize', stabilizeBottomNav);
-            window.removeEventListener('orientationchange', stabilizeBottomNav);
-            window.removeEventListener('scroll', stabilizeBottomNav);
-            window.removeEventListener('touchstart', stabilizeBottomNav);
-            window.removeEventListener('touchmove', stabilizeBottomNav);
-            document.removeEventListener('visibilitychange', stabilizeBottomNav);
+            window.removeEventListener('resize', stabilizeMenus);
+            window.removeEventListener('orientationchange', stabilizeMenus);
+            window.removeEventListener('scroll', stabilizeMenus);
+            window.removeEventListener('touchstart', stabilizeMenus);
+            window.removeEventListener('touchmove', stabilizeMenus);
+            document.removeEventListener('visibilitychange', stabilizeMenus);
         };
     }, []);
 
