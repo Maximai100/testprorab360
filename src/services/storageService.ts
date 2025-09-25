@@ -29,6 +29,47 @@ const STORAGE_KEYS = {
     CALCULATOR_STATE: 'calculatorState'
 } as const;
 
+// Кеш для быстрого доступа к данным
+const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+// TTL для кеша (в миллисекундах)
+const CACHE_TTL = {
+    ESTIMATES: 30000, // 30 секунд
+    PROJECTS: 60000,  // 1 минута
+    FINANCE: 30000,   // 30 секунд
+    DEFAULT: 15000    // 15 секунд
+};
+
+// Функция для получения данных из кеша
+const getFromCache = <T>(key: string, defaultValue: T): T | null => {
+    const cached = dataCache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+        return cached.data;
+    }
+    if (cached) {
+        dataCache.delete(key);
+    }
+    return null;
+};
+
+// Функция для сохранения данных в кеш
+const setToCache = (key: string, data: any, ttl: number = CACHE_TTL.DEFAULT) => {
+    dataCache.set(key, {
+        data,
+        timestamp: Date.now(),
+        ttl
+    });
+};
+
+// Функция для очистки кеша
+const clearCache = (key?: string) => {
+    if (key) {
+        dataCache.delete(key);
+    } else {
+        dataCache.clear();
+    }
+};
+
 // Generic storage functions
 export const storageService = {
     // Get data from localStorage with fallback
@@ -63,10 +104,32 @@ export const storageService = {
     set<T>(key: string, value: T): void {
         try {
             localStorage.setItem(key, JSON.stringify(value));
+            // Также сохраняем в кеш для быстрого доступа
+            setToCache(key, value);
         } catch (error) {
             console.error(`Error writing to localStorage key "${key}":`, error);
         }
     },
+    
+    // Get data with cache fallback
+    getCached<T>(key: string, defaultValue: T): T {
+        // Сначала проверяем кеш
+        const cached = getFromCache(key, defaultValue);
+        if (cached !== null) {
+            return cached;
+        }
+        
+        // Если нет в кеше, получаем из localStorage
+        const result = this.get(key, defaultValue);
+        
+        // Сохраняем в кеш
+        setToCache(key, result);
+        
+        return result;
+    },
+    
+    // Clear cache
+    clearCache: clearCache,
 
     // Remove data from localStorage
     remove(key: string): void {

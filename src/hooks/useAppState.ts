@@ -5,12 +5,19 @@ import { dataService } from '../services/storageService';
 export const useAppState = () => {
     console.log('🎯 useAppState: Хук useAppState инициализируется');
     // App navigation state
-    const [activeView, setActiveView] = useState<string>(() => dataService.getActiveView());
+    const [activeView, setActiveView] = useState<string>(() => {
+        const savedView = dataService.getActiveView();
+        // Если сохраненный вид - estimate, но нет активной сметы, переходим к workspace
+        if (savedView === 'estimate' && !dataService.getActiveEstimateId()) {
+            return 'workspace';
+        }
+        return savedView;
+    });
     const [activeProjectId, setActiveProjectId] = useState<string | null>(() => dataService.getActiveProjectId());
     
     // Отладочная информация для activeProjectId
     useEffect(() => {
-        console.log('🔍 activeProjectId изменился на:', activeProjectId);
+
     }, [activeProjectId]);
     const [activeEstimateId, setActiveEstimateId] = useState<string | null>(() => dataService.getActiveEstimateId());
     
@@ -99,7 +106,7 @@ export const useAppState = () => {
     }, []);
     
     const navigateToProject = useCallback((projectId: string) => {
-        console.log('🔍 navigateToProject: устанавливаем activeProjectId =', projectId);
+
         setActiveProjectId(projectId);
         setActiveView('projectDetail');
     }, []);
@@ -305,7 +312,7 @@ export const useAppState = () => {
     
     // Функция для принудительного обновления данных
     const refreshData = useCallback(() => {
-        console.log('🔄 AppState: refreshData вызвана - принудительное обновление данных');
+
         // Эта функция будет переопределена в App.tsx для обновления всех хуков
     }, []);
     

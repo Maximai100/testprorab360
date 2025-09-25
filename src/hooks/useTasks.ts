@@ -22,8 +22,7 @@ export const useTasks = (session: Session | null) => {
         setError(null);
 
         try {
-            console.log('🔄 useTasks: Загружаем задачи из Supabase...');
-            
+
             const { data, error } = await supabase
                 .from('tasks')
                 .select('*')
@@ -149,7 +148,6 @@ export const useTasks = (session: Session | null) => {
         }
 
         try {
-            console.log('🔄 useTasks: Обновляем задачу:', taskId, updates);
 
             const updateData: any = {};
             if (updates.title !== undefined) updateData.title = updates.title;
@@ -215,7 +213,7 @@ export const useTasks = (session: Session | null) => {
         }
 
         try {
-            console.log('🔄 useTasks: Удаляем задачу:', taskId);
+
             // Оптимистичное удаление
             const prevTasks = tasks;
             setTasks(prev => prev.filter(task => task.id !== taskId));

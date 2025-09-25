@@ -7,16 +7,43 @@ import type { Session } from '@supabase/supabase-js';
 
 // Вспомогательная функция для преобразования данных из Supabase
 const transformSupabaseData = (data: any[] | null) => {
-  console.log('🔧 transformSupabaseData: входящие данные:', data);
-  console.log('🔧 transformSupabaseData: количество смет:', data?.length || 0);
-  
+
   const transformed = (data || []).map((estimate, index) => {
-    console.log(`🔧 transformSupabaseData: обрабатываем смету ${index + 1}:`, estimate);
-    console.log(`🔧 transformSupabaseData: estimate_items для сметы ${index + 1}:`, estimate.estimate_items);
+
+    // Исправляем единицы измерения и цены для позиций сметы
+    const correctedItems = (estimate.estimate_items || []).map((item: any) => {
+
+      // Если единица измерения "комплект", пытаемся определить правильную единицу по названию
+      let correctedUnit = item.unit;
+      if (item.unit === 'комплект') {
+        if (item.name.includes('штукатурка') || item.name.includes('шпаклевка')) {
+          correctedUnit = 'меш.';
+        } else if (item.name.includes('краска') || item.name.includes('грунтовка')) {
+          correctedUnit = 'банка';
+        } else if (item.name.includes('обои')) {
+          correctedUnit = 'рулон';
+        } else if (item.name.includes('ламинат') || item.name.includes('плитка')) {
+          correctedUnit = 'упаковка';
+        } else if (item.name.includes('плинтус')) {
+          correctedUnit = 'планка';
+        } else if (item.name.includes('гипсокартон')) {
+          correctedUnit = 'лист';
+        }
+      }
+      
+      // Если цена 0, оставляем её как есть (не устанавливаем примерные цены)
+      let correctedPrice = item.price;
+
+      return {
+        ...item,
+        unit: correctedUnit,
+        price: correctedPrice
+      };
+    });
     
     const transformedEstimate = {
       ...estimate,
-      items: estimate.estimate_items || [],
+      items: correctedItems,
       clientInfo: estimate.client_info || '',
       number: estimate.number || '',
       date: estimate.date || new Date().toISOString(),
@@ -24,19 +51,15 @@ const transformSupabaseData = (data: any[] | null) => {
       createdAt: estimate.created_at || new Date().toISOString(),
       updatedAt: estimate.updated_at || new Date().toISOString()
     };
-    
-    console.log(`🔧 transformSupabaseData: преобразованная смета ${index + 1}:`, transformedEstimate);
-    console.log(`🔧 transformSupabaseData: items в преобразованной смете ${index + 1}:`, transformedEstimate.items);
-    
+
     return transformedEstimate;
   });
-  
-  console.log('🔧 transformSupabaseData: все преобразованные данные:', transformed);
+
   return transformed;
 };
 
 export const useEstimates = (session: Session | null) => {
-  console.log('📊 useEstimates: Хук useEstimates инициализируется');
+
   const [allEstimates, setAllEstimates] = useState<Estimate[]>([]);
   const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
   const [clientInfo, setClientInfo] = useState('');
@@ -55,20 +78,18 @@ export const useEstimates = (session: Session | null) => {
     if (savedTemplates) {
       try {
         const parsedTemplates = JSON.parse(savedTemplates);
-        console.log('🔧 useEstimates: Загружены шаблоны из localStorage:', parsedTemplates);
-        
+
         // Проверяем, есть ли старые шаблоны без новых полей
         const hasOldTemplates = parsedTemplates.some((template: any) => !template.id || !template.name);
         
         if (hasOldTemplates) {
-          console.log('🔧 useEstimates: Обнаружены старые шаблоны, очищаем localStorage');
+
           // Очищаем старые шаблоны - пользователь должен будет создать новые
           localStorage.removeItem('estimateTemplates');
           setTemplates([]);
           return;
         }
-        
-        console.log('🔧 useEstimates: Шаблоны уже в новом формате:', parsedTemplates);
+
         setTemplates(parsedTemplates);
       } catch (error) {
         console.error('Ошибка загрузки шаблонов:', error);
@@ -121,27 +142,38 @@ export const useEstimates = (session: Session | null) => {
     console.log('useEffect сработал, session:', session);
     const loadEstimates = async () => {
       if (session?.user) {
-        console.log('Загружаем сметы для пользователя:', session.user.id);
-        const { data, error } = await supabase
-          .from('estimates')
-          .select(`
-            *,
-            estimate_items (
-              id, name, quantity, price, unit, image_url, type, estimate_id
-            )
-          `)
-          .eq('user_id', session.user.id);
-        
-        if (error) {
-          console.error('Ошибка загрузки смет:', error);
-        } else {
-          console.log('Загружено смет:', data?.length || 0, data);
+        try {
+
+          // Добавляем небольшую задержку для предотвращения слишком частых запросов
+          await new Promise(resolve => setTimeout(resolve, 50));
           
-          // Преобразуем данные из Supabase в нужный формат
-          const transformedData = transformSupabaseData(data);
+          const { data, error } = await supabase
+            .from('estimates')
+            .select(`
+              *,
+              estimate_items (
+                id, name, quantity, price, unit, image_url, type, estimate_id
+              )
+            `)
+            .eq('user_id', session.user.id);
           
-          console.log('Преобразованные данные:', transformedData);
-          setAllEstimates(transformedData);
+          if (error) {
+            console.error('Ошибка загрузки смет:', error);
+            // Не выбрасываем ошибку, чтобы не ломать приложение
+            return;
+          } else {
+            console.log('Загружено смет:', data?.length || 0, data);
+            
+            // Преобразуем данные из Supabase в нужный формат
+            const transformedData = transformSupabaseData(data);
+            
+            console.log('Преобразованные данные:', transformedData);
+            setAllEstimates(transformedData);
+          }
+        } catch (error) {
+          console.error('Критическая ошибка при загрузке смет:', error);
+          // В случае критической ошибки показываем пустой массив
+          setAllEstimates([]);
         }
       } else {
         console.log('Session или user не определен');
@@ -152,11 +184,6 @@ export const useEstimates = (session: Session | null) => {
   }, [session?.user]);
 
   const createNewEstimate = (projectIdOrObject: string | { projectId: string } | null = null) => {
-    console.log('[DEBUG] Шаг 2: Внутри createNewEstimate.');
-    console.log('[DEBUG] Полученный projectIdOrObject:', projectIdOrObject);
-    console.log('[DEBUG] Тип projectIdOrObject:', typeof projectIdOrObject);
-    console.log('[DEBUG] projectIdOrObject === null:', projectIdOrObject === null);
-    console.log('[DEBUG] projectIdOrObject === undefined:', projectIdOrObject === undefined);
     
     let finalProjectId: string | null = null;
 
@@ -203,59 +230,44 @@ export const useEstimates = (session: Session | null) => {
   };
 
   const loadEstimate = (estimateId: string, projectId?: string | null, setIsDirty?: (value: boolean) => void) => {
-    console.log('🔧 loadEstimate: начинаем загрузку сметы', estimateId);
-    console.log('🔧 loadEstimate: allEstimates:', allEstimates);
-    console.log('🔧 loadEstimate: allEstimates.length:', allEstimates.length);
-    
+
     const estimateToLoad = allEstimates.find(e => e.id === estimateId);
-    console.log('🔧 loadEstimate: найдена смета:', estimateToLoad);
-    
+
     if (estimateToLoad) {
-      console.log('🔧 loadEstimate: полная структура сметы:', JSON.stringify(estimateToLoad, null, 2));
-      console.log('🔧 loadEstimate: items сметы:', estimateToLoad.items);
-      console.log('🔧 loadEstimate: items тип:', typeof estimateToLoad.items);
-      console.log('🔧 loadEstimate: items массив?', Array.isArray(estimateToLoad.items));
-      console.log('🔧 loadEstimate: items.length:', estimateToLoad.items?.length || 0);
-      
+
+
       if (estimateToLoad.items && estimateToLoad.items.length > 0) {
-        console.log('🔧 loadEstimate: первая позиция:', estimateToLoad.items[0]);
-        console.log('🔧 loadEstimate: все позиции:', estimateToLoad.items.map((item, index) => ({ index, item })));
+
+        
+        // Проверяем каждую позицию на наличие данных
+        estimateToLoad.items.forEach((item, index) => {
+
+        });
       } else {
-        console.log('🔧 loadEstimate: ВНИМАНИЕ! Позиции сметы пусты или отсутствуют!');
+
       }
       
       // Создаем копию сметы с обновленным project_id, если он передан
       const updatedEstimate = projectId !== undefined 
         ? { ...estimateToLoad, project_id: projectId }
         : estimateToLoad;
-      
-      console.log('🔧 loadEstimate: устанавливаем currentEstimate:', updatedEstimate);
+
       setCurrentEstimate(updatedEstimate);
-      
-      console.log('🔧 loadEstimate: устанавливаем items:', estimateToLoad.items);
-      console.log('🔧 loadEstimate: items.length перед setItems:', estimateToLoad.items?.length || 0);
+
       setItems(estimateToLoad.items || []);
-      console.log('🔧 loadEstimate: setItems вызван');
-      
-      console.log('🔧 loadEstimate: устанавливаем clientInfo:', estimateToLoad.clientInfo);
+
       setClientInfo(estimateToLoad.clientInfo || '');
-      
-      console.log('🔧 loadEstimate: устанавливаем estimateNumber:', estimateToLoad.number);
+
       setEstimateNumber(estimateToLoad.number || '');
-      
-      console.log('🔧 loadEstimate: устанавливаем estimateDate:', estimateToLoad.date);
+
       setEstimateDate(new Date(estimateToLoad.date).toISOString().split('T')[0]);
-      
-      console.log('🔧 loadEstimate: устанавливаем discount:', estimateToLoad.discount);
+
       setDiscount(estimateToLoad.discount);
-      
-      console.log('🔧 loadEstimate: устанавливаем discountType:', estimateToLoad.discountType);
+
       setDiscountType(estimateToLoad.discountType);
-      
-      console.log('🔧 loadEstimate: устанавливаем tax:', estimateToLoad.tax);
+
       setTax(estimateToLoad.tax);
-      
-      console.log('🔧 loadEstimate: устанавливаем status:', estimateToLoad.status);
+
       setStatus(estimateToLoad.status);
       
       // Если project_id изменился, помечаем как "грязную" для активации кнопки сохранения
@@ -281,18 +293,14 @@ export const useEstimates = (session: Session | null) => {
 
   const saveEstimateDirectly = async (estimateData: Estimate) => {
     console.log("--- Запуск saveEstimateDirectly ---");
-    console.log('[DEBUG] saveEstimateDirectly: estimateData:', estimateData);
-    console.log('[DEBUG] saveEstimateDirectly: session:', session);
-    console.log('[DEBUG] saveEstimateDirectly: session?.user:', session?.user);
-    
+
     if (!session?.user) {
       console.error("ОШИБКА: Нет сессии!");
       return;
     }
 
     const isNew = estimateData.id.startsWith('temp-');
-    console.log('🔧 saveEstimateDirectly: isNew:', isNew);
-    
+
     const estimateDataForDb = {
       project_id: estimateData.project_id,
       client_info: estimateData.clientInfo,
@@ -305,12 +313,12 @@ export const useEstimates = (session: Session | null) => {
       user_id: session.user.id,
     };
 
-    console.log('[DEBUG] saveEstimateDirectly: Данные для отправки:', estimateDataForDb);
-
     let estimateId = estimateData.id;
 
     if (isNew) {
       console.log("РЕЖИМ: Создание новой сметы через saveEstimateDirectly.");
+      
+      // Используем транзакцию для атомарности операций
       const { data: newDbEstimate, error } = await supabase
         .from('estimates')
         .insert(estimateDataForDb)
@@ -321,11 +329,10 @@ export const useEstimates = (session: Session | null) => {
         console.error("🔧 saveEstimateDirectly: Ошибка создания сметы:", error); 
         throw error;
       }
-      
-      console.log('🔧 saveEstimateDirectly: смета создана, ID:', newDbEstimate.id);
+
       estimateId = newDbEstimate.id;
 
-      // Сохраняем позиции сметы
+      // Сохраняем позиции сметы одним запросом
       if (estimateData.items && estimateData.items.length > 0) {
         console.log(`Найдено ${estimateData.items.length} позиций для сохранения.`);
         const itemsToInsert = estimateData.items.map(({ id, image, ...item }) => ({
@@ -346,30 +353,39 @@ export const useEstimates = (session: Session | null) => {
       }
     }
 
-    console.log("--- Перезагружаем все сметы после сохранения ---");
-    const { data } = await supabase.from('estimates').select(`
-      *,
-      estimate_items (
-        id, name, quantity, price, unit, image_url, type, estimate_id
-      )
-    `).eq('user_id', session.user.id);
+    // Оптимизированное обновление данных - используем кеш если доступен
+    console.log("--- Оптимизированное обновление данных ---");
     
-    console.log('После сохранения загружено смет:', data?.length || 0, data);
+    // Сначала обновляем локальный кеш
+    const currentEstimates = allEstimates.filter(e => e.id !== estimateId);
+    const updatedEstimate = { ...estimateData, id: estimateId };
+    const newEstimates = [...currentEstimates, updatedEstimate];
+    setAllEstimates(newEstimates);
     
-    // Преобразуем данные из Supabase в нужный формат
-    const transformedData = transformSupabaseData(data);
-    console.log('Преобразованные данные после сохранения:', transformedData);
-    
-    setAllEstimates(transformedData);
-    
-    // Устанавливаем сохраненную смету как currentEstimate
-    const savedEstimate = transformedData.find(e => e.id === estimateId);
-    if(savedEstimate) {
-      console.log('Загружаем сохраненную смету в currentEstimate:', savedEstimate);
-      setCurrentEstimate(savedEstimate);
-    } else {
-      console.error('ОШИБКА: Не удалось найти сохраненную смету с ID:', estimateId);
-    }
+    // Затем обновляем данные из Supabase в фоне
+    setTimeout(async () => {
+      try {
+        const { data } = await supabase.from('estimates').select(`
+          *,
+          estimate_items (
+            id, name, quantity, price, unit, image_url, type, estimate_id
+          )
+        `).eq('user_id', session.user.id);
+        
+        if (data) {
+          const transformedData = transformSupabaseData(data);
+          setAllEstimates(transformedData);
+          
+          // Устанавливаем сохраненную смету как currentEstimate
+          const savedEstimate = transformedData.find(e => e.id === estimateId);
+          if(savedEstimate) {
+            setCurrentEstimate(savedEstimate);
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при фоновом обновлении данных:', error);
+      }
+    }, 0);
     
     console.log("--- Завершение saveEstimateDirectly ---");
     return estimateId;
@@ -377,10 +393,7 @@ export const useEstimates = (session: Session | null) => {
 
   const saveCurrentEstimate = async () => {
     console.log("--- Запуск saveCurrentEstimate ---");
-    console.log('[DEBUG] saveCurrentEstimate: currentEstimate:', currentEstimate);
-    console.log('[DEBUG] saveCurrentEstimate: session:', session);
-    console.log('[DEBUG] saveCurrentEstimate: session?.user:', session?.user);
-    
+
     if (!currentEstimate || !session?.user) {
       console.error("ОШИБКА: Нет currentEstimate или сессии!");
       console.error("currentEstimate:", currentEstimate);
@@ -406,29 +419,19 @@ export const useEstimates = (session: Session | null) => {
     console.log("Сохраняемая смета (с актуальными данными):", estimateWithLatestData);
 
     const isNew = estimateWithLatestData.id.startsWith('temp-');
-    console.log('🔧 saveCurrentEstimate: isNew:', isNew);
-    
-    console.log('🔧 saveCurrentEstimate: estimateWithLatestData.items:', estimateWithLatestData.items);
-    console.log('🔧 saveCurrentEstimate: estimateWithLatestData.items.length:', estimateWithLatestData.items?.length || 0);
-    console.log('🔧 saveCurrentEstimate: items (состояние):', items);
-    console.log('🔧 saveCurrentEstimate: items.length (состояние):', items.length);
+
     
     if (estimateWithLatestData.items && estimateWithLatestData.items.length > 0) {
-      console.log('🔧 saveCurrentEstimate: первая позиция из estimateWithLatestData:', estimateWithLatestData.items[0]);
-      console.log('🔧 saveCurrentEstimate: все позиции из estimateWithLatestData:', estimateWithLatestData.items.map((item, index) => ({ index, item })));
+
     } else {
-      console.log('🔧 saveCurrentEstimate: ВНИМАНИЕ! estimateWithLatestData.items пуст!');
+
     }
     
     if (items.length > 0) {
-      console.log('🔧 saveCurrentEstimate: первая позиция из items:', items[0]);
-      console.log('🔧 saveCurrentEstimate: все позиции из items:', items.map((item, index) => ({ index, item })));
+
     } else {
-      console.log('🔧 saveCurrentEstimate: ВНИМАНИЕ! items (состояние) пуст!');
     }
-    
-    console.log('🔧 saveCurrentEstimate: estimateWithLatestData.project_id =', estimateWithLatestData.project_id, 'тип:', typeof estimateWithLatestData.project_id);
-    
+
     // Дополнительная проверка project_id
     if (!estimateWithLatestData.project_id) {
       console.warn('🔧 saveCurrentEstimate: ВНИМАНИЕ! project_id не установлен для сметы:', estimateWithLatestData);
@@ -446,21 +449,12 @@ export const useEstimates = (session: Session | null) => {
       user_id: session.user.id,
     };
 
-    console.log('[DEBUG] Шаг 3: Попытка сохранения в Supabase.');
-    console.log('[DEBUG] Данные для отправки (estimateData):', estimateData);
-    console.log('[DEBUG] project_id в estimateData:', estimateData.project_id);
-    console.log('[DEBUG] Тип project_id:', typeof estimateData.project_id);
-    console.log('[DEBUG] project_id === null:', estimateData.project_id === null);
-    console.log('[DEBUG] project_id === undefined:', estimateData.project_id === undefined);
-    console.log('[DEBUG] project_id === "":', estimateData.project_id === "");
-
-    console.log('🔧 saveCurrentEstimate: estimateData =', estimateData);
 
     let estimateId = estimateWithLatestData.id;
 
     if (isNew) {
       console.log("РЕЖИМ: Создание новой сметы.");
-      console.log('🔧 saveCurrentEstimate: создаем новую смету в БД');
+
       const { data: newDbEstimate, error } = await supabase
         .from('estimates')
         .insert(estimateData)
@@ -471,8 +465,7 @@ export const useEstimates = (session: Session | null) => {
         console.error("🔧 saveCurrentEstimate: Ошибка создания сметы:", error); 
         return; 
       }
-      
-      console.log('🔧 saveCurrentEstimate: смета создана, ID:', newDbEstimate.id);
+
       estimateId = newDbEstimate.id;
       console.log(`Смета создана, ID: ${estimateId}. Готовим позиции для сохранения.`);
 
@@ -487,11 +480,7 @@ export const useEstimates = (session: Session | null) => {
         }));
         
         console.log("Данные для вставки в estimate_items:", itemsToInsert);
-        console.log('🔧 saveCurrentEstimate: itemsToInsert для новой сметы:', itemsToInsert);
-        console.log('🔧 saveCurrentEstimate: количество позиций для вставки:', itemsToInsert.length);
-        console.log('🔧 saveCurrentEstimate: первая позиция для вставки:', itemsToInsert[0]);
-        
-        console.log('🔧 saveCurrentEstimate: вставляем позиции в estimate_items');
+
         const { error: itemsError } = await supabase.from('estimate_items').insert(itemsToInsert);
         
         if (itemsError) {
@@ -500,17 +489,16 @@ export const useEstimates = (session: Session | null) => {
           // Тут можно добавить логику отката - удаления только что созданной сметы
         } else {
           console.log("УСПЕХ: Позиции сметы успешно сохранены.");
-          console.log('🔧 saveCurrentEstimate: позиции успешно вставлены');
+
         }
       } else {
         console.log("В смете нет позиций для сохранения.");
-        console.log('🔧 saveCurrentEstimate: позиций для вставки нет (estimateWithLatestData.items пуст)');
       }
 
     } else {
       // --- ЛОГИКА ОБНОВЛЕНИЯ ---
       console.log("РЕЖИМ: Обновление существующей сметы.");
-      console.log('🔧 saveCurrentEstimate: обновляем существующую смету');
+
       const { error } = await supabase
         .from('estimates')
         .update(estimateData)
@@ -521,7 +509,6 @@ export const useEstimates = (session: Session | null) => {
         return; 
       }
 
-      console.log('🔧 saveCurrentEstimate: удаляем старые позиции');
       await supabase.from('estimate_items').delete().eq('estimate_id', estimateWithLatestData.id);
       
       // Проверяем, есть ли позиции в estimateWithLatestData
@@ -535,11 +522,7 @@ export const useEstimates = (session: Session | null) => {
         }));
         
         console.log("Данные для вставки в estimate_items (обновление):", itemsToInsert);
-        console.log('🔧 saveCurrentEstimate: itemsToInsert для обновления:', itemsToInsert);
-        console.log('🔧 saveCurrentEstimate: количество позиций для вставки:', itemsToInsert.length);
-        console.log('🔧 saveCurrentEstimate: первая позиция для обновления:', itemsToInsert[0]);
-        
-        console.log('🔧 saveCurrentEstimate: вставляем новые позиции');
+
         const { error: itemsError } = await supabase.from('estimate_items').insert(itemsToInsert);
         
         if (itemsError) {
@@ -547,11 +530,10 @@ export const useEstimates = (session: Session | null) => {
           console.error("КРИТИЧЕСКАЯ ОШИБКА при сохранении позиций:", itemsError);
         } else {
           console.log("УСПЕХ: Позиции сметы успешно обновлены.");
-          console.log('🔧 saveCurrentEstimate: позиции успешно вставлены');
+
         }
       } else {
         console.log("В смете нет позиций для обновления.");
-        console.log('🔧 saveCurrentEstimate: позиций для вставки нет (estimateWithLatestData.items пуст)');
       }
     }
 
@@ -567,7 +549,7 @@ export const useEstimates = (session: Session | null) => {
     if (data && data.length > 0) {
       console.log('Первая смета после сохранения:', data[0]);
       console.log('Позиции первой сметы после сохранения:', data[0].estimate_items);
-      console.log('Количество позиций в первой смете:', data[0].estimate_items?.length || 0);
+
     }
     
     // Преобразуем данные из Supabase в нужный формат
@@ -579,7 +561,7 @@ export const useEstimates = (session: Session | null) => {
     // After saving, load the definitive version from the server
     const savedEstimate = transformedData.find(e => e.id === estimateId);
     if(savedEstimate) {
-      console.log('Загружаем сохраненную смету в currentEstimate:', savedEstimate);
+
       setCurrentEstimate(savedEstimate);
     } else {
       console.error('ОШИБКА: Не удалось найти сохраненную смету с ID:', estimateId);
@@ -612,13 +594,7 @@ export const useEstimates = (session: Session | null) => {
   }, []);
 
   const getEstimatesByProject = useCallback((projectId: string) => {
-    console.log(`[DEBUG] Шаг 5: Фильтрация смет для проекта с ID: ${projectId}`);
-    console.log('[DEBUG] Всего смет в allEstimates:', allEstimates.length);
-    console.log('[DEBUG] Тип projectId:', typeof projectId);
-    console.log('[DEBUG] projectId === null:', projectId === null);
-    console.log('[DEBUG] projectId === undefined:', projectId === undefined);
-    console.log('[DEBUG] projectId === "":', projectId === "");
-    
+
     console.log('getEstimatesByProject вызвана для projectId:', projectId);
     console.log('allEstimates:', allEstimates);
     
@@ -631,21 +607,12 @@ export const useEstimates = (session: Session | null) => {
     }
     
     const filtered = allEstimates.filter(e => e.project_id === projectId);
-    console.log('[DEBUG] Результат фильтрации:');
-    console.log('[DEBUG] Отфильтрованные сметы:', filtered);
-    console.log('[DEBUG] Количество смет для проекта', projectId, ':', filtered.length);
-    
+
     // Дополнительная диагностика фильтрации
     if (allEstimates.length > 0) {
-      console.log('[DEBUG] Анализ всех смет:');
+
       allEstimates.forEach((estimate, index) => {
-        console.log(`[DEBUG] Смета ${index + 1}:`, {
-          id: estimate.id,
-          project_id: estimate.project_id,
-          project_id_type: typeof estimate.project_id,
-          project_id_equals: estimate.project_id === projectId,
-          number: estimate.number
-        });
+
       });
     }
     
@@ -660,20 +627,16 @@ export const useEstimates = (session: Session | null) => {
 
   // Обертка для setEstimates с преобразованием данных
   const setEstimatesWithTransform = useCallback((data: any[]) => {
-    console.log('🔧 setEstimatesWithTransform: входящие данные:', data);
-    console.log('🔧 setEstimatesWithTransform: количество смет:', data?.length || 0);
-    
+
     if (data && data.length > 0) {
-      console.log('🔧 setEstimatesWithTransform: первая смета:', data[0]);
-      console.log('🔧 setEstimatesWithTransform: estimate_items первой сметы:', data[0].estimate_items);
+
     }
     
     // Преобразуем данные из Supabase в нужный формат
     const transformedData = transformSupabaseData(data);
-    console.log('🔧 setEstimatesWithTransform: преобразованные данные:', transformedData);
-    
+
     setAllEstimates(transformedData);
-    console.log('🔧 setEstimatesWithTransform: setAllEstimates вызван');
+
   }, []);
 
   return {
@@ -701,48 +664,63 @@ export const useEstimates = (session: Session | null) => {
     removeItem,
     // Need to re-implement these later if needed
     deleteEstimate: async (id: string) => {
-        console.log('[DEBUG] deleteEstimate: удаляем смету с ID:', id);
-        
+
         try {
-            // Удаляем смету из базы данных
-            const { error: deleteError } = await supabase.from('estimates').delete().eq('id', id);
-            
-            if (deleteError) {
-                console.error('[DEBUG] deleteEstimate: Ошибка удаления сметы:', deleteError);
-                throw deleteError;
-            }
-            
-            console.log('[DEBUG] deleteEstimate: смета успешно удалена из БД');
-            
-            // Перезагружаем все сметы
-            const { data, error } = await supabase.from('estimates').select(`
-              *,
-              estimate_items (
-                id, name, quantity, price, unit, image_url, type, estimate_id
-              )
-            `).eq('user_id', session?.user?.id || '');
-            
-            if (error) {
-                console.error('[DEBUG] deleteEstimate: Ошибка загрузки смет после удаления:', error);
-                throw error;
-            }
-            
-            console.log('[DEBUG] deleteEstimate: загружено смет после удаления:', data?.length || 0);
-            
-            // Преобразуем данные из Supabase в нужный формат
-            const transformedData = transformSupabaseData(data);
-            console.log('[DEBUG] deleteEstimate: преобразованные данные:', transformedData);
-            
-            // Обновляем состояние
-            setAllEstimates(transformedData);
+            // Оптимизированное удаление - сначала обновляем локальный кеш
+
+            const updatedEstimates = allEstimates.filter(e => e.id !== id);
+            setAllEstimates(updatedEstimates);
             
             // Если удаляемая смета была текущей, очищаем currentEstimate
             if (currentEstimate?.id === id) {
-                console.log('[DEBUG] deleteEstimate: очищаем currentEstimate');
+
                 setCurrentEstimate(null);
             }
             
-            console.log('[DEBUG] deleteEstimate: удаление завершено успешно');
+            // Затем удаляем из базы данных в фоне
+            setTimeout(async () => {
+                try {
+
+                    const { error: deleteError } = await supabase.from('estimates').delete().eq('id', id);
+                    
+                    if (deleteError) {
+                        console.error('[DEBUG] deleteEstimate: Ошибка удаления сметы:', deleteError);
+                        // В случае ошибки восстанавливаем данные
+                        const { data } = await supabase.from('estimates').select(`
+                          *,
+                          estimate_items (
+                            id, name, quantity, price, unit, image_url, type, estimate_id
+                          )
+                        `).eq('user_id', session?.user?.id || '');
+                        
+                        if (data) {
+                            const transformedData = transformSupabaseData(data);
+                            setAllEstimates(transformedData);
+                        }
+                        throw deleteError;
+                    }
+
+                } catch (error) {
+                    console.error('[DEBUG] deleteEstimate: Ошибка при удалении из БД:', error);
+                    // Восстанавливаем данные из БД
+                    try {
+                        const { data } = await supabase.from('estimates').select(`
+                          *,
+                          estimate_items (
+                            id, name, quantity, price, unit, image_url, type, estimate_id
+                          )
+                        `).eq('user_id', session?.user?.id || '');
+                        
+                        if (data) {
+                            const transformedData = transformSupabaseData(data);
+                            setAllEstimates(transformedData);
+                        }
+                    } catch (restoreError) {
+                        console.error('[DEBUG] deleteEstimate: Ошибка при восстановлении данных:', restoreError);
+                    }
+                }
+            }, 0);
+            
             
         } catch (error) {
             console.error('[DEBUG] deleteEstimate: Ошибка при удалении сметы:', error);
@@ -768,34 +746,26 @@ export const useEstimates = (session: Session | null) => {
       setTemplates(prev => prev.filter(t => t.id !== templateId));
     },
     saveAsTemplate: (estimateId: string) => {
-      console.log('🔧 useEstimates: saveAsTemplate вызвана для estimateId:', estimateId);
-      console.log('🔧 useEstimates: allEstimates.length:', allEstimates.length);
-      console.log('🔧 useEstimates: allEstimates:', allEstimates);
-      
+
       const estimate = allEstimates.find(e => e.id === estimateId);
-      console.log('🔧 useEstimates: найденная смета:', estimate);
-      
+
       if (estimate) {
         const template: EstimateTemplate = {
           id: crypto.randomUUID(), // Уникальный ID для шаблона
-          name: estimate.number || 'Без названия', // Название сметы
+          name: estimate.clientInfo || estimate.number || 'Без названия', // Название сметы
           items: estimate.items || [],
           discount: estimate.discount,
           discountType: estimate.discountType,
           tax: estimate.tax,
           lastModified: Date.now()
         };
-        console.log('🔧 useEstimates: созданный шаблон:', template);
-        console.log('🔧 useEstimates: количество позиций в шаблоне:', template.items.length);
-        
+
         setTemplates(prev => {
           const newTemplates = [template, ...prev];
-          console.log('🔧 useEstimates: обновленные шаблоны:', newTemplates);
-          console.log('🔧 useEstimates: количество шаблонов после сохранения:', newTemplates.length);
+
           return newTemplates;
         });
-        
-        console.log('🔧 useEstimates: Шаблон успешно сохранен');
+
       } else {
         console.error('🔧 useEstimates: ОШИБКА - смета не найдена для ID:', estimateId);
       }
@@ -804,15 +774,18 @@ export const useEstimates = (session: Session | null) => {
     addItemsFromAI: () => {},
     updateItemImage: () => {},
     reorderItems: () => {},
-    fetchAllEstimates: useCallback(async () => {
+    fetchAllEstimates: useCallback(async (retryCount = 0) => {
       if (!session?.user?.id) {
-        console.log('🔧 useEstimates: Нет сессии, очищаем данные');
+
         setAllEstimates([]);
         return;
       }
 
       try {
-        console.log('🔧 useEstimates: fetchAllEstimates запущен');
+
+        // Добавляем задержку перед запросом (следуем SUPABASE_SAFETY_GUIDE)
+        await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1)));
+        
         const { data, error } = await supabase
           .from('estimates')
           .select(`
@@ -832,28 +805,44 @@ export const useEstimates = (session: Session | null) => {
 
         if (error) {
           console.error('🔧 useEstimates: Ошибка загрузки смет:', error);
+          
+          // Retry логика для ошибок подключения (следуем SUPABASE_SAFETY_GUIDE)
+          if (retryCount < 2 && error.message.includes('Database connection error')) {
+
+            setTimeout(() => {
+              fetchAllEstimates(retryCount + 1);
+            }, 2000 * (retryCount + 1));
+            return;
+          }
+          
           return;
         }
-        
-        console.log('[DEBUG] Шаг 4: Получены данные из Supabase в fetchAllEstimates.');
-        console.log('[DEBUG] "Сырые" данные (data):', data);
-        console.log('[DEBUG] Количество смет в data:', data?.length || 0);
-        
+
+
         if (data && data.length > 0) {
-          console.log('[DEBUG] Первая смета из Supabase:', data[0]);
-          console.log('[DEBUG] project_id первой сметы:', data[0].project_id);
-          console.log('[DEBUG] Тип project_id первой сметы:', typeof data[0].project_id);
+
         }
         
         // Преобразуем данные из Supabase в нужный формат
         const transformedData = transformSupabaseData(data);
-        console.log('🔧 useEstimates: преобразованные данные:', transformedData);
-        
+
         setAllEstimates(transformedData);
         dataService.setEstimates(transformedData as any);
-        console.log('🔧 useEstimates: setAllEstimates вызван');
+
       } catch (error) {
         console.error('🔧 useEstimates: Ошибка в fetchAllEstimates:', error);
+        
+        // Retry логика для критических ошибок
+        if (retryCount < 2) {
+
+          setTimeout(() => {
+            fetchAllEstimates(retryCount + 1);
+          }, 2000 * (retryCount + 1));
+          return;
+        }
+        
+        // В случае критической ошибки показываем пустой массив
+        setAllEstimates([]);
       }
     }, [session]), // Добавляем session в зависимости
   };

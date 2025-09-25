@@ -32,7 +32,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ profile, onClose, 
                     <label>Логотип</label>
                     {profile.logo ? (
                         <div className="logo-preview-container">
-                            <img src={profile.logo} alt="Предпросмотр логотипа" className="logo-preview" />
+                            <img 
+                                src={(() => {
+                                    const logoUrl = profile.logo;
+                                    if (!logoUrl) return '';
+                                    
+                                    // Проверяем, не содержит ли URL multipart/form-data
+                                    if (logoUrl.includes('multipart') || logoUrl.includes('form-data')) {
+                                        console.error('❌ Обнаружен неправильный URL с multipart/form-data в модальном окне:', logoUrl);
+                                        console.error('❌ Не отображаем логотип');
+                                        return '';
+                                    }
+                                    
+                                    return logoUrl;
+                                })()}
+                                alt="Предпросмотр логотипа" 
+                                className="logo-preview"
+                                onLoad={(e) => {
+                                    console.log('✅ Логотип в модальном окне загружен успешно:', e.currentTarget.src);
+                                }}
+                                onError={(e) => {
+                                    const currentSrc = e.currentTarget.src;
+                                    console.error('❌ Ошибка загрузки логотипа в модальном окне:', currentSrc);
+                                    
+                                    // Проверяем, не является ли это ложным срабатыванием
+                                    if (currentSrc.includes('multipart') || currentSrc.includes('form-data')) {
+                                        console.error('❌ URL содержит multipart/form-data - это ожидаемая ошибка');
+                                        console.error('❌ Возможно, URL содержит multipart/form-data');
+                                        return;
+                                    }
+                                    
+                                    // Проверяем, не является ли это пустым URL
+                                    if (!currentSrc || currentSrc === '') {
+                                        console.error('❌ Пустой URL логотипа - это ожидаемое поведение');
+                                        return;
+                                    }
+                                    
+                                    console.error('❌ Неожиданная ошибка загрузки логотипа');
+                                }}
+                            />
                             <button onClick={onRemoveLogo} className="btn btn-tertiary remove-logo-btn">Удалить</button>
                         </div>
                     ) : (

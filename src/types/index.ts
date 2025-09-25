@@ -450,7 +450,6 @@ export interface EstimateViewProps {
     isPdfLoading: boolean;
     isSaving: boolean;
     handleExportPDF: () => void;
-    handleShare: () => void;
     onNewEstimate: (template?: EstimateTemplate) => void;
 }
 

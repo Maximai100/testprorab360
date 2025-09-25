@@ -384,6 +384,95 @@
     flex-shrink: 0;
 }
 
+/* Исправление для мобильной версии калькулятора */
+@media (max-width: 768px) {
+    .construction-calculator-module .modal-content {
+        max-height: 85vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .construction-calculator-module .modal-body {
+        max-height: calc(85vh - 140px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-grow: 1 !important;
+    }
+    
+    .construction-calculator-module .modal-footer {
+        position: sticky !important;
+        bottom: 0 !important;
+        background-color: var(--card-bg-color) !important;
+        border-top: 1px solid var(--border-color) !important;
+        padding: 16px !important;
+        margin-top: 0 !important;
+        flex-shrink: 0 !important;
+        z-index: 10 !important;
+        /* Убеждаемся что кнопки всегда видны */
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+    }
+    
+    .construction-calculator-module .modal-footer .btn {
+        flex: 1 !important;
+        min-height: 44px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Специальные стили для кнопки PDF */
+    .construction-calculator-module .modal-footer .btn-primary {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    .construction-calculator-module .modal-footer .btn-primary:hover {
+        background-color: var(--primary-color-hover) !important;
+    }
+    
+    /* Специальные стили для заявки поставщику */
+    .construction-calculator-module .supplier-request-list {
+        max-height: calc(85vh - 200px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .construction-calculator-module .supplier-request-item {
+        margin-bottom: 16px !important;
+        padding: 12px !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        background-color: var(--bg-color) !important;
+    }
+    
+    .construction-calculator-module .supplier-item-name {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+        padding: 8px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+    }
+    
+    .construction-calculator-module .supplier-item-details {
+        display: flex !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .construction-calculator-module .supplier-item-details input {
+        flex: 1 !important;
+        padding: 8px !important;
+        font-size: 14px !important;
+    }
+    
+    .construction-calculator-module .supplier-item-note {
+        width: 100% !important;
+        padding: 8px !important;
+        font-size: 14px !important;
+    }
+}
+
 .construction-calculator-module .no-results-message {
     text-align: center;
     color: var(--hint-color);

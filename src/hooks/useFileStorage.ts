@@ -126,7 +126,7 @@ export const useFileStorage = () => {
       }
       
       // Если ошибка, пробуем base64 fallback
-      console.log('🔄 Fallback на base64 хранение для файла:', file.name);
+
       return await uploadFileAsBase64(file);
     } catch (error) {
       console.error('Ошибка при загрузке файла:', error);
@@ -141,8 +141,7 @@ export const useFileStorage = () => {
    */
   const uploadFileAsBase64 = async (file: File): Promise<FileUploadResult> => {
     try {
-      console.log('🔧 Загружаем файл как base64:', file.name);
-      
+
       // Сжимаем изображение если нужно
       let fileToProcess = file;
       if (file.type.startsWith('image/') && file.size > 1 * 1024 * 1024) {
@@ -153,7 +152,6 @@ export const useFileStorage = () => {
           const maxHeight = isWhatsAppImage ? 576 : 720;
           
           fileToProcess = await compressImage(file, maxWidth, maxHeight, quality);
-          console.log('🔧 Файл сжат для base64:', (fileToProcess.size / 1024).toFixed(2) + 'KB');
         } catch (compressError) {
           console.warn('Ошибка сжатия для base64:', compressError);
         }
@@ -187,151 +185,39 @@ export const useFileStorage = () => {
    * @returns результат загрузки с публичным URL и путем
    */
   const uploadFile = async (bucketName: string, file: File): Promise<FileUploadResult> => {
-    try {
-      setIsUploading(true);
 
-      let fileToUpload = file;
-
-      // Если это изображение и оно больше 1MB, сжимаем его
-      if (file.type.startsWith('image/') && file.size > 1 * 1024 * 1024) {
-        console.log('🔧 Сжимаем изображение:', file.name, 'Размер до:', (file.size / 1024).toFixed(2) + 'KB');
-        try {
-          // Для чеков используем более агрессивное сжатие
-          const isReceipt = bucketName === 'receipts';
-          const isWhatsAppImage = file.name.toLowerCase().includes('whatsapp');
-          
-          let quality, maxWidth, maxHeight;
-          
-          if (isReceipt) {
-            // Для чеков используем очень агрессивное сжатие
-            quality = 0.4;
-            maxWidth = 1024;
-            maxHeight = 768;
-          } else if (isWhatsAppImage) {
-            quality = 0.5;
-            maxWidth = 1280;
-            maxHeight = 720;
-          } else {
-            quality = 0.6;
-            maxWidth = 1600;
-            maxHeight = 900;
-          }
-          
-          fileToUpload = await compressImage(file, maxWidth, maxHeight, quality);
-          console.log('🔧 Изображение сжато. Размер после:', (fileToUpload.size / 1024).toFixed(2) + 'KB');
-        } catch (compressError) {
-          console.warn('Ошибка сжатия изображения, загружаем оригинал:', compressError);
-        }
-      }
-
-      // Проверяем размер файла (максимум 5MB для чеков, 10MB для остальных)
-      const maxFileSize = bucketName === 'receipts' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-      if (fileToUpload.size > maxFileSize) {
-        const fileSizeMB = (fileToUpload.size / (1024 * 1024)).toFixed(2);
-        const maxSizeMB = bucketName === 'receipts' ? '5MB' : '10MB';
-        throw new Error(`Файл слишком большой: ${fileSizeMB}MB. Максимальный размер: ${maxSizeMB}`);
-      }
-
-      // Получаем текущего пользователя
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated for file upload");
-
-      // Генерируем уникальное имя файла
-      const fileExt = fileToUpload.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      // Создаем путь в формате: user_id/имя_файла
-      const filePath = `${user.id}/${fileName}`;
-
-      console.log('🔧 Загрузка файла в путь:', filePath, 'Размер:', (fileToUpload.size / 1024).toFixed(2) + 'KB');
-
-      // Загружаем файл в Storage с повторными попытками
-      let uploadResult;
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (retryCount <= maxRetries) {
-        try {
-          const { data, error } = await supabase.storage
-            .from(bucketName)
-            .upload(filePath, fileToUpload, {
-              cacheControl: '3600',
-              upsert: false,
-              contentType: fileToUpload.type || 'application/octet-stream'
-            });
-
-          if (error) {
-            console.error(`Ошибка загрузки файла (попытка ${retryCount + 1}):`, error);
-            
-            // Если это ошибка сети или CORS, пробуем еще раз
-            if ((error.message.includes('CORS') || error.message.includes('NetworkError') || error.message.includes('413')) && retryCount < maxRetries) {
-              retryCount++;
-              console.log(`Повторная попытка загрузки через 2 секунды... (${retryCount}/${maxRetries})`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              continue;
-            }
-            
-            // Обрабатываем специфичные ошибки
-            if (error.message.includes('413') || error.message.includes('Payload Too Large')) {
-              return { 
-                publicUrl: '', 
-                path: '', 
-                error: 'Файл слишком большой. Максимальный размер: 10MB' 
-              };
-            }
-            
-            if (error.message.includes('CORS') || error.message.includes('NetworkError')) {
-              return { 
-                publicUrl: '', 
-                path: '', 
-                error: 'Ошибка сети. Проверьте подключение к интернету и попробуйте снова' 
-              };
-            }
-            
-            return { publicUrl: '', path: '', error: error.message };
-          }
-
-          uploadResult = { data, error: null };
-          break;
-        } catch (uploadError) {
-          console.error(`Исключение при загрузке файла (попытка ${retryCount + 1}):`, uploadError);
-          
-          if (retryCount < maxRetries) {
-            retryCount++;
-            console.log(`Повторная попытка загрузки через 2 секунды... (${retryCount}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-          }
-          
-          throw uploadError;
-        }
-      }
-
-      if (!uploadResult) {
-        throw new Error('Не удалось загрузить файл после всех попыток');
-      }
-
-      // Получаем публичный URL
-      const { data: publicData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
-      console.log('🔧 Файл успешно загружен:', { filePath, publicUrl: publicData.publicUrl });
-
-      return {
-        publicUrl: publicData.publicUrl,
-        path: filePath,
-      };
-    } catch (error) {
-      console.error('Ошибка при загрузке файла:', error);
-      return { 
-        publicUrl: '', 
-        path: '', 
-        error: error instanceof Error ? error.message : 'Неизвестная ошибка' 
-      };
-    } finally {
-      setIsUploading(false);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("ОШИБКА: Пользователь не аутентифицирован для загрузки файла.");
+      throw new Error("User not authenticated for file upload");
     }
+
+    const filePath = `${user.id}/${Date.now()}-${file.name}`;
+    console.log(`Файлу присвоен путь: ${filePath}`);
+
+    // --- ЭТО ЕДИНСТВЕННО ПРАВИЛЬНЫЙ СПОСОБ ЗАГРУЗКИ ---
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file); // Передаем сам ФАЙЛ, а не FormData
+
+    if (uploadError) {
+      console.error("!!! ОШИБКА при загрузке в Storage:", uploadError);
+      throw uploadError;
+    }
+
+    console.log("Файл успешно загружен. Получаем публичный URL...");
+
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(uploadData.path);
+
+    console.log("Успешно получен URL:", urlData.publicUrl);
+
+    return {
+      publicUrl: urlData.publicUrl,
+      path: uploadData.path,
+      error: null
+    };
   };
 
   /**
@@ -348,14 +234,11 @@ export const useFileStorage = () => {
     storage_path: string,
     project_id: string | null
   ) => {
-    console.log('🔧 createDocument вызвана с параметрами:', { name, file_url, storage_path, project_id });
-    
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('Пользователь не авторизован');
     }
-    
-    console.log('🔧 Пользователь авторизован:', user.id);
 
     const insertData = {
       user_id: user.id, // <-- Ключевое исправление
@@ -364,8 +247,6 @@ export const useFileStorage = () => {
       file_url: file_url,
       storage_path: storage_path,
     };
-    
-    console.log('🔧 Данные для вставки:', insertData);
 
     const { data, error } = await supabase
       .from('documents')
@@ -408,8 +289,6 @@ export const useFileStorage = () => {
       if (!user) {
         throw new Error('Пользователь не авторизован');
       }
-      
-      console.log('🔧 Создание фотоотчета для пользователя:', user.id);
 
       const { data, error } = await supabase
         .from('photoreports')

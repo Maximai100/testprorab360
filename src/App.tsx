@@ -1,8 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
-// Простой лог для проверки выполнения
-console.log('📁 App.tsx: Файл загружен и выполняется');
-
 import { GoogleGenAI } from '@google/genai';
 import { 
     TelegramWebApp, Item, LibraryItem, CompanyProfile, EstimateStatus, ThemeMode, Estimate, Project, FinanceEntry, 
@@ -69,7 +66,6 @@ import { dataService, storageService } from './services/storageService';
 const App: React.FC = () => {
     const renderCount = useRef(0);
     renderCount.current += 1;
-    console.log('🚀 App: Компонент App рендерится #' + renderCount.current + ' - ' + new Date().toLocaleTimeString());
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -98,23 +94,14 @@ const App: React.FC = () => {
     }, []);
 
     // Use new hooks - ВСЕГДА вызываем хуки в начале компонента
-    console.log('🔧 App: Инициализируем хуки...');
     const appState = useAppState();
-    console.log('🔧 App: useAppState инициализирован');
     const estimatesHook = useEstimates(session);
-    console.log('🔧 App: useEstimates инициализирован');
     const projectsHook = useProjects();
-    console.log('🔧 App: useProjects инициализирован');
     const projectDataHook = useProjectData();
-    console.log('🔧 App: useProjectData инициализирован');
     const inventoryHook = useInventory(session);
-    console.log('🔧 App: useInventory инициализирован');
     const notesHook = useNotes(session);
-    console.log('🔧 App: useNotes инициализирован');
     const tasksHook = useTasks(session);
-    console.log('🔧 App: useTasks инициализирован');
     const fileStorageHook = useFileStorage();
-    console.log('🔧 App: useFileStorage инициализирован');
 
     const loadProjectsFromSupabaseRef = projectsHook.loadProjectsFromSupabase;
     const loadDocumentsFromSupabaseRef = projectsHook.loadDocumentsFromSupabase;
@@ -128,16 +115,13 @@ const App: React.FC = () => {
     const fetchAllNotesRef = notesHook.fetchAllNotes;
     const fetchAllTasksRef = tasksHook.fetchAllTasks;
     
-    // Логирование состояния после инициализации хуков
-    console.log('🚀 App: activeView:', appState?.activeView);
-    console.log('🚀 App: session:', session ? 'есть' : 'нет');
+    // Логирование состояния после инициализации хуков (перемещено после объявления всех хуков)
 
     // Subscribe to Supabase auth changes - перемещен после объявления хуков
 
     // Функция для загрузки всех смет
     const fetchAllEstimates = useCallback(async () => {
       try {
-        console.log('🔧 App: fetchAllEstimates запущен');
         const { data, error } = await supabase
           .from('estimates')
           .select(`
@@ -156,27 +140,13 @@ const App: React.FC = () => {
           .eq('user_id', session?.user?.id || '');
 
         if (error) {
-          console.error('🔧 App: Ошибка загрузки смет:', error);
+          console.error('Ошибка загрузки смет:', error);
           return;
         }
         
-        console.log('🔧 App: fetchAllEstimates успешно, данные:', data);
-        console.log('🔧 App: количество смет:', data?.length || 0);
-        
-        if (data && data.length > 0) {
-          console.log('🔧 App: первая смета:', data[0]);
-          console.log('🔧 App: estimate_items первой сметы:', data[0].estimate_items);
-          console.log('🔧 App: количество позиций в первой смете:', data[0].estimate_items?.length || 0);
-          
-          if (data[0].estimate_items && data[0].estimate_items.length > 0) {
-            console.log('🔧 App: первая позиция первой сметы:', data[0].estimate_items[0]);
-          }
-        }
-        
         estimatesHook.setEstimates(data || []); // Сохраняем в состояние хука
-        console.log('🔧 App: setEstimates вызван');
       } catch (error) {
-        console.error('🔧 App: Ошибка в fetchAllEstimates:', error);
+        console.error('Ошибка в fetchAllEstimates:', error);
       }
     }, []); // Убираем estimatesHook из зависимостей для предотвращения бесконечного цикла
 
@@ -186,9 +156,8 @@ const App: React.FC = () => {
             try {
                 const { data: { session: initialSession } } = await supabase.auth.getSession();
                 setSession(initialSession);
-                console.log('🔧 App: Начальная сессия:', initialSession ? 'есть' : 'нет');
             } catch (e) {
-                console.error('🔧 App: Ошибка получения сессии Supabase:', e);
+                console.error('Ошибка получения сессии Supabase:', e);
                 setSession(null);
             }
         };
@@ -197,7 +166,6 @@ const App: React.FC = () => {
 
         // Подписываемся на изменения состояния авторизации
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            console.log('🔧 App: Изменение состояния авторизации:', _event, session ? 'есть' : 'нет');
             setSession(session);
         });
 
@@ -212,7 +180,6 @@ const App: React.FC = () => {
     // Загружаем проекты всегда (даже без сессии), если ещё не загружали
     useEffect(() => {
         if (!projectsLoaded) {
-            console.log('Загружаем проекты без зависимости от сессии...');
             loadProjectsFromSupabaseRef();
             setProjectsLoaded(true);
         }
@@ -222,7 +189,6 @@ const App: React.FC = () => {
     useEffect(() => {
         if (!session) {
             if (dataLoaded || isDataLoading) {
-                console.log("Сессия отсутствует, очищаем данные...");
                 setProjectsRef([]);
                 setEstimatesRef([]);
                 fetchAllInventoryRef(null);
@@ -236,8 +202,6 @@ const App: React.FC = () => {
         if (dataLoaded || isDataLoading) {
             return;
         }
-
-        console.log("Сессия активна, загружаем данные...");
         setIsDataLoading(true);
 
         let cancelled = false;
@@ -308,6 +272,47 @@ const App: React.FC = () => {
     const dragOverItem = useRef<number | null>(null);
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+    // Логирование состояния после инициализации всех хуков
+    
+    // Добавляем диагностические функции в глобальную область для отладки
+    if (typeof window !== 'undefined') {
+      (window as any).diagnoseLogo = companyProfileHook.diagnoseLogo;
+      (window as any).diagnoseStorage = companyProfileHook.diagnoseStorage;
+      (window as any).refreshSupabaseCache = companyProfileHook.refreshSupabaseCache;
+      (window as any).fixLogoUrl = companyProfileHook.fixLogoUrl;
+      // Функция для проверки URL логотипа в компонентах
+      (window as any).checkLogoUrls = () => {
+
+        // Проверяем URL в шапке
+        const headerImg = document.querySelector('.app-logo') as HTMLImageElement;
+        if (headerImg) {
+
+          if (headerImg.src.includes('multipart') || headerImg.src.includes('form-data')) {
+            console.error('❌ URL в шапке содержит multipart/form-data');
+          } else {
+            console.log('✅ URL в шапке выглядит правильно');
+          }
+        }
+        
+        // Проверяем URL в модальном окне
+        const modalImg = document.querySelector('.logo-preview') as HTMLImageElement;
+        if (modalImg) {
+
+          if (modalImg.src.includes('multipart') || modalImg.src.includes('form-data')) {
+            console.error('❌ URL в модальном окне содержит multipart/form-data');
+          } else {
+            console.log('✅ URL в модальном окне выглядит правильно');
+          }
+        }
+      };
+
+      console.log('🔍 - window.diagnoseLogo() - проверка логотипа');
+      console.log('🔍 - window.diagnoseStorage() - проверка Supabase Storage');
+      console.log('🔍 - window.refreshSupabaseCache() - обновление кеша Supabase');
+      console.log('🔍 - window.fixLogoUrl() - исправление URL логотипа');
+      console.log('🔍 - window.checkLogoUrls() - проверка URL в компонентах');
+    }
+
     // Get project context
     const { setActiveProjectId: setContextActiveProjectId, activeProjectId: contextProjectId } = useProjectContext();
     
@@ -317,7 +322,6 @@ const App: React.FC = () => {
             setContextActiveProjectId(appState.activeProjectId);
         }
     }, [appState.activeProjectId, contextProjectId, setContextActiveProjectId]);
-    
 
     // Load initial data
     useEffect(() => {
@@ -330,8 +334,6 @@ const App: React.FC = () => {
         libraryHook.fetchLibraryItems(session);
         companyProfileHook.fetchProfile(session);
     }, [session]);
-
-    
 
     useEffect(() => {
         dataService.setInventoryNotes(inventoryNotes);
@@ -386,6 +388,36 @@ const App: React.FC = () => {
         const name = companyProfileHook.profile?.name?.trim();
         document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
     }, [companyProfileHook.profile?.name]);
+
+    // Стабилизация нижнего меню в мобильной версии
+    useEffect(() => {
+        const stabilizeBottomNav = () => {
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                // Принудительно устанавливаем стабильную позицию
+                bottomNav.style.transform = 'translate3d(0, 0, 0)';
+                bottomNav.style.willChange = 'transform';
+                bottomNav.style.backfaceVisibility = 'hidden';
+                bottomNav.style.webkitBackfaceVisibility = 'hidden';
+            }
+        };
+
+        // Стабилизируем при загрузке
+        stabilizeBottomNav();
+
+        // Стабилизируем при изменении размера окна
+        window.addEventListener('resize', stabilizeBottomNav);
+        window.addEventListener('orientationchange', stabilizeBottomNav);
+
+        // Стабилизируем при скролле
+        window.addEventListener('scroll', stabilizeBottomNav, { passive: true });
+
+        return () => {
+            window.removeEventListener('resize', stabilizeBottomNav);
+            window.removeEventListener('orientationchange', stabilizeBottomNav);
+            window.removeEventListener('scroll', stabilizeBottomNav);
+        };
+    }, []);
 
     // Helper to set or update favicon link tag
     const setFaviconHref = useCallback((href: string, sizes?: string) => {
@@ -474,14 +506,14 @@ const App: React.FC = () => {
     // Переопределяем функцию refreshData для обновления всех данных
     useEffect(() => {
         appState.refreshData = async () => {
-            console.log('🔄 App: refreshData вызвана - обновляем все данные');
+
             try {
                 await Promise.all([
                     estimatesHook.fetchAllEstimates(),
                     projectsHook.loadProjectsFromSupabase(),
                     projectDataHook.loadProjectData(activeProject?.id || '')
                 ]);
-                console.log('🔄 App: все данные обновлены');
+
             } catch (error) {
                 console.error('🔄 App: ошибка при обновлении данных:', error);
             }
@@ -496,10 +528,7 @@ const App: React.FC = () => {
 
     // Filtered projects
     const filteredProjects = useMemo(() => {
-        console.log('App: filteredProjects вычисляется, projectsHook.projects:', projectsHook.projects);
-        console.log('App: projectStatusFilter:', appState.projectStatusFilter);
-        console.log('App: projectSearch:', appState.projectSearch);
-        
+
         const filtered = projectsHook.projects.filter(project => {
             const matchesStatus = project.status === appState.projectStatusFilter;
             const matchesSearch = !appState.projectSearch || 
@@ -508,54 +537,37 @@ const App: React.FC = () => {
                 project.address.toLowerCase().includes(appState.projectSearch.toLowerCase());
             return matchesStatus && matchesSearch;
         });
-        
-        console.log('App: filteredProjects результат:', filtered);
+
         return filtered;
     }, [projectsHook.projects, appState.projectStatusFilter, appState.projectSearch]);
 
     // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
-        console.log('🔧 handleLoadEstimate: загружаем смету', id, 'для проекта', appState.activeProjectId);
         estimatesHook.loadEstimate(id, appState.activeProjectId, appState.setIsDirty);
         appState.navigateToEstimate(id);
         // Закрываем модальное окно после загрузки сметы
         appState.closeModal('estimatesList');
-        console.log('🔧 handleLoadEstimate: модальное окно закрыто');
     }, [estimatesHook, appState]);
 
     const handleNewEstimate = useCallback((template?: { items: any[]; discount: number; discountType: 'percent' | 'fixed'; tax: number; }) => {
-        console.log('🔧 App: handleNewEstimate вызвана с шаблоном:', template);
-        
         const newEstimate = estimatesHook.createNewEstimate(null);
-        console.log('🔧 App: создана новая смета:', newEstimate);
         
         // Если передан шаблон, применяем его данные
         if (template) {
-            console.log('🔧 App: применяем данные шаблона:');
-            console.log('🔧 App: items:', template.items);
-            console.log('🔧 App: discount:', template.discount);
-            console.log('🔧 App: discountType:', template.discountType);
-            console.log('🔧 App: tax:', template.tax);
-            
             estimatesHook.setItems(template.items || []);
             estimatesHook.setDiscount(template.discount || 0);
             estimatesHook.setDiscountType(template.discountType || 'percent');
             estimatesHook.setTax(template.tax || 0);
             appState.setIsDirty(true); // Помечаем как измененную
-            
-            console.log('🔧 App: данные шаблона применены к новой смете');
         }
         
-        console.log('🔧 App: переходим к смете:', newEstimate.id);
         appState.navigateToEstimate(newEstimate.id);
     }, [estimatesHook, appState]);
 
     const handleSaveEstimate = useCallback(async () => {
-        console.log('🔧 App: handleSaveEstimate вызвана');
         appState.setLoading('saving', true);
         try {
             await estimatesHook.saveEstimate();
-            console.log('🔧 App: saveEstimate завершена успешно');
             appState.setIsDirty(false);
         } catch (error) {
             console.error('🔧 App: Ошибка при сохранении сметы:', error);
@@ -565,28 +577,60 @@ const App: React.FC = () => {
     }, [estimatesHook, appState]);
 
     const handleDeleteEstimate = useCallback(async (id: string) => {
-        safeShowConfirm('Вы уверены, что хотите удалить эту смету?', async (ok) => {
-            if (ok) {
-                try {
-                    console.log('[DEBUG] handleDeleteEstimate: начинаем удаление сметы:', id);
-                    await estimatesHook.deleteEstimate(id);
-                    console.log('[DEBUG] handleDeleteEstimate: смета успешно удалена');
-                    
-                    // Если удаляемая смета была активной, возвращаемся назад
-                    if (appState.activeEstimateId === id) {
-                        console.log('[DEBUG] handleDeleteEstimate: возвращаемся назад, так как удалена активная смета');
-                        appState.goBack();
+        try {
+            safeShowConfirm('Вы уверены, что хотите удалить эту смету?', async (ok) => {
+                if (ok) {
+                    try {
+
+                        await estimatesHook.deleteEstimate(id);
+
+                        // Если удаляемая смета была активной, возвращаемся назад
+                        if (appState.activeEstimateId === id) {
+                            appState.goBack();
+                        }
+                        
+                        safeShowAlert('Смета успешно удалена!');
+                        
+                    } catch (error) {
+                        console.error('[DEBUG] handleDeleteEstimate: Ошибка при удалении сметы:', error);
+                        safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
                     }
-                    
-                    // Показываем уведомление об успешном удалении
-                    safeShowAlert('Смета успешно удалена!');
-                    
-                } catch (error) {
-                    console.error('[DEBUG] handleDeleteEstimate: Ошибка при удалении сметы:', error);
-                    safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
                 }
+            });
+        } catch (error) {
+            console.error('[DEBUG] handleDeleteEstimate: Ошибка при показе подтверждения:', error);
+            // Fallback: удаляем без подтверждения
+            try {
+                await estimatesHook.deleteEstimate(id);
+                safeShowAlert('Смета удалена!');
+                
+                if (appState.activeEstimateId === id) {
+                    appState.goBack();
+                }
+            } catch (deleteError) {
+                console.error('[DEBUG] handleDeleteEstimate: Ошибка при fallback удалении:', deleteError);
+                safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
             }
-        });
+        }
+    }, [estimatesHook, appState]);
+
+    // Альтернативная функция удаления без подтверждения для браузерной версии
+    const handleDeleteEstimateDirect = useCallback(async (id: string) => {
+        
+        try {
+            await estimatesHook.deleteEstimate(id);
+            
+            // Если удаляемая смета была активной, возвращаемся назад
+            if (appState.activeEstimateId === id) {
+                appState.goBack();
+            }
+            
+            safeShowAlert('Смета удалена!');
+            
+        } catch (error) {
+            console.error('[DEBUG] handleDeleteEstimateDirect: Ошибка при удалении:', error);
+            safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
+        }
     }, [estimatesHook, appState]);
 
     const handleStatusChange = useCallback((id: string, status: EstimateStatus) => {
@@ -964,7 +1008,6 @@ const App: React.FC = () => {
         appState.closeModal('settings');
     }, [companyProfileHook, appState]);
 
-
     // Item handlers
     const handleAddItem = useCallback(() => {
         estimatesHook.addItem();
@@ -1041,19 +1084,6 @@ const App: React.FC = () => {
         }
     }, [estimatesHook, companyProfileHook.profile, appState, projectsHook.projects]);
 
-    // Share
-    const handleShare = useCallback(() => {
-        if (tg && tg.sendData) {
-            const data = {
-                type: 'estimate',
-                estimate: estimatesHook.currentEstimate
-            };
-            tg.sendData(JSON.stringify(data));
-        } else {
-            safeShowAlert('Функция доступна только в Telegram');
-        }
-    }, [estimatesHook.currentEstimate]);
-
     // Navigation handlers
     const handleBackToProject = useCallback(() => {
         if (appState.activeProjectId) {
@@ -1084,7 +1114,6 @@ const App: React.FC = () => {
     const handleOpenScratchpad = useCallback(() => {
         // Получаем текущее содержимое глобальной заметки
         const globalNote = notesHook.getNote('global');
-        console.log('🔧 handleOpenScratchpad: Открываем блокнот с содержимым:', globalNote);
         
         // Переключаемся на вид scratchpad с данными заметки
         appState.navigateToView('scratchpad', { 
@@ -1154,7 +1183,6 @@ const App: React.FC = () => {
                         isPdfLoading={appState.isPdfLoading}
                         isSaving={appState.isSaving}
                         handleExportPDF={handleExportPDF}
-                        handleShare={handleShare}
                         onNewEstimate={handleNewEstimate}
                     />
                 );
@@ -1179,11 +1207,7 @@ const App: React.FC = () => {
                 if (!activeProject) return null;
                 
                 const projectEstimates = estimatesHook.getEstimatesByProject(activeProject.id);
-                console.log('[DEBUG] Шаг 7: App.tsx - передача смет в ProjectDetailView.');
-                console.log('[DEBUG] activeProject.id:', activeProject.id);
-                console.log('[DEBUG] projectEstimates для передачи:', projectEstimates);
-                console.log('[DEBUG] Количество projectEstimates:', projectEstimates.length);
-                
+
                 return (
                     <ProjectDetailView
                         activeProject={activeProject}
@@ -1360,7 +1384,7 @@ const App: React.FC = () => {
                 );
             
             case 'calculator':
-                return <CalculatorView appState={appState} />;
+                return <CalculatorView appState={appState} companyProfile={companyProfileHook.profile} />;
             
             default:
                 return (
@@ -1428,10 +1452,49 @@ const App: React.FC = () => {
             <header className="app-header">
                 <div className="app-header-left">
                     <img
-                        src={companyProfileHook.profile.logo || '/logo.png'}
+                        src={(() => {
+                            const logoUrl = companyProfileHook.profile.logo;
+
+                            if (!logoUrl) {
+
+                                return '/logo.png';
+                            }
+                            
+                            // Проверяем, не содержит ли URL multipart/form-data
+                            if (logoUrl.includes('multipart') || logoUrl.includes('form-data')) {
+                                console.error('❌ Обнаружен неправильный URL с multipart/form-data в шапке:', logoUrl);
+                                console.error('❌ Используем fallback логотип');
+                                return '/logo.png';
+                            }
+
+                            return logoUrl;
+                        })()}
                         alt="Логотип"
                         className="app-logo"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
+                        onLoad={(e) => {
+                            console.log('✅ Логотип в шапке загружен успешно:', e.currentTarget.src);
+                        }}
+                        onError={(e) => {
+                            const currentSrc = e.currentTarget.src;
+                            console.error('❌ Ошибка загрузки логотипа в шапке:', currentSrc);
+                            
+                            // Проверяем, не является ли это ложным срабатыванием
+                            if (currentSrc.includes('multipart') || currentSrc.includes('form-data')) {
+                                console.error('❌ URL содержит multipart/form-data - это ожидаемая ошибка');
+                                console.error('❌ Переключаемся на fallback логотип');
+                                (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                                return;
+                            }
+                            
+                            // Проверяем, не является ли это уже fallback логотипом
+                            if (currentSrc.includes('/logo.png')) {
+                                console.error('❌ Ошибка загрузки fallback логотипа - возможно, файл не существует');
+                                return;
+                            }
+                            
+                            console.error('❌ Переключаемся на fallback логотип');
+                            (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                        }}
                     />
                     <h1>{(companyProfileHook.profile.name && companyProfileHook.profile.name.trim()) ? companyProfileHook.profile.name : 'Прораб'}</h1>
                 </div>
@@ -1471,12 +1534,12 @@ const App: React.FC = () => {
                 <button 
                     onClick={() => {
                         // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
-                        console.log('🔍 Навигация к проектам: activeProjectId =', appState.activeProjectId);
+
                         if (appState.activeProjectId) {
-                            console.log('🔍 Переходим к деталям проекта:', appState.activeProjectId);
+
                             appState.navigateToView('projectDetail');
                         } else {
-                            console.log('🔍 Переходим к списку проектов');
+
                             appState.navigateToView('projects');
                         }
                     }} 
@@ -1488,8 +1551,11 @@ const App: React.FC = () => {
                 <button 
                     onClick={() => {
                         // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
-                        console.log('🔍 Переход к смете: activeProjectId =', appState.activeProjectId);
-                        estimatesHook.createNewEstimate();
+
+                        // Если уже есть активная смета, не создаем новую
+                        if (!estimatesHook.currentEstimate) {
+                            estimatesHook.createNewEstimate();
+                        }
                         appState.setActiveView('estimate');
                     }} 
                     className={appState.activeView === 'estimate' ? 'active' : ''}
@@ -1727,7 +1793,6 @@ const App: React.FC = () => {
                 />
             )}
 
-
             {appState.showScratchpadModal && (
                 <div className="modal-overlay" onClick={() => appState.closeModal('scratchpad')}>
                     <div className="modal-content scratchpad-modal" onClick={e => e.stopPropagation()}>
@@ -1741,12 +1806,6 @@ const App: React.FC = () => {
                             value={appState.scratchpadData?.content || projectsHook.scratchpad}
                             onChange={(e) => {
                                 const newValue = e.target.value;
-                                console.log('🔧 Модальное окно блокнота - изменение:', { 
-                                    newValue, 
-                                    hasScratchpadData: !!appState.scratchpadData,
-                                    scratchpadDataContent: appState.scratchpadData?.content,
-                                    globalScratchpad: projectsHook.scratchpad
-                                });
                                 if (appState.scratchpadData?.onSave) {
                                     appState.scratchpadData.onSave(newValue);
                                 } else {
@@ -1766,5 +1825,4 @@ const App: React.FC = () => {
     );
 };
 
-console.log('📤 App.tsx: Компонент App определен, экспортируем...');
 export default App;

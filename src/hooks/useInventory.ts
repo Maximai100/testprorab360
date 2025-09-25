@@ -17,7 +17,7 @@ export const useInventory = (session: Session | null) => {
     // Загрузка всех данных инвентаря для текущего пользователя
     const fetchAllInventory = useCallback(async (session: Session | null) => {
         if (!session?.user?.id) {
-            console.log('🔧 useInventory: Нет сессии, очищаем данные');
+
             setTools([]);
             setConsumables([]);
             return;
@@ -27,7 +27,6 @@ export const useInventory = (session: Session | null) => {
         setError(null);
 
         try {
-            console.log('🔧 useInventory: Загружаем данные инвентаря для пользователя:', session.user.id);
 
             // Загружаем инструменты и расходники параллельно
             const [toolsRes, consumablesRes] = await Promise.all([
@@ -93,10 +92,6 @@ export const useInventory = (session: Session | null) => {
             dataService.setTools(transformedTools);
             dataService.setConsumables(transformedConsumables);
 
-            console.log('🔧 useInventory: Данные загружены успешно');
-            console.log('🔧 useInventory: Инструменты:', transformedTools.length);
-            console.log('🔧 useInventory: Расходники:', transformedConsumables.length);
-
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при загрузке данных:', error);
             setError(error instanceof Error ? error.message : 'Ошибка загрузки данных');
@@ -129,7 +124,7 @@ export const useInventory = (session: Session | null) => {
             // Если передан файл изображения, загружаем его
             if (imageFile) {
                 try {
-                    console.log('🖼️ Загружаем изображение для инструмента:', imageFile.name);
+
                     const uploadResult = await uploadFileWithFallback('tools-images', imageFile);
                     
                     if (uploadResult.error) {
@@ -138,7 +133,7 @@ export const useInventory = (session: Session | null) => {
                     }
                     
                     imageUrl = uploadResult.publicUrl;
-                    console.log('🖼️ Изображение успешно загружено:', imageUrl);
+
                 } catch (error) {
                     console.error('Ошибка при загрузке изображения:', error);
                     throw error;
@@ -192,7 +187,6 @@ export const useInventory = (session: Session | null) => {
             };
 
             setTools(prev => [newTool, ...prev]);
-            console.log('🔧 useInventory: Инструмент добавлен:', newTool);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при добавлении инструмента:', error);
@@ -218,7 +212,7 @@ export const useInventory = (session: Session | null) => {
             // Если передан новый файл изображения, загружаем его
             if (imageFile) {
                 try {
-                    console.log('🖼️ Обновляем изображение для инструмента:', imageFile.name);
+
                     const uploadResult = await uploadFileWithFallback('tools-images', imageFile);
                     
                     if (uploadResult.error) {
@@ -227,7 +221,7 @@ export const useInventory = (session: Session | null) => {
                     }
                     
                     imageUrl = uploadResult.publicUrl;
-                    console.log('🖼️ Изображение успешно обновлено:', imageUrl);
+
                 } catch (error) {
                     console.error('Ошибка при обновлении изображения:', error);
                     throw error;
@@ -282,7 +276,6 @@ export const useInventory = (session: Session | null) => {
             };
 
             setTools(prev => prev.map(tool => tool.id === toolData.id ? updatedTool : tool));
-            console.log('🔧 useInventory: Инструмент обновлен:', updatedTool);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при обновлении инструмента:', error);
@@ -315,7 +308,6 @@ export const useInventory = (session: Session | null) => {
             }
 
             setTools(prev => prev.filter(tool => tool.id !== toolId));
-            console.log('🔧 useInventory: Инструмент удален:', toolId);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при удалении инструмента:', error);
@@ -369,7 +361,6 @@ export const useInventory = (session: Session | null) => {
             };
 
             setConsumables(prev => [newConsumable, ...prev]);
-            console.log('🔧 useInventory: Расходник добавлен:', newConsumable);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при добавлении расходника:', error);
@@ -426,7 +417,6 @@ export const useInventory = (session: Session | null) => {
             setConsumables(prev => prev.map(consumable => 
                 consumable.id === consumableData.id ? updatedConsumable : consumable
             ));
-            console.log('🔧 useInventory: Расходник обновлен:', updatedConsumable);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при обновлении расходника:', error);
@@ -459,7 +449,6 @@ export const useInventory = (session: Session | null) => {
             }
 
             setConsumables(prev => prev.filter(consumable => consumable.id !== consumableId));
-            console.log('🔧 useInventory: Расходник удален:', consumableId);
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при удалении расходника:', error);

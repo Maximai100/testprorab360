@@ -9,7 +9,6 @@ import { formatDueDate, financeCategoryToRu, downloadFileFromUrl, safeShowAlert 
 import './ProjectDetailView.css';
 import { FinanceEntryModal } from '../modals/FinanceEntryModal';
 
-
 // Карта приоритетов для задач
 const priorityMap: Record<string, { color: string, name: string }> = {
     low: { color: '#808080', name: 'Низкий' },
@@ -127,7 +126,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     // Загружаем данные проекта при монтировании компонента
     useEffect(() => {
         if (activeProject?.id && loadProjectData) {
-            console.log('🔧 ProjectDetailView: Загружаем данные проекта:', activeProject.id);
+
             loadProjectData(activeProject.id);
         }
     }, [activeProject?.id, loadProjectData]);
@@ -171,12 +170,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     console.log('ProjectDetailView: estimates:', estimates);
     
     const projectEstimates = useMemo(() => {
-        console.log('[DEBUG] Шаг 6: ProjectDetailView - получение смет для проекта.');
-        console.log('[DEBUG] activeProject.id:', activeProject.id);
-        console.log('[DEBUG] Тип activeProject.id:', typeof activeProject.id);
-        console.log('[DEBUG] estimates получены:', estimates);
-        console.log('[DEBUG] Количество estimates:', estimates.length);
-        
+
         // estimates уже отфильтрованы в App.tsx через getEstimatesByProject
         console.log('ProjectDetailView: projectEstimates получены:', {
             totalEstimates: estimates.length,
@@ -191,11 +185,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     // Мемоизируем значение заметки проекта для оптимизации
     const projectNote = useMemo(() => {
         const note = notesHook.getNote('project', activeProject.id);
-        console.log('🔧 ProjectDetailView: projectNote получена:', { 
-            note, 
-            projectId: activeProject.id,
-            projectName: activeProject.name 
-        });
+
         return note;
     }, [notesHook, activeProject.id]);
     const projectWorkStages = useMemo(() => workStages.filter(ws => ws.projectId === activeProject.id), [workStages, activeProject.id]);
@@ -226,7 +216,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         };
         return statusMap[status] || status;
     }, []);
-
 
     return (
         <>
@@ -417,7 +406,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                 <ListItem
                                     key={est.id}
                                     icon={<IconDocument />}
-                                    title={est.number || 'Без названия'}
+                                    title={est.clientInfo || est.number || 'Без названия'}
                                     subtitle={
                                         <div className="estimate-subtitle">
                                             <span className="estimate-amount">{formatCurrency(calculateEstimateTotal(est))}</span>
@@ -428,15 +417,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
                                     onDelete={() => {
-                                        console.log('[DEBUG] ProjectDetailView: onDelete вызван для сметы:', est.id);
-                                        console.log('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate существует?', !!handleDeleteProjectEstimate);
-                                        console.log('[DEBUG] ProjectDetailView: тип handleDeleteProjectEstimate:', typeof handleDeleteProjectEstimate);
-                                        
-                                        if (handleDeleteProjectEstimate) {
-                                            console.log('[DEBUG] ProjectDetailView: вызываю handleDeleteProjectEstimate');
-                                            handleDeleteProjectEstimate(est.id);
+                                        if (handleDeleteProjectEstimate && typeof handleDeleteProjectEstimate === 'function') {
+                                            try {
+                                                handleDeleteProjectEstimate(est.id);
+                                            } catch (error) {
+                                                console.error('[DEBUG] ProjectDetailView: Ошибка при удалении сметы:', error);
+                                                safeShowAlert('Ошибка при удалении сметы: ' + error.message);
+                                            }
                                         } else {
-                                            console.error('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate не определен!');
+                                            console.error('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate не доступна');
                                             safeShowAlert('Ошибка: Функция удаления сметы не доступна.');
                                         }
                                     }}
@@ -625,10 +614,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         <h2>Блокнот</h2>
                         <button 
                             onClick={() => {
-                                console.log('🔧 Открытие полноэкранного блокнота проекта:', { 
-                                    projectNote, 
-                                    projectId: activeProject.id 
-                                });
+
                                 appState.navigateToView('scratchpad', { 
                                     content: projectNote, 
                                     onSave: (content: string) => notesHook.saveNote('project', content, activeProject.id),

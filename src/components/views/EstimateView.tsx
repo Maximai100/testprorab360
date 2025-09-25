@@ -10,12 +10,9 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
     dragItem, dragOverItem, handleDragSort, fileInputRefs, handleItemImageChange, 
     handleRemoveItemImage, handleRemoveItem, handleItemChange, formatCurrency, handleAddItem, 
     discount, setDiscount, discountType, setDiscountType, tax, setTax, calculation, 
-    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, handleShare, onNewEstimate 
+    handleSave, isDirty, isPdfLoading, isSaving, draggingItem, setDraggingItem, handleExportPDF, onNewEstimate 
 }) => {
-    console.log('🔧 EstimateView: Компонент рендерится');
-    console.log('🔧 EstimateView: handleSave получен:', handleSave);
-    console.log('🔧 EstimateView: isDirty:', isDirty);
-    console.log('🔧 EstimateView: isSaving:', isSaving);
+
     const defaultCalculation = {
         materialsTotal: 0,
         workTotal: 0,
@@ -50,7 +47,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                     />
                 </div>
             )}
-            <div className="card estimate-meta"><div className="meta-field"><label htmlFor="estimateNumber">Название сметы/номер сметы</label><input id="estimateNumber" type="text" value={estimateNumber} onChange={e => { setEstimateNumber(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="Например: Ремонт кухни №2025-001" /></div><div className="meta-field"><label htmlFor="estimateDate">Дата</label><input id="estimateDate" type="date" value={estimateDate} onChange={e => { setEstimateDate(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div></div>
+            <div className="card estimate-meta"><div className="meta-field"><label htmlFor="estimateNumber">Название сметы/номер сметы</label><input id="estimateNumber" type="text" value={clientInfo || estimateNumber} onChange={e => { setEstimateNumber(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} placeholder="Например: Ремонт кухни №2025-001" /></div><div className="meta-field"><label htmlFor="estimateDate">Дата</label><input id="estimateDate" type="date" value={estimateDate} onChange={e => { setEstimateDate(e.target.value); setIsDirty(true); }} onFocus={handleInputFocus} /></div></div>
             <div className="items-list">
                 {items.map((item: any, index: number) => (
                     <div 
@@ -139,10 +136,7 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
             </div>
             <div className="actions-footer">
                 <button onClick={() => {
-                    console.log('🔧 EstimateView: Кнопка Сохранить нажата');
-                    console.log('🔧 EstimateView: isDirty:', isDirty);
-                    console.log('🔧 EstimateView: isSaving:', isSaving);
-                    console.log('🔧 EstimateView: handleSave:', handleSave);
+
                     handleSave();
                 }} className="btn btn-secondary save-btn" disabled={!isDirty || isSaving}>
                     {isSaving ? <Loader /> : (isDirty ? 'Сохранить' : 'Сохранено ✓')}
@@ -151,7 +145,6 @@ export const EstimateView: React.FC<EstimateViewProps> = ({
                     {isPdfLoading ? <Loader /> : 'Экспорт в PDF'}
                 </button>
                 <button onClick={() => onNewEstimate()} className="btn btn-secondary"><IconPlus/> Новая смета</button>
-                <button onClick={handleShare} className="btn btn-primary share-btn">Поделиться</button>
             </div>
         </main>
     </>

@@ -38,9 +38,23 @@ export const safeShowAlert = (message: string, callback?: () => void) => {
 export const safeShowConfirm = (message: string, callback: (ok: boolean) => void) => {
     // Telegram WebApp version 6.1+ is required for showConfirm.
     if (tg && tg.version >= '6.1' && typeof tg.showConfirm === 'function') {
-        tg.showConfirm(message, callback);
+        try {
+            tg.showConfirm(message, callback);
+        } catch (error) {
+            console.error('[DEBUG] safeShowConfirm: Ошибка Telegram API:', error);
+            // Fallback to browser confirm
+            const result = window.confirm(message);
+            callback(result);
+        }
     } else {
-        callback(window.confirm(message));
+        try {
+            const result = window.confirm(message);
+            callback(result);
+        } catch (error) {
+            console.error('[DEBUG] safeShowConfirm: Ошибка window.confirm:', error);
+            // Если и это не работает, считаем что пользователь согласился
+            callback(true);
+        }
     }
 };
 
@@ -203,6 +217,26 @@ export const formatDueDate = (dueDate: Date | string | null): string => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     return `${day}.${month}`;
+};
+
+/**
+ * Санитизирует имя файла для Supabase Storage
+ * Убирает недопустимые символы и заменяет их на подчеркивания
+ * @param fileName Оригинальное имя файла
+ * @returns Санитизированное имя файла
+ */
+export const sanitizeFileName = (fileName: string): string => {
+    // Убираем расширение
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+    const extension = fileName.match(/\.[^/.]+$/)?.[0] || "";
+    
+    // Заменяем недопустимые символы на подчеркивания
+    const sanitizedName = nameWithoutExt
+        .replace(/[^a-zA-Z0-9\-_]/g, '_')  // Заменяем все кроме букв, цифр, дефисов и подчеркиваний
+        .replace(/_+/g, '_')               // Убираем множественные подчеркивания
+        .replace(/^_|_$/g, '');            // Убираем подчеркивания в начале и конце
+    
+    return sanitizedName + extension;
 };
 
 // Map finance category code to Russian label

@@ -66,8 +66,7 @@ export const useProjects = () => {
     useEffect(() => {
         dataService.setNotes(notes);
     }, [notes]);
-    
-    
+
     useEffect(() => {
         dataService.setTools(tools);
     }, [tools]);
@@ -113,13 +112,11 @@ export const useProjects = () => {
     
     const loadProjectsFromSupabase = useCallback(async () => {
         try {
-            console.log('🔄 loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
-            console.log('🔄 loadProjectsFromSupabase: Выполняем запрос к Supabase...');
+
             const { data: projectsData, error } = await supabase
                 .from('projects')
                 .select('*')
                 .order('created_at', { ascending: false });
-            console.log('🔄 loadProjectsFromSupabase: Запрос к Supabase завершен');
 
             if (error) {
                 console.warn('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
@@ -159,8 +156,7 @@ export const useProjects = () => {
     // Load documents from Supabase
     const loadDocumentsFromSupabase = useCallback(async () => {
         try {
-            console.log('🔄 loadDocumentsFromSupabase: Начинаем загрузку документов из Supabase...');
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 console.log('loadDocumentsFromSupabase: Пользователь не авторизован');
@@ -216,8 +212,7 @@ export const useProjects = () => {
     // Load photo reports from Supabase
     const loadPhotoReportsFromSupabase = useCallback(async () => {
         try {
-            console.log('🔄 loadPhotoReportsFromSupabase: Начинаем загрузку фотоотчетов из Supabase...');
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 console.log('loadPhotoReportsFromSupabase: Пользователь не авторизован');
@@ -266,8 +261,7 @@ export const useProjects = () => {
     // Load finance entries from Supabase
     const loadFinanceEntriesFromSupabase = useCallback(async () => {
         try {
-            console.log('🔄 loadFinanceEntriesFromSupabase: Начинаем загрузку финансовых записей из Supabase...');
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 console.log('loadFinanceEntriesFromSupabase: Пользователь не авторизован');
@@ -323,7 +317,7 @@ export const useProjects = () => {
         // Если передан файл чека, загружаем его
         if (receiptFile) {
             try {
-                console.log('📄 Загружаем чек для финансовой транзакции:', receiptFile.name);
+
                 const uploadResult = await uploadFileWithFallback('receipts', receiptFile);
                 
                 if (uploadResult.error) {
@@ -332,7 +326,7 @@ export const useProjects = () => {
                 }
                 
                 receiptUrl = uploadResult.publicUrl;
-                console.log('📄 Чек успешно загружен:', receiptUrl);
+
             } catch (error) {
                 console.error('Ошибка при загрузке чека:', error);
                 throw error;
@@ -382,7 +376,7 @@ export const useProjects = () => {
             };
             
             setFinanceEntries(prev => [...prev, newEntry]);
-            console.log('📄 Финансовая запись создана:', newEntry);
+
             return newEntry;
             
         } catch (error) {
@@ -397,7 +391,7 @@ export const useProjects = () => {
         // Если передан новый файл чека, загружаем его
         if (receiptFile) {
             try {
-                console.log('📄 Обновляем чек для финансовой транзакции:', receiptFile.name);
+
                 const uploadResult = await uploadFileWithFallback('receipts', receiptFile);
                 
                 if (uploadResult.error) {
@@ -406,7 +400,7 @@ export const useProjects = () => {
                 }
                 
                 receiptUrl = uploadResult.publicUrl;
-                console.log('📄 Чек успешно обновлен:', receiptUrl);
+
             } catch (error) {
                 console.error('Ошибка при обновлении чека:', error);
                 throw error;
@@ -459,8 +453,7 @@ export const useProjects = () => {
             setFinanceEntries(prev => prev.map(entry => 
                 entry.id === id ? updatedEntry : entry
             ));
-            console.log('📄 Финансовая запись обновлена:', updatedEntry);
-            
+
         } catch (error) {
             console.error('Ошибка при обновлении финансовой записи:', error);
             throw error;
@@ -578,8 +571,7 @@ export const useProjects = () => {
     const getNotesByProject = useCallback((projectId: string) => {
         return notes.filter(n => n.projectId === projectId);
     }, [notes]);
-    
-    
+
     // Tools management
     const addTool = useCallback((toolData: Omit<Tool, 'id' | 'createdAt' | 'updatedAt'>) => {
         const newTool = dataUtils.createEntity(toolData);
@@ -742,8 +734,7 @@ export const useProjects = () => {
         updateNote,
         deleteNote,
         getNotesByProject,
-        
-        
+
         // Tools management
         addTool,
         updateTool,

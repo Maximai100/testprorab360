@@ -15,7 +15,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
     // Мемоизируем значение заметки для оптимизации
     const globalNote = useMemo(() => {
         const note = notesHook.getNote('global');
-        console.log('🔧 WorkspaceView: globalNote получена:', note);
+
         return note;
     }, [notesHook]);
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Project, FinanceEntry, WorkStage } from '../../types';
 import { ListItem } from '../ui/ListItem';
-import { IconTrendingUp, IconCheckCircle, IconImage, IconShare, IconChevronRight } from '../common/Icon';
+import { IconTrendingUp, IconCheckCircle, IconImage, IconChevronRight } from '../common/Icon';
 import { financeCategoryToRu } from '../../utils';
 
 interface ClientReportScreenProps {
@@ -60,9 +60,6 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
     { id: 5, title: 'Отделка', date: '05.02.2024' }
   ];
 
-  const handleShare = () => {
-    alert('Функция "Поделиться" будет добавлена в следующем обновлении! 📱');
-  };
 
   return (
     <>
@@ -223,27 +220,6 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
           </p>
         </div>
 
-        {/* Кнопка "Поделиться" */}
-        <div className="card" style={{ textAlign: 'center' }}>
-          <button 
-            onClick={handleShare}
-            style={{
-              backgroundColor: 'var(--color-primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--border-radius-s)',
-              padding: 'var(--spacing-m) var(--spacing-xl)',
-              fontSize: 'var(--font-size-m)',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-s)'
-            }}
-          >
-            <IconShare />
-            Поделиться / Отправить
-          </button>
-        </div>
       </main>
     </>
   );

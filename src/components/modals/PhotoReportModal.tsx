@@ -108,7 +108,7 @@ export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onS
             // Проверяем, есть ли файлы сохраненные как base64
             const base64Count = uploadedPhotos.filter(photo => photo.isBase64).length;
             if (base64Count > 0) {
-                console.log(`📝 ${base64Count} из ${uploadedPhotos.length} фотографий сохранены как base64 из-за проблем с Storage`);
+
             }
 
             // Создаем фотоотчет в базе данных

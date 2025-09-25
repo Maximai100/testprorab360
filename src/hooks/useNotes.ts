@@ -15,7 +15,7 @@ export const useNotes = (session: Session | null) => {
     // Загрузка всех заметок пользователя
     const fetchAllNotes = useCallback(async (session: Session | null) => {
         if (!session?.user?.id) {
-            console.log('📝 useNotes: Нет сессии для загрузки заметок');
+
             return;
         }
 
@@ -23,7 +23,6 @@ export const useNotes = (session: Session | null) => {
         setError(null);
 
         try {
-            console.log('📝 useNotes: Загружаем заметки для пользователя:', session.user.id);
 
             const { data: notesData, error: notesError } = await supabase
                 .from('notes')
@@ -50,7 +49,6 @@ export const useNotes = (session: Session | null) => {
             setNotes(transformedNotes);
             // Кешируем для мгновенного старта
             dataService.setNotes(transformedNotes);
-            console.log('📝 useNotes: Заметки загружены успешно:', transformedNotes.length);
 
         } catch (error) {
             console.error('📝 useNotes: Ошибка при загрузке заметок:', error);
@@ -120,7 +118,6 @@ export const useNotes = (session: Session | null) => {
         // Устанавливаем новый таймаут
         const timeout = setTimeout(async () => {
             try {
-                console.log('📝 useNotes: Сохраняем заметку:', { context, entityId, contentLength: content.length });
 
                 // Ищем существующую заметку (не временную)
                 const existingNote = notes.find(n => 
@@ -150,8 +147,6 @@ export const useNotes = (session: Session | null) => {
                             ? { ...note, content, updatedAt: data.updated_at }
                             : note
                     ));
-
-                    console.log('📝 useNotes: Заметка обновлена:', existingNote.id);
 
                 } else {
                     // Создаем новую заметку
@@ -187,7 +182,7 @@ export const useNotes = (session: Session | null) => {
                             ? newNote
                             : note
                     ));
-                    console.log('📝 useNotes: Заметка создана:', newNote.id);
+
                 }
 
             } catch (error) {

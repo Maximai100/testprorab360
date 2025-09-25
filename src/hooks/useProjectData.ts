@@ -14,24 +14,32 @@ export const useProjectData = () => {
     // Инициализируем хук для работы с файлами
     const { uploadFileWithFallback } = useFileStorage();
     
-    // Загрузка данных проекта из Supabase
-    const loadProjectData = useCallback(async (projectId: string) => {
+    // Загрузка данных проекта из Supabase с retry логикой
+    const loadProjectData = useCallback(async (projectId: string, retryCount = 0) => {
         if (!projectId) return;
         
         setLoading(true);
         setError(null);
         
         try {
-            console.log('🔄 useProjectData: Загружаем данные проекта:', projectId);
+            console.log('🔄 useProjectData: Загружаем данные проекта:', projectId, retryCount > 0 ? `(попытка ${retryCount + 1})` : '');
             
-            const { data: { user } } = await supabase.auth.getUser();
+            // Добавляем задержку для предотвращения слишком частых запросов
+            await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1)));
+            
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError) {
+                console.error('useProjectData: Ошибка получения пользователя:', userError);
+                throw userError;
+            }
             if (!user) {
                 console.log('useProjectData: Пользователь не авторизован');
+                setLoading(false);
                 return;
             }
 
             // Загружаем параллельно: финансы и этапы работ
-            const [financeRes, stagesRes] = await Promise.all([
+            const [financeRes, stagesRes] = await Promise.allSettled([
                 supabase
                     .from('finance_entries')
                     .select('*')
@@ -46,17 +54,30 @@ export const useProjectData = () => {
                     .order('created_at', { ascending: false })
             ]);
 
-            if (financeRes.error) {
-                console.error('useProjectData: Ошибка загрузки финансовых записей:', financeRes.error);
-                throw financeRes.error;
+            // Обрабатываем результаты Promise.allSettled
+            const financeData = financeRes.status === 'fulfilled' ? financeRes.value : null;
+            const stagesData = stagesRes.status === 'fulfilled' ? stagesRes.value : null;
+            
+            if (financeRes.status === 'rejected') {
+                console.error('useProjectData: Ошибка загрузки финансовых записей:', financeRes.reason);
+                throw financeRes.reason;
             }
-            if (stagesRes.error) {
-                console.error('useProjectData: Ошибка загрузки этапов работ:', stagesRes.error);
-                throw stagesRes.error;
+            if (stagesRes.status === 'rejected') {
+                console.error('useProjectData: Ошибка загрузки этапов работ:', stagesRes.reason);
+                throw stagesRes.reason;
+            }
+            
+            if (financeData?.error) {
+                console.error('useProjectData: Ошибка загрузки финансовых записей:', financeData.error);
+                throw financeData.error;
+            }
+            if (stagesData?.error) {
+                console.error('useProjectData: Ошибка загрузки этапов работ:', stagesData.error);
+                throw stagesData.error;
             }
 
             // Преобразуем данные в формат приложения
-            const mappedFinanceEntries: FinanceEntry[] = ((financeRes.data as any[]) || []).map((row: any) => ({
+            const mappedFinanceEntries: FinanceEntry[] = ((financeData?.data as any[]) || []).map((row: any) => ({
                 id: row.id,
                 projectId: row.project_id,
                 type: row.type,
@@ -69,7 +90,7 @@ export const useProjectData = () => {
                 updatedAt: row.updated_at,
             }));
 
-            const mappedWorkStages: WorkStage[] = ((stagesRes.data as any[]) || []).map((row: any) => ({
+            const mappedWorkStages: WorkStage[] = ((stagesData?.data as any[]) || []).map((row: any) => ({
                 id: row.id,
                 projectId: row.project_id,
                 title: row.title,
@@ -92,7 +113,29 @@ export const useProjectData = () => {
             
         } catch (error) {
             console.error('❌ useProjectData: Ошибка при загрузке данных проекта:', error);
-            setError(error instanceof Error ? error.message : 'Неизвестная ошибка');
+            
+            // Retry логика для сетевых ошибок
+            if (retryCount < 2 && error instanceof Error && 
+                (error.message.includes('NetworkError') || error.message.includes('fetch'))) {
+
+                setTimeout(() => {
+                    loadProjectData(projectId, retryCount + 1);
+                }, 1000 * (retryCount + 1));
+                return;
+            }
+            
+            // Более детальная обработка ошибок
+            if (error instanceof Error) {
+                if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+                    setError('Ошибка сети. Проверьте подключение к интернету.');
+                } else if (error.message.includes('auth')) {
+                    setError('Ошибка авторизации. Попробуйте перезайти в приложение.');
+                } else {
+                    setError(`Ошибка загрузки данных: ${error.message}`);
+                }
+            } else {
+                setError('Неизвестная ошибка при загрузке данных');
+            }
         } finally {
             setLoading(false);
         }
@@ -105,7 +148,7 @@ export const useProjectData = () => {
         // Если передан файл чека, загружаем его
         if (receiptFile) {
             try {
-                console.log('📄 Загружаем чек для финансовой транзакции:', receiptFile.name);
+
                 const uploadResult = await uploadFileWithFallback('receipts', receiptFile);
                 
                 if (uploadResult.error) {
@@ -114,7 +157,7 @@ export const useProjectData = () => {
                 }
                 
                 receiptUrl = uploadResult.publicUrl;
-                console.log('📄 Чек успешно загружен:', receiptUrl);
+
             } catch (error) {
                 console.error('Ошибка при загрузке чека:', error);
                 throw error;
@@ -174,7 +217,7 @@ export const useProjectData = () => {
         // Если передан новый файл чека, загружаем его
         if (receiptFile) {
             try {
-                console.log('📄 Обновляем чек для финансовой транзакции:', receiptFile.name);
+
                 const uploadResult = await uploadFileWithFallback('receipts', receiptFile);
                 
                 if (uploadResult.error) {
@@ -183,7 +226,7 @@ export const useProjectData = () => {
                 }
                 
                 receiptUrl = uploadResult.publicUrl;
-                console.log('📄 Чек успешно обновлен:', receiptUrl);
+
             } catch (error) {
                 console.error('Ошибка при обновлении чека:', error);
                 throw error;
@@ -250,8 +293,7 @@ export const useProjectData = () => {
             }
             
             setFinanceEntries(prev => prev.filter(f => f.id !== id));
-            console.log('📄 Финансовая запись удалена:', id);
-            
+
         } catch (error) {
             console.error('Ошибка при удалении финансовой записи:', error);
             throw error;
@@ -304,7 +346,7 @@ export const useProjectData = () => {
             };
             
             setWorkStages(prev => [...prev, newStage]);
-            console.log('📅 Этап работ создан:', newStage);
+
             return newStage;
             
         } catch (error) {
@@ -357,8 +399,7 @@ export const useProjectData = () => {
             setWorkStages(prev => prev.map(stage => 
                 stage.id === id ? updatedStage : stage
             ));
-            console.log('📅 Этап работ обновлен:', updatedStage);
-            
+
         } catch (error) {
             console.error('Ошибка при обновлении этапа работ:', error);
             throw error;
@@ -384,8 +425,7 @@ export const useProjectData = () => {
             }
             
             setWorkStages(prev => prev.filter(w => w.id !== id));
-            console.log('📅 Этап работ удален:', id);
-            
+
         } catch (error) {
             console.error('Ошибка при удалении этапа работ:', error);
             throw error;

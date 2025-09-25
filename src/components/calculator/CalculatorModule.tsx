@@ -9,78 +9,14 @@ import { useProjectContext } from '../../context/ProjectContext';
 import { supabase } from '../../supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
-// Fix: Add TypeScript definitions for the Telegram Web App API to resolve errors on `window.Telegram`.
-interface TelegramWebApp {
-    version: string;
-    ready: () => void;
-    expand: () => void;
-    sendData: (data: string) => void;
-    HapticFeedback: {
-        notificationOccurred: (type: 'success' | 'error' | 'warning') => void;
-    };
-    colorScheme: 'light' | 'dark';
-    onEvent: (eventType: 'themeChanged', eventHandler: () => void) => void;
-    offEvent: (eventType: 'themeChanged', eventHandler: () => void) => void;
-    isClosingConfirmationEnabled: boolean;
-    enableClosingConfirmation: () => void;
-    disableClosingConfirmation: () => void;
-    disableVerticalSwipes: () => void;
-    showAlert: (message: string, callback?: () => void) => void;
-    showConfirm: (message: string, callback: (ok: boolean) => void) => void;
-}
-
 declare global {
     interface Window {
-        Telegram?: {
-            WebApp: TelegramWebApp;
-        };
         jspdf: {
             jsPDF: typeof jsPDF;
         }
     }
 }
 
-// --- Development Mock for Telegram API ---
-// This allows the app to run in a regular browser for development without errors.
-if (!window.Telegram || !window.Telegram.WebApp) {
-    console.log("Telegram WebApp API not found. Using development mock.");
-    window.Telegram = {
-        WebApp: {
-            version: '7.0',
-            ready: () => console.log("Mock App.ready()"),
-            expand: () => console.log("Mock App.expand()"),
-            sendData: (data: string) => {
-                console.log("--- Mock App.sendData() ---");
-                console.log("Data to be sent to Telegram chat:");
-                console.log(data);
-                alert("Данные для отправки выведены в консоль (F12).");
-            },
-            HapticFeedback: {
-                notificationOccurred: (type) => console.log(`Mock HapticFeedback: ${type}`),
-            },
-            colorScheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-            onEvent: (eventType, eventHandler) => {
-                if (eventType === 'themeChanged') {
-                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', eventHandler);
-                }
-            },
-            offEvent: (eventType, eventHandler) => {
-                 if (eventType === 'themeChanged') {
-                     window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', eventHandler);
-                }
-            },
-            isClosingConfirmationEnabled: false,
-            enableClosingConfirmation: () => console.log("Mock Closing Confirmation Enabled"),
-            disableClosingConfirmation: () => console.log("Mock Closing Confirmation Disabled"),
-            disableVerticalSwipes: () => console.log("Mock Vertical Swipes Disabled"),
-            showAlert: (message, callback) => { alert(message); callback?.(); },
-            showConfirm: (message, callback) => { callback(window.confirm(message)); },
-        },
-    };
-}
-// --- End of Mock ---
-
-const tg = window.Telegram?.WebApp;
 
 /**
  * Safely shows an alert. Falls back to browser's alert if Telegram API is unavailable or outdated.
@@ -88,14 +24,9 @@ const tg = window.Telegram?.WebApp;
  * @param callback Optional callback to be executed after the alert is closed.
  */
 const safeShowAlert = (message: string, callback?: () => void) => {
-    // Telegram WebApp version 6.1+ is required for showAlert.
-    if (tg && tg.version >= '6.1' && typeof tg.showAlert === 'function') {
-        tg.showAlert(message, callback);
-    } else {
-        alert(message);
-        if (callback) {
-            callback();
-        }
+    alert(message);
+    if (callback) {
+        callback();
     }
 };
 
@@ -105,12 +36,7 @@ const safeShowAlert = (message: string, callback?: () => void) => {
  * @param callback Callback to be executed with the result (true for OK, false for Cancel).
  */
 const safeShowConfirm = (message: string, callback: (ok: boolean) => void) => {
-    // Telegram WebApp version 6.1+ is required for showConfirm.
-    if (tg && tg.version >= '6.1' && typeof tg.showConfirm === 'function') {
-        tg.showConfirm(message, callback);
-    } else {
-        callback(window.confirm(message));
-    }
+    callback(window.confirm(message));
 };
 
 // --- ICON COMPONENTS ---
@@ -122,7 +48,6 @@ const IconChevronRight = (props: React.HTMLAttributes<HTMLDivElement>) => <Icon 
 const IconSun = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></Icon>;
 const IconMoon = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></Icon>;
 const IconImage = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></Icon>;
-const IconShare = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></Icon>;
 const IconSave = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg></Icon>;
 const IconFolderOpen = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></Icon>;
 const IconPdf = () => <Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.29 15.71c.24-.24.44-.53.6-.86s.24-.71.24-1.13c0-.42-.08-.79-.24-1.11s-.36-.58-.6-.8c-.24-.22-.53-.39-.86-.51s-.71-.18-1.12-.18c-.48 0-.91.07-1.29.2s-.7.3-1.01.52c-.31.22-.56.49-.75.81s-.29.69-.29 1.1c0 .51.12.95.35 1.33s.53.69.9.91c.37.22.78.33 1.22.33.53 0 1.01-.11 1.44-.34s.78-.54 1.05-.94zM8.3 15.3v-3.68h1.12c.31 0 .58.04.81.13s.42.22.58.4c.16.18.28.39.36.64s.12.52.12.81c0 .28-.04.54-.12.78s-.2.46-.36.64c-.16.18-.35.32-.58.42s-.49.16-.81.16H8.3z"></path></svg></Icon>;
@@ -195,12 +120,14 @@ interface SavedEstimate {
 interface MaterialResult {
     quantity: string;
     cost: number;
+    unit?: string; // Добавляем единицу измерения
     details: Record<string, string>;
     isGroup?: boolean;
     items?: {
         name: string;
         quantity: string;
         cost: number;
+        unit?: string; // Добавляем единицу измерения для элементов группы
     }[];
 }
 type MaterialCategory = 'plaster' | 'putty' | 'paint' | 'wallpaper' | 'tile' | 'flooring' | 'screed' | 'skirting' | 'drywall' | 'arbitrary';
@@ -429,6 +356,7 @@ const useBagCalculation = (
         return {
             quantity: quantityText,
             cost: totalCost,
+            unit: 'меш.', // Изменяем на упаковочную единицу
             details: {
                 "Количество": quantityText,
                 "Стоимость": `${totalCost.toFixed(2)} ₽`,
@@ -582,6 +510,7 @@ const PaintCalculator: React.FC<{ wallArea: number, floorArea: number } & Materi
         return {
             quantity: quantityText,
             cost: totalCost,
+            unit: 'банка', // Изменяем на упаковочную единицу
             details: {
                 "Количество": quantityText,
                 "Стоимость": `${totalCost.toFixed(2)} ₽`,
@@ -702,6 +631,7 @@ const WallpaperCalculator: React.FC<{ perimeter: number, height: number } & Mate
         return {
             quantity: quantityText,
             cost: totalCost,
+            unit: 'рулон', // Изменяем на упаковочную единицу
             details: {
                 "Количество": quantityText,
                 "Стоимость": `${totalCost.toFixed(2)} ₽`,
@@ -783,6 +713,7 @@ const LaminateCalculator: React.FC<{ floorArea: number } & MaterialCalculatorPro
         return {
             quantity: quantityText,
             cost: totalCost,
+            unit: 'упаковка', // Изменяем на упаковочную единицу
             details: {
                 "Ламинат": `${totalArea.toFixed(2)} м² (≈ ${packs} уп.)`,
                 "Подложка": `${totalArea.toFixed(2)} м²`,
@@ -915,6 +846,7 @@ const SkirtingCalculator: React.FC<{ perimeter: number, totalDoorWidth: number, 
         return {
             quantity: quantityText,
             cost: totalCost,
+            unit: 'планка', // Изменяем на упаковочную единицу
             details: {
                 "Количество": quantityText,
                 "Стоимость": `${totalCost.toFixed(2)} ₽`,
@@ -1723,6 +1655,7 @@ const ResultsPage: React.FC<{
         }
 
         // Преобразование данных калькулятора в формат сметы
+        
         const newEstimateItems = Object.entries(materialResults)
             .filter(([_, result]) => result && result.quantity.trim())
             .map(([name, result]) => {
@@ -1738,11 +1671,29 @@ const ResultsPage: React.FC<{
                     }));
                 } else if (result) {
                     // Для обычных материалов
+                    
+                    // Извлекаем количество упаковок из строки (например, "330 кг (≈ 11 меш.)" -> 11)
+                    const quantityMatch = result.quantity.match(/≈ (\d+(?:[.,]\d+)?)/);
+                    const quantity = quantityMatch ? parseFloat(quantityMatch[1].replace(',', '.')) : 1;
+                    
+                    // Извлекаем цену за единицу из details
+                    const pricePerUnit = result.details && result.details['Цена за мешок'] 
+                        ? parseFloat(result.details['Цена за мешок'].replace(/[^\d.,]/g, '').replace(',', '.')) || 0
+                        : result.details && result.details['Цена за банку']
+                        ? parseFloat(result.details['Цена за банку'].replace(/[^\d.,]/g, '').replace(',', '.')) || 0
+                        : result.details && result.details['Цена за рулон']
+                        ? parseFloat(result.details['Цена за рулон'].replace(/[^\d.,]/g, '').replace(',', '.')) || 0
+                        : result.details && result.details['Цена за упаковку']
+                        ? parseFloat(result.details['Цена за упаковку'].replace(/[^\d.,]/g, '').replace(',', '.')) || 0
+                        : result.details && result.details['Цена за планку']
+                        ? parseFloat(result.details['Цена за планку'].replace(/[^\d.,]/g, '').replace(',', '.')) || 0
+                        : 0;
+                    
                     return {
                         name: name,
-                        quantity: 1, // Количество уже учтено в стоимости
-                        unit: 'комплект',
-                        price: result.cost,
+                        quantity: quantity, // Используем извлеченное количество
+                        unit: result.unit || 'комплект', // Используем реальную единицу измерения
+                        price: pricePerUnit, // Используем цену за единицу
                         type: 'material' as const,
                         image: null
                     };
@@ -1754,12 +1705,6 @@ const ResultsPage: React.FC<{
 
         // ПРАВИЛЬНЫЙ ПОРЯДОК ДЕЙСТВИЙ
         try {
-            console.log('[DEBUG] Шаг 1: Попытка создания сметы.');
-            console.log('[DEBUG] Полученный activeProjectId:', activeProjectId);
-            console.log('[DEBUG] Тип activeProjectId:', typeof activeProjectId);
-            console.log('[DEBUG] activeProjectId === null:', activeProjectId === null);
-            console.log('[DEBUG] activeProjectId === undefined:', activeProjectId === undefined);
-            console.log('[DEBUG] activeProjectId === "":', activeProjectId === "");
             
             // 1. Проверяем наличие проекта (это уже должно быть)
             if (!activeProjectId) {
@@ -1771,10 +1716,7 @@ const ResultsPage: React.FC<{
             // newEstimateItems уже созданы выше
             
             // 3. Создаем ОБЪЕКТ новой сметы
-            console.log('🔧 CalculatorModule: создаем смету для проекта:', activeProjectId);
             const newEstimateObject = estimatesHook.createNewEstimate(activeProjectId);
-            console.log('🔧 CalculatorModule: создана смета:', newEstimateObject);
-            console.log('🔧 CalculatorModule: project_id сметы:', newEstimateObject.project_id);
             
             // 4. Дополняем объект данными из формы и калькулятора
             newEstimateObject.number = `К-${Date.now().toString().slice(-6)}`; // Номер сметы
@@ -1783,11 +1725,9 @@ const ResultsPage: React.FC<{
             
             // 5. ---- КЛЮЧЕВОЙ ШАГ ----
             // Используем новый метод прямого сохранения сметы
-            console.log('[DEBUG] Сохраняем смету напрямую через saveEstimateDirectly');
             
             // 6. Сохраняем смету напрямую, не завися от currentEstimate
             try {
-                console.log('[DEBUG] Начинаем прямое сохранение сметы');
                 await estimatesHook.saveEstimateDirectly(newEstimateObject);
                 
                 // Принудительно обновляем данные в App.tsx
@@ -1819,28 +1759,6 @@ const ResultsPage: React.FC<{
         }
     };
 
-    const handleShareCalculations = () => {
-        let report = `*Расчет материалов*\n\n`;
-        report += `*--- ОБЩАЯ СВОДКА ---*\n`;
-        report += `Общая площадь пола: ${totalCalculations.totalFloorArea.toFixed(2)} м²\n`;
-        report += `Общая площадь стен: ${totalCalculations.totalNetWallArea.toFixed(2)} м²\n`;
-        report += `Общий периметр: ${totalCalculations.totalPerimeter.toFixed(2)} м\n\n`;
-        report += `*ОБЩАЯ СТОИМОСТЬ: ${totalCost.toFixed(2)} ₽*\n\n`;
-
-        report += `*--- РЕЗУЛЬТАТЫ РАСЧЕТОВ ---*\n`;
-        MATERIAL_ORDER.forEach(key => {
-            const result = materialResults[key];
-            if (key === 'Произвольные материалы' && result?.isGroup && result.items) {
-                 result.items.forEach(item => {
-                    report += `${item.name}:\n  Кол-во: ${item.quantity}\n  Стоимость: ${item.cost.toFixed(2)} ₽\n`;
-                });
-            } else if (result && result.quantity.trim()) {
-                 report += `${key}:\n  Кол-во: ${result.quantity.replace(/\n/g, '\n  ')}\n  Стоимость: ${result.cost.toFixed(2)} ₽\n`;
-            }
-        });
-        
-        tg?.sendData(report);
-    };
 
     const handleExportPdf = async () => {
         try {
@@ -1906,13 +1824,13 @@ const ResultsPage: React.FC<{
                 const result = materialResults[name];
                  if (name === 'Произвольные материалы' && result?.isGroup && result.items) {
                     result.items.forEach(item => {
-                        tableRows.push([item.name, item.quantity, `${item.cost.toFixed(2)} ₽`]);
+                        tableRows.push([item.name, item.quantity, item.cost > 0 ? `${item.cost.toFixed(2)} ₽` : '-']);
                     });
                 } else if (result && result.quantity) {
                     const materialData = [
                         name,
                         result.quantity.replace(/\n/g, ', '), // Flatten multi-line quantities
-                        `${result.cost.toFixed(2)} ₽`
+                        result.cost > 0 ? `${result.cost.toFixed(2)} ₽` : '-'
                     ];
                     tableRows.push(materialData);
                 }
@@ -1993,7 +1911,10 @@ const ResultsPage: React.FC<{
                                 return arbitraryResult.items.map((item, index) => (
                                     <div className="summary-item" key={`arb-item-${index}-${item.name}`}>
                                         <span>{item.name}</span>
-                                        <strong className="summary-item__value">{item.quantity}<br/>{item.cost.toFixed(2)} ₽</strong>
+                                        <strong className="summary-item__value">
+                                            {item.quantity}
+                                            {item.cost > 0 && <><br/>{item.cost.toFixed(2)} ₽</>}
+                                        </strong>
                                     </div>
                                 ));
                             }
@@ -2006,7 +1927,10 @@ const ResultsPage: React.FC<{
                         return (
                             <div className="summary-item" key={name}>
                                 <span>{name}</span>
-                                <strong className="summary-item__value">{result.quantity}<br/>{result.cost.toFixed(2)} ₽</strong>
+                                <strong className="summary-item__value">
+                                    {result.quantity}
+                                    {result.cost > 0 && <><br/>{result.cost.toFixed(2)} ₽</>}
+                                </strong>
                             </div>
                         );
                     })}
@@ -2018,7 +1942,6 @@ const ResultsPage: React.FC<{
             </div>
             
             <div className="results-actions">
-                <button className="btn btn-secondary" onClick={handleShareCalculations}><IconShare/> Поделиться</button>
                 <button className="btn btn-secondary" onClick={handleExportPdf}><IconPdf/> Экспорт в PDF</button>
                 <button className="btn btn-secondary" onClick={onOpenSupplierRequest}><IconClipboard/> Заявка поставщику</button>
                 <button 
@@ -2504,7 +2427,8 @@ const SupplierRequestModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     materialResults: Record<string, MaterialResult | null>;
-}> = ({ isOpen, onClose, materialResults }) => {
+    companyProfile?: any;
+}> = ({ isOpen, onClose, materialResults, companyProfile }) => {
     const [requestItems, setRequestItems] = useState<RequestItem[]>([]);
     const [copyButtonText, setCopyButtonText] = useState('Скопировать');
 
@@ -2592,9 +2516,28 @@ const SupplierRequestModal: React.FC<{
         });
     };
 
-    const handleSendToChat = () => {
-        const text = formatRequestText();
-        tg?.sendData(text);
+    const handleExportPDF = async () => {
+        try {
+            const PdfServiceInstance = await import('../../services/PdfService');
+            
+            // Отладочная информация
+            
+            // Преобразуем requestItems в формат для PDF
+            const pdfItems = requestItems.map(item => ({
+                name: item.name,
+                quantity: parseFloat(item.quantity) || 0,
+                unit: item.unit,
+                note: item.note
+            }));
+            
+            await PdfServiceInstance.default.generateSupplierRequestPDF(
+                pdfItems,
+                companyProfile
+            );
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            safeShowAlert('Ошибка при генерации PDF');
+        }
     };
 
     return (
@@ -2632,7 +2575,7 @@ const SupplierRequestModal: React.FC<{
             </div>
             <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={handleCopyToClipboard}>{copyButtonText}</button>
-                <button className="btn btn-primary" onClick={handleSendToChat}>Отправить в чат</button>
+                <button className="btn btn-primary" onClick={handleExportPDF}>Экспорт в PDF</button>
             </div>
         </Modal>
     );
@@ -2642,9 +2585,10 @@ interface CalculatorModuleProps {
     // The config prop has been removed as theme management is now handled 
     // by the parent application via a wrapper CSS class.
     appState?: any;
+    companyProfile?: any;
 }
 
-export const CalculatorModule: React.FC<CalculatorModuleProps> = ({ appState }) => {
+export const CalculatorModule: React.FC<CalculatorModuleProps> = ({ appState, companyProfile }) => {
     useEffect(() => {
         document.documentElement.lang = 'ru';
     }, []);
@@ -2744,15 +2688,10 @@ export const CalculatorModule: React.FC<CalculatorModuleProps> = ({ appState }) 
             if (autosavedData) {
                 const restoredRooms = JSON.parse(autosavedData);
                 if (Array.isArray(restoredRooms) && restoredRooms.length > 0) {
-                    setTimeout(() => {
-                        safeShowConfirm('Найдена незаконченная сессия. Восстановить введенные данные?', (ok) => {
-                            if (ok) {
-                                setRooms(restoredRooms);
-                                tg?.HapticFeedback.notificationOccurred('success');
-                            }
-                            localStorage.removeItem('autosavedRooms');
-                        });
-                    }, 500); // Small delay to ensure UI is ready
+                    // Автоматически восстанавливаем данные без модального окна
+                    setRooms(restoredRooms);
+                    tg?.HapticFeedback.notificationOccurred('success');
+                    localStorage.removeItem('autosavedRooms');
                 }
             }
         } catch (error) {
@@ -2814,13 +2753,10 @@ export const CalculatorModule: React.FC<CalculatorModuleProps> = ({ appState }) 
         const estimateToLoad = savedEstimates.find(e => e.id === id);
         if (!estimateToLoad) return;
 
-        safeShowConfirm('Загрузка сохраненного расчета перезапишет текущие данные. Продолжить?', (ok) => {
-            if (ok) {
-                setRooms(estimateToLoad.rooms);
-                setLoadModalOpen(false);
-                tg?.HapticFeedback.notificationOccurred('success');
-            }
-        });
+        // Автоматически загружаем данные без модального окна
+        setRooms(estimateToLoad.rooms);
+        setLoadModalOpen(false);
+        tg?.HapticFeedback.notificationOccurred('success');
     };
 
     const handleDeleteEstimate = (id: number) => {
@@ -2892,6 +2828,7 @@ export const CalculatorModule: React.FC<CalculatorModuleProps> = ({ appState }) 
                 isOpen={isSupplierRequestModalOpen}
                 onClose={() => setSupplierRequestModalOpen(false)}
                 materialResults={materialResults}
+                companyProfile={companyProfile}
             />
         </>
     );

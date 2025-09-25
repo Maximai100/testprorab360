@@ -37,12 +37,12 @@ export const InventoryScreen: React.FC<InventoryScreenProps & {
     // Мемоизируем значения заметок для оптимизации
     const toolsNote = useMemo(() => {
         const note = notesHook.getNote('inventory_tools');
-        console.log('🔧 InventoryScreen: toolsNote получена:', note);
+
         return note;
     }, [notesHook]);
     const consumablesNote = useMemo(() => {
         const note = notesHook.getNote('inventory_consumables');
-        console.log('🔧 InventoryScreen: consumablesNote получена:', note);
+
         return note;
     }, [notesHook]);
 
