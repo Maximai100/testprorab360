@@ -6,7 +6,6 @@ import {
 import { dataService, dataUtils } from '../services/storageService';
 import { supabase } from '../supabaseClient';
 import { useFileStorage } from './useFileStorage';
-import { withRetry, handleSupabaseError, createErrorHandler } from '../utils/supabaseErrorHandler';
 
 export const useProjects = () => {
     console.log('useProjects: Хук useProjects инициализируется');
@@ -112,28 +111,18 @@ export const useProjects = () => {
         return projects.find(p => p.id === id) || null;
     }, [projects]);
     
-    // Создаем обработчик ошибок
-    const errorHandler = createErrorHandler();
-
     const loadProjectsFromSupabase = useCallback(async () => {
         try {
             console.log('🔄 loadProjectsFromSupabase: Начинаем загрузку проектов из Supabase...');
-            
-            const { data: projectsData, error } = await withRetry(
-                () => supabase
-                    .from('projects')
-                    .select('*')
-                    .order('created_at', { ascending: false }),
-                {
-                    maxAttempts: 3,
-                    baseDelay: 1000,
-                    maxDelay: 5000,
-                }
-            );
+            console.log('🔄 loadProjectsFromSupabase: Выполняем запрос к Supabase...');
+            const { data: projectsData, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+            console.log('🔄 loadProjectsFromSupabase: Запрос к Supabase завершен');
 
             if (error) {
-                const errorMessage = errorHandler(error, 'loadProjectsFromSupabase');
-                console.warn('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', errorMessage);
+                console.warn('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
                 console.log('loadProjectsFromSupabase: Продолжаем работу в офлайн-режиме с localStorage');
                 return;
             }
@@ -151,7 +140,8 @@ export const useProjects = () => {
                     updatedAt: row.updated_at,
                 }));
                 
-                console.log('loadProjectsFromSupabase: Загружено проектов из Supabase:', mappedProjects.length);
+                console.log('loadProjectsFromSupabase: Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
+                console.log('loadProjectsFromSupabase: Устанавливаем проекты в состояние...');
                 setProjects(mappedProjects);
                 // Сохраняем кеш для мгновенного старта в следующий раз
                 dataService.setProjects(mappedProjects);
@@ -160,12 +150,11 @@ export const useProjects = () => {
                 console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');
             }
         } catch (error) {
-            const errorMessage = errorHandler(error, 'loadProjectsFromSupabase');
-            console.warn('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', errorMessage);
+            console.warn('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
             console.log('loadProjectsFromSupabase: Продолжаем работу в офлайн-режиме с localStorage');
         }
         console.log('✅ loadProjectsFromSupabase: Функция завершена');
-    }, [errorHandler]);
+    }, []);
 
     // Load documents from Supabase
     const loadDocumentsFromSupabase = useCallback(async () => {
