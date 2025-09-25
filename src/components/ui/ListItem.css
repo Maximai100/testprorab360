@@ -25,6 +25,11 @@
   border-radius: 50%;
   background-color: var(--color-surface-2); /* Цвет фона по умолчанию */
   color: var(--color-text-primary);
+  /* Принудительно делаем иконки идеально круглыми */
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
 }
 
 .list-item-icon-button {
@@ -39,6 +44,11 @@
   cursor: pointer;
   color: var(--color-text-primary);
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  /* Принудительно делаем кнопки идеально круглыми */
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
 }
 
 .list-item-icon-button:hover {

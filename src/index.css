@@ -2584,13 +2584,18 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 .priority-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
     margin-left: 8px;
     display: inline-block;
     flex-shrink: 0;
     box-sizing: border-box;
+    /* Принудительно делаем кружочки идеально круглыми */
+    min-width: 12px !important;
+    min-height: 12px !important;
+    max-width: 12px !important;
+    max-height: 12px !important;
 }
 
 .task-groups-container {
@@ -3025,7 +3030,40 @@ input[type=number] { -moz-appearance: textfield; }
     opacity: 0.8;
 }
 
-/* Исправление проблемы с "прыгающим" нижним меню в мобильной версии */
+    /* Стабилизация кружочков приоритета на мобильных */
+    .priority-dot {
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 50% !important;
+        min-width: 12px !important;
+        min-height: 12px !important;
+        max-width: 12px !important;
+        max-height: 12px !important;
+        /* Дополнительная стабилизация для мобильных */
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    
+    /* Стабилизация иконок в списках на мобильных */
+    .list-item-icon-wrapper,
+    .list-item-icon-button {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        /* Дополнительная стабилизация для мобильных */
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    
+    /* Исправление проблемы с "прыгающим" нижним меню в мобильной версии */
 @media (max-width: 768px) {
     /* Предотвращаем изменение высоты viewport при работе с модальными окнами */
     body {
