@@ -389,7 +389,7 @@ const App: React.FC = () => {
         document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
     }, [companyProfileHook.profile?.name]);
 
-    // Стабилизация верхнего и нижнего меню в мобильной версии
+    // Стабилизация верхнего и нижнего меню, а также заголовков экранов в мобильной версии
     useEffect(() => {
         const stabilizeMenus = () => {
             // Стабилизируем верхнее меню
@@ -443,6 +443,27 @@ const App: React.FC = () => {
                 bottomNav.style.overflow = 'hidden';
                 bottomNav.style.webkitOverflowScrolling = 'touch';
             }
+            
+            // Стабилизируем заголовки экранов
+            const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
+            screenHeaders.forEach(header => {
+                // Принудительно устанавливаем стабильную позицию
+                header.style.transform = 'translate3d(0, 0, 0)';
+                header.style.willChange = 'transform';
+                header.style.backfaceVisibility = 'hidden';
+                header.style.webkitBackfaceVisibility = 'hidden';
+                header.style.webkitTransform = 'translate3d(0, 0, 0)';
+                
+                // Предотвращаем изменение позиции
+                header.style.position = 'sticky';
+                header.style.top = '0';
+                header.style.left = '0';
+                header.style.right = '0';
+                
+                // Дополнительная стабилизация для iOS
+                header.style.overflow = 'hidden';
+                header.style.webkitOverflowScrolling = 'touch';
+            });
         };
 
         // Стабилизируем при загрузке
