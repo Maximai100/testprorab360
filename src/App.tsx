@@ -399,6 +399,22 @@ const App: React.FC = () => {
                 bottomNav.style.willChange = 'transform';
                 bottomNav.style.backfaceVisibility = 'hidden';
                 bottomNav.style.webkitBackfaceVisibility = 'hidden';
+                bottomNav.style.webkitTransform = 'translate3d(0, 0, 0)';
+                
+                // Фиксированная высота
+                bottomNav.style.height = '60px';
+                bottomNav.style.minHeight = '60px';
+                bottomNav.style.maxHeight = '60px';
+                
+                // Предотвращаем изменение позиции
+                bottomNav.style.position = 'fixed';
+                bottomNav.style.bottom = '0';
+                bottomNav.style.left = '0';
+                bottomNav.style.right = '0';
+                
+                // Дополнительная стабилизация для iOS
+                bottomNav.style.overflow = 'hidden';
+                bottomNav.style.webkitOverflowScrolling = 'touch';
             }
         };
 
@@ -411,11 +427,21 @@ const App: React.FC = () => {
 
         // Стабилизируем при скролле
         window.addEventListener('scroll', stabilizeBottomNav, { passive: true });
+        
+        // Стабилизируем при изменении viewport
+        window.addEventListener('touchstart', stabilizeBottomNav, { passive: true });
+        window.addEventListener('touchmove', stabilizeBottomNav, { passive: true });
+        
+        // Стабилизируем при изменении видимости
+        document.addEventListener('visibilitychange', stabilizeBottomNav);
 
         return () => {
             window.removeEventListener('resize', stabilizeBottomNav);
             window.removeEventListener('orientationchange', stabilizeBottomNav);
             window.removeEventListener('scroll', stabilizeBottomNav);
+            window.removeEventListener('touchstart', stabilizeBottomNav);
+            window.removeEventListener('touchmove', stabilizeBottomNav);
+            document.removeEventListener('visibilitychange', stabilizeBottomNav);
         };
     }, []);
 
