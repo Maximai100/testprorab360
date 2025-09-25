@@ -17,6 +17,7 @@ import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeIm
 import { statusMap } from './constants';
 import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome, IconCheckSquare } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
+import { ConnectionStatus } from './components/common/ConnectionStatus';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { EstimatesListModal } from './components/modals/EstimatesListModal';
 import { LibraryModal } from './components/modals/LibraryModal';
@@ -1434,6 +1435,7 @@ const App: React.FC = () => {
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                     />
                     <h1>{(companyProfileHook.profile.name && companyProfileHook.profile.name.trim()) ? companyProfileHook.profile.name : 'Прораб'}</h1>
+                    <ConnectionStatus className="ml-4" />
                 </div>
                 <div className="app-header-right">
                     <button onClick={appState.handleThemeChange} className="header-btn" aria-label="Сменить тему">
