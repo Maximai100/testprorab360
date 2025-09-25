@@ -171,14 +171,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     console.log('ProjectDetailView: estimates:', estimates);
     
     const projectEstimates = useMemo(() => {
-        const filtered = estimates.filter(e => e.project_id === activeProject.id);
-        console.log('ProjectDetailView: projectEstimates фильтрация:', {
+        console.log('[DEBUG] Шаг 6: ProjectDetailView - получение смет для проекта.');
+        console.log('[DEBUG] activeProject.id:', activeProject.id);
+        console.log('[DEBUG] Тип activeProject.id:', typeof activeProject.id);
+        console.log('[DEBUG] estimates получены:', estimates);
+        console.log('[DEBUG] Количество estimates:', estimates.length);
+        
+        // estimates уже отфильтрованы в App.tsx через getEstimatesByProject
+        console.log('ProjectDetailView: projectEstimates получены:', {
             totalEstimates: estimates.length,
             activeProjectId: activeProject.id,
-            filteredCount: filtered.length,
-            estimatesWithProjectId: estimates.filter(e => e.project_id).map(e => ({ id: e.id, project_id: e.project_id, number: e.number }))
+            estimates: estimates.map(e => ({ id: e.id, project_id: e.project_id, number: e.number }))
         });
-        return filtered;
+        return estimates;
     }, [estimates, activeProject.id]);
     const projectPhotos = useMemo(() => photoReports.filter(p => p.projectId === activeProject.id), [photoReports, activeProject.id]);
     const projectDocuments = useMemo(() => documents.filter(d => d.projectId === activeProject.id), [documents, activeProject.id]);
@@ -423,13 +428,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                     }
                                     onClick={() => handleLoadEstimate(est.id)}
                                     onDelete={() => {
-                                        console.log('ProjectDetailView: onDelete вызван для сметы:', est.id);
-                                        console.log('ProjectDetailView: handleDeleteProjectEstimate существует?', !!handleDeleteProjectEstimate);
+                                        console.log('[DEBUG] ProjectDetailView: onDelete вызван для сметы:', est.id);
+                                        console.log('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate существует?', !!handleDeleteProjectEstimate);
+                                        console.log('[DEBUG] ProjectDetailView: тип handleDeleteProjectEstimate:', typeof handleDeleteProjectEstimate);
+                                        
                                         if (handleDeleteProjectEstimate) {
-                                            console.log('ProjectDetailView: вызываю handleDeleteProjectEstimate');
+                                            console.log('[DEBUG] ProjectDetailView: вызываю handleDeleteProjectEstimate');
                                             handleDeleteProjectEstimate(est.id);
                                         } else {
-                                            console.log('ProjectDetailView: handleDeleteProjectEstimate не определен');
+                                            console.error('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate не определен!');
+                                            safeShowAlert('Ошибка: Функция удаления сметы не доступна.');
                                         }
                                     }}
                                 />
@@ -443,90 +451,29 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         </div>
                     </div>
                 </div>
-                <div className="card project-section">
-                    <div className="project-section-header collapsible-header" onClick={() => setIsFinancesCollapsed(!isFinancesCollapsed)}>
-                        <h3>Финансы ({projectFinances.length})</h3>
-                        <div className="header-actions">
-                            <button className="add-in-header-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenFinanceModal(); }}><IconPlus/></button>
-                            {isFinancesCollapsed ? <IconChevronRight /> : <IconChevronDown />}
-                        </div>
-                    </div>
-                    <div className={`project-section-body ${isFinancesCollapsed ? 'collapsed' : ''}`}>
-                        {projectFinances.length > 0 ? (
-                            <div className="project-items-list">
-                                {(isFinancesCollapsed ? projectFinances.slice(0, 3) : projectFinances).map(f => (
-                                    <ListItem
-                                      key={f.id}
-                                      icon={f.type === 'income'
-                                        ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
-                                        : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
-                                      }
-                                      iconBgColor={f.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
-                                      title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
-                                      subtitle={`${financeCategoryToRu(f.category || 'other')}${f.date ? ' • ' + new Date(f.date).toLocaleDateString('ru-RU') : ''}`}
-                                      amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
-                                      amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
-                                      actions={
-                                        <div className="finance-actions">
-                                          {f.receipt_url && (
-                                            <button
-                                              className="receipt-btn"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleViewReceipt(f.receipt_url!, f.description || (f.type === 'expense' ? 'Расход' : 'Оплата'));
-                                              }}
-                                              title="Просмотреть чек"
-                                            >
-                                              <IconCamera />
-                                            </button>
-                                          )}
-                                          <button onClick={() => setEditingFinance(f)} className="edit-btn" aria-label="Редактировать"><IconEdit/></button>
-                                          <button onClick={(e) => { e.stopPropagation(); onDeleteFinanceEntry(f.id); }} className="delete-btn" aria-label="Удалить"><IconTrash/></button>
-                                        </div>
-                                      }
-                                    />
-                                ))}
-                                {isFinancesCollapsed && projectFinances.length > 3 && (
-                                    <div className="collapsed-indicator">
-                                        <span>... и еще {projectFinances.length - 3} транзакций</span>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="empty-state-container">
-                                <IconCreditCard />
-                                <p>Транзакций пока нет.</p>
-                                <button onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }} className="btn btn-primary">+ Добавить транзакцию</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-                {editingFinance && (
-                    <FinanceEntryModal
-                        onClose={() => setEditingFinance(null)}
-                        onSave={async (entry, receiptFile) => {
-                            await projectDataHook.updateFinanceEntry(editingFinance.id, entry, receiptFile);
-                            setEditingFinance(null);
-                        }}
-                        showAlert={safeShowAlert}
-                        onInputFocus={() => {}}
-                        initial={editingFinance}
-                    />
-                )}
                  <div className="card project-section">
                     <div className="project-section-header">
                         <h3>График работ ({projectWorkStages.length})</h3>
                         <div className="header-actions">
                             {projectWorkStages.length > 0 && (
                                 <button 
-                                    className="export-btn" 
+                                    className="add-in-header-btn export-pdf-btn" 
+                                    style={{ color: 'var(--hint-color)', opacity: 0.7 }}
                                     onClick={(e) => {
                                         e.preventDefault(); 
                                         onExportWorkSchedulePDF(activeProject, projectWorkStages);
                                     }}
                                     title="Экспорт в PDF"
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.color = 'var(--text-color)';
+                                        e.currentTarget.style.opacity = '1';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.color = 'var(--hint-color)';
+                                        e.currentTarget.style.opacity = '0.7';
+                                    }}
                                 >
-                                    📄
+                                    <IconDownload />
                                 </button>
                             )}
                             <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenWorkStageModal(null);}}><IconPlus/></button>
@@ -575,42 +522,60 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="card project-section">
-                    <div className="project-section-header">
-                        <h3>Фотоотчеты ({projectPhotos.length})</h3>
-                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}}><IconPlus/></button>
+                <div className="card project-section finances-section">
+                    <div className="project-section-header collapsible-header" onClick={() => setIsFinancesCollapsed(!isFinancesCollapsed)}>
+                        <h3>Финансы ({projectFinances.length})</h3>
+                        <div className="header-actions">
+                            <button className="add-in-header-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenFinanceModal(); }}><IconPlus/></button>
+                            {isFinancesCollapsed ? <IconChevronRight /> : <IconChevronDown />}
+                        </div>
                     </div>
-                    <div className="project-section-body">
-                        {projectPhotos.length > 0 ? (
-                            <div className="photo-reports-list">
-                                {projectPhotos.map(photoReport => (
-                                    <div key={photoReport.id} className="photo-report-item">
-                                        <div className="photo-report-header">
-                                            <h4>{photoReport.title}</h4>
-                                            <span className="photo-report-date">
-                                                {new Date(photoReport.date).toLocaleDateString('ru-RU')}
-                                            </span>
+                    <div className={`project-section-body ${isFinancesCollapsed ? 'collapsed' : ''}`}>
+                        {projectFinances.length > 0 ? (
+                            <div className="project-items-list">
+                                {(isFinancesCollapsed ? projectFinances.slice(0, 3) : projectFinances).map(f => (
+                                    <ListItem
+                                      key={f.id}
+                                      icon={f.type === 'income'
+                                        ? <IconChevronRight style={{transform: 'rotate(-90deg)'}} />
+                                        : <IconChevronRight style={{transform: 'rotate(90deg)'}} />
+                                      }
+                                      iconBgColor={f.type === 'income' ? 'rgba(48, 209, 88, 0.2)' : 'rgba(255, 69, 58, 0.2)'}
+                                      title={f.description || (f.type === 'expense' ? 'Расход' : 'Оплата')}
+                                      subtitle={`${financeCategoryToRu(f.category || 'other')}${f.date ? ' • ' + new Date(f.date).toLocaleDateString('ru-RU') : ''}`}
+                                      amountText={`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
+                                      amountColor={f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)'}
+                                      actions={
+                                        <div className="finance-actions" onClick={(e) => e.stopPropagation()}>
+                                          <span className="list-item-amount" style={{ color: f.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                                            {`${f.type === 'income' ? '+' : '-'}${formatCurrency(f.amount)}`}
+                                          </span>
+                                          {f.receipt_url && (
+                                            <button
+                                              className="receipt-btn"
+                                              onClick={() => handleViewReceipt(f.receipt_url!, f.description || (f.type === 'expense' ? 'Расход' : 'Оплата'))}
+                                              title="Просмотреть чек"
+                                            >
+                                              <IconCamera />
+                                            </button>
+                                          )}
+                                          <button onClick={(e) => { e.stopPropagation(); onDeleteFinanceEntry(f.id); }} className="delete-btn" aria-label="Удалить"><IconTrash/></button>
                                         </div>
-                                        <div className="photo-grid">
-                                            {photoReport.photos.slice(0, 3).map((photo, index) => (
-                                                <div key={index} className="photo-thumbnail" onClick={() => onViewPhoto(photoReport)}>
-                                                    <img src={photo.url} alt={photo.caption || 'фото'}/>
-                                                </div>
-                                            ))}
-                                            {photoReport.photos.length > 3 && (
-                                                <div className="photo-thumbnail more-photos">
-                                                    <span>+{photoReport.photos.length - 3}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                      }
+                                      onClick={() => setEditingFinance(f)}
+                                    />
                                 ))}
+                                {isFinancesCollapsed && projectFinances.length > 3 && (
+                                    <div className="collapsed-indicator">
+                                        <span>... и еще {projectFinances.length - 3} транзакций</span>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="empty-state-container">
-                                <IconCamera />
-                                <p>Фотографий пока нет.</p>
-                                <button onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}} className="btn btn-primary">+ Добавить фото</button>
+                                <IconCreditCard />
+                                <p>Транзакций пока нет.</p>
+                                <button onClick={(e) => { e.preventDefault(); onOpenFinanceModal(); }} className="btn btn-primary">+ Добавить транзакцию</button>
                             </div>
                         )}
                     </div>
@@ -683,6 +648,46 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         style={{ height: '200px', minHeight: '200px' }}
                     />
                 </div>
+                <div className="card project-section">
+                    <div className="project-section-header">
+                        <h3>Фотоотчеты ({projectPhotos.length})</h3>
+                        <button className="add-in-header-btn" onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}}><IconPlus/></button>
+                    </div>
+                    <div className="project-section-body">
+                        {projectPhotos.length > 0 ? (
+                            <div className="photo-reports-list">
+                                {projectPhotos.map(photoReport => (
+                                    <div key={photoReport.id} className="photo-report-item">
+                                        <div className="photo-report-header">
+                                            <h4>{photoReport.title}</h4>
+                                            <span className="photo-report-date">
+                                                {new Date(photoReport.date).toLocaleDateString('ru-RU')}
+                                            </span>
+                                        </div>
+                                        <div className="photo-grid">
+                                            {photoReport.photos.slice(0, 3).map((photo, index) => (
+                                                <div key={index} className="photo-thumbnail" onClick={() => onViewPhoto(photoReport)}>
+                                                    <img src={photo.url} alt={photo.caption || 'фото'}/>
+                                                </div>
+                                            ))}
+                                            {photoReport.photos.length > 3 && (
+                                                <div className="photo-thumbnail more-photos">
+                                                    <span>+{photoReport.photos.length - 3}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="empty-state-container">
+                                <IconCamera />
+                                <p>Фотографий пока нет.</p>
+                                <button onClick={(e) => {e.preventDefault(); onOpenPhotoReportModal();}} className="btn btn-primary">+ Добавить фото</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </main>
             {/* Модальное окно просмотра чеков */}
             <ImageViewerModal
@@ -698,6 +703,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     task={selectedTask}
                     onClose={() => setSelectedTask(null)}
                     onSave={handleTaskSave}
+                />
+            )}
+            {/* Модальное окно редактирования финансов - перемещено в конец */}
+            {editingFinance && (
+                <FinanceEntryModal
+                    onClose={() => setEditingFinance(null)}
+                    onSave={async (entry, receiptFile) => {
+                        await projectDataHook.updateFinanceEntry(editingFinance.id, entry, receiptFile);
+                        setEditingFinance(null);
+                    }}
+                    showAlert={safeShowAlert}
+                    onInputFocus={() => {}}
+                    initial={editingFinance}
                 />
             )}
         </>

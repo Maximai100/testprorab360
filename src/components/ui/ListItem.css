@@ -95,19 +95,21 @@
 .list-item-delete-button {
   background: none;
   border: none;
-  padding: var(--spacing-s);
+  padding: 6px;
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--hint-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .list-item-delete-button:hover {
   background-color: var(--color-danger);
-  color: var(--color-text-primary);
+  color: #fff;
 }
 
 .list-item-delete-button .icon-wrapper {

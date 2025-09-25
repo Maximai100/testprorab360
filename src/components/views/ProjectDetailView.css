@@ -33,26 +33,62 @@
 .delete-btn {
   background: none;
   border: none;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 6px;
   cursor: pointer;
   color: var(--hint-color);
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
+  width: 28px;
   height: 28px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .delete-btn:hover {
-  background-color: var(--danger-color);
-  color: white;
+  background-color: var(--color-danger);
+  color: #fff;
 }
 
 .delete-btn svg {
   width: 14px;
   height: 14px;
+}
+
+/* Стили для правильного позиционирования блока Финансы */
+.finances-section {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 16px 0 !important;
+  float: none !important;
+  clear: both !important;
+  z-index: 1 !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+
+/* Стили для кнопки экспорта PDF - серая как кнопки корзины */
+.add-in-header-btn.export-pdf-btn {
+  color: var(--hint-color) !important;
+}
+
+.add-in-header-btn.export-pdf-btn:hover {
+  color: var(--text-color) !important;
+}
+
+/* Более агрессивный подход для кнопки экспорта */
+.project-section-header .add-in-header-btn.export-pdf-btn {
+  color: var(--hint-color) !important;
+  opacity: 0.7 !important;
+}
+
+.project-section-header .add-in-header-btn.export-pdf-btn:hover {
+  color: var(--text-color) !important;
+  opacity: 1 !important;
 }
 
 /* Адаптивность для мобильных устройств */

@@ -1,0 +1,1180 @@
+
+
+.construction-calculator-module *,
+.construction-calculator-module *::before,
+.construction-calculator-module *::after {
+    box-sizing: border-box;
+}
+
+.construction-calculator-module {
+    --primary-color: #3390ec;
+    --primary-text-color: #ffffff;
+    --bg-color: #f0f0f5;
+    --secondary-bg-color: #ffffff;
+    --text-color: #000000;
+    --hint-color: #8E8E93;
+    --link-color: #3390ec;
+    --border-color: #e0e0e0;
+    --danger-color: #e53935;
+    --success-color: #28a745;
+    
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    /* Styles from body tag */
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.construction-calculator-module.dark-theme {
+    --primary-color: #58a7f8;
+    --primary-text-color: #ffffff;
+    --bg-color: #1c1c1d;
+    --secondary-bg-color: #2c2c2e;
+    --text-color: #ffffff;
+    --hint-color: #8d8d92;
+    --link-color: #58a7f8;
+    --border-color: #3a3a3c;
+    --danger-color: #ff453a;
+    --success-color: #30d158;
+
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.construction-calculator-module .app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px;
+    padding-top: 72px; /* Space for sticky header */
+}
+
+.construction-calculator-module .calc-header {
+    position: sticky;
+    top: 0;
+    background-color: color-mix(in srgb, var(--bg-color) 90%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100;
+    padding: 12px 16px;
+    margin: -16px -16px 16px -16px; /* Adjust for container padding */
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.construction-calculator-module .calc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.construction-calculator-module .calc-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.construction-calculator-module .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.construction-calculator-module .header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 6px;
+    color: var(--hint-color);
+    line-height: 1;
+}
+.construction-calculator-module .header-btn .icon-wrapper {
+    width: 24px;
+    height: 24px;
+}
+.construction-calculator-module .lang-switcher-btn {
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-right: 4px;
+}
+
+
+.construction-calculator-module .card {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.construction-calculator-module input,
+.construction-calculator-module textarea,
+.construction-calculator-module select {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: none; /* Remove default focus glow */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.construction-calculator-module select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.construction-calculator-module input:focus,
+.construction-calculator-module textarea:focus,
+.construction-calculator-module select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+.construction-calculator-module input.invalid,
+.construction-calculator-module textarea.invalid,
+.construction-calculator-module select.invalid {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 1px var(--danger-color);
+}
+/* Hide arrows from number input */
+.construction-calculator-module input[type=number]::-webkit-inner-spin-button, 
+.construction-calculator-module input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+.construction-calculator-module input[type=number] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+
+.construction-calculator-module input::placeholder,
+.construction-calculator-module textarea::placeholder {
+    color: var(--hint-color);
+}
+.construction-calculator-module input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(var(--is-dark, 0));
+}
+.construction-calculator-module.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.construction-calculator-module .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s ease, opacity 0.2s;
+}
+.construction-calculator-module .btn .icon-wrapper {
+    width: 20px;
+    height: 20px;
+}
+.construction-calculator-module .btn:active {
+    transform: scale(0.98);
+}
+.construction-calculator-module .btn:disabled,
+.construction-calculator-module button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: scale(1);
+}
+
+.construction-calculator-module .btn-primary {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+
+.construction-calculator-module .btn-secondary {
+    background-color: transparent;
+    color: var(--link-color);
+    border: 1px solid var(--link-color);
+}
+
+.construction-calculator-module .btn-tertiary {
+    background: none;
+    color: var(--hint-color);
+    padding: 14px;
+    width: auto;
+    border: none;
+    font-size: 16px;
+}
+.construction-calculator-module .btn-tertiary:hover {
+    color: var(--danger-color);
+}
+
+.construction-calculator-module .total-container {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding: 20px;
+}
+
+.construction-calculator-module .total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+}
+.construction-calculator-module .total-row--with-border {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.construction-calculator-module .grand-total {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+.construction-calculator-module .grand-total span:first-child {
+    color: var(--text-color);
+}
+
+/* Modal Styles */
+.construction-calculator-module .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+}
+.construction-calculator-module .modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+.construction-calculator-module .modal-overlay.open .modal-content {
+    transform: translateY(0);
+}
+
+.construction-calculator-module .modal-content {
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    box-shadow: var(--box-shadow);
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+}
+
+.construction-calculator-module .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.construction-calculator-module .modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.construction-calculator-module .close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--hint-color);
+    line-height: 1;
+    padding: 8px;
+}
+.construction-calculator-module .close-btn .icon-wrapper {
+    width: 24px;
+    height: 24px;
+}
+
+
+.construction-calculator-module .modal-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.construction-calculator-module .modal-tabs button {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--hint-color);
+    border-bottom: 2px solid transparent;
+}
+.construction-calculator-module .modal-tabs button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.construction-calculator-module .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
+}
+
+.construction-calculator-module .modal-body label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: -8px; /* Reduce gap between label and input */
+}
+
+.construction-calculator-module .modal-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.construction-calculator-module .no-results-message {
+    text-align: center;
+    color: var(--hint-color);
+    padding: 24px 0;
+}
+
+/* Project Detail */
+.construction-calculator-module .back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--hint-color);
+    line-height: 1;
+    padding: 6px;
+}
+.construction-calculator-module .back-btn .icon-wrapper {
+    width: 28px;
+    height: 28px;
+}
+
+.construction-calculator-module .project-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+}
+.construction-calculator-module .project-section-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+.construction-calculator-module .add-in-header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--primary-color);
+    padding: 4px;
+}
+.construction-calculator-module .add-in-header-btn .icon-wrapper {
+    width: 24px;
+    height: 24px;
+}
+
+/* --- CALCULATOR VIEW --- */
+.construction-calculator-module .room-tabs-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+.construction-calculator-module .room-tab {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.construction-calculator-module .room-tab > span {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.construction-calculator-module .room-tab.active {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border-color: var(--primary-color);
+}
+.construction-calculator-module .room-tab .room-rename-input {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    flex-grow: 1;
+    text-align: center;
+}
+.construction-calculator-module .remove-room-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: currentColor;
+    opacity: 0.7;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.construction-calculator-module .remove-room-btn .icon-wrapper {
+    width: 16px;
+    height: 16px;
+}
+.construction-calculator-module .add-room-btn {
+    border: 1px dashed var(--border-color);
+    background: none;
+    cursor: pointer;
+    color: var(--hint-color);
+    padding: 8px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.construction-calculator-module .add-room-btn .icon-wrapper {
+    width: 20px;
+    height: 20px;
+}
+.construction-calculator-module .toggle-switch {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.construction-calculator-module .toggle-switch button {
+    background-color: var(--secondary-bg-color);
+    border: none;
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--hint-color);
+    font-weight: 500;
+    flex-grow: 1; /* Make buttons fill the container */
+    flex-basis: 0; /* Distribute space evenly */
+}
+.construction-calculator-module .toggle-switch button:not(:last-child) {
+    border-right: 1px solid var(--border-color);
+}
+.construction-calculator-module .toggle-switch button.active {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+
+.construction-calculator-module .unit-switcher {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+.construction-calculator-module .presets-card label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--hint-color);
+    font-size: 14px;
+}
+.construction-calculator-module .presets-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+}
+.construction-calculator-module .preset-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.construction-calculator-module .preset-btn:hover {
+    background-color: var(--secondary-bg-color);
+    border-color: var(--primary-color);
+}
+.construction-calculator-module .preset-btn:active {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+.construction-calculator-module .calc-input-group {
+    margin-bottom: 12px;
+}
+.construction-calculator-module .calc-input-group:last-child {
+    margin-bottom: 0;
+}
+.construction-calculator-module .calc-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.construction-calculator-module .calc-label-wrapper label {
+    font-weight: 500;
+}
+.construction-calculator-module .calc-input-wrapper {
+    position: relative;
+}
+.construction-calculator-module .calc-input-unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--hint-color);
+    pointer-events: none;
+}
+.construction-calculator-module .error-message {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    padding-left: 2px;
+    min-height: 14px; /* Reserve space to prevent layout jump */
+}
+
+.construction-calculator-module .calc-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    text-align: center;
+}
+.construction-calculator-module .calc-summary-grid span {
+    font-size: 14px;
+    color: var(--hint-color);
+}
+.construction-calculator-module .calc-summary-grid strong {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.construction-calculator-module .openings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.construction-calculator-module .opening-item {
+    padding: 12px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 
+      "toggle delete"
+      "inputs inputs"
+      "options options";
+    gap: 12px;
+}
+.construction-calculator-module .item-type-toggle { grid-area: toggle; }
+.construction-calculator-module .opening-item > .btn-tertiary {
+    grid-area: delete;
+}
+.construction-calculator-module .opening-inputs-wrapper { grid-area: inputs; }
+.construction-calculator-module .opening-options { grid-area: options; }
+
+
+.construction-calculator-module .opening-inputs-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+.construction-calculator-module .opening-options {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+.construction-calculator-module .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.construction-calculator-module .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+.construction-calculator-module .material-calculators-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.construction-calculator-module .material-summary-grid {
+    grid-template-columns: 1fr 1fr;
+}
+.construction-calculator-module .material-summary-grid > div {
+    padding: 12px;
+}
+.construction-calculator-module .material-calculator-card {
+    padding: 16px;
+}
+.construction-calculator-module .material-calculator-card h4 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+}
+.construction-calculator-module .material-calculator-card .toggle-switch {
+    margin-bottom: 12px;
+}
+.construction-calculator-module .material-calculator-card .library-select-group {
+    margin-bottom: 12px;
+}
+.construction-calculator-module .material-calculator-card .library-select-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+.construction-calculator-module .tile-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.construction-calculator-module .calc-result {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+.construction-calculator-module .calc-result strong {
+    flex-grow: 1;
+    white-space: pre-line;
+    text-align: right;
+}
+.construction-calculator-module .calc-result-group {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.construction-calculator-module .calc-result-group .calc-result {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+.construction-calculator-module .calc-note {
+    font-size: 12px;
+    color: var(--hint-color);
+    margin: 8px 0 0;
+    text-align: right;
+}
+
+.construction-calculator-module .tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.construction-calculator-module .tooltip-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--hint-color);
+    color: var(--hint-color);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 14px;
+    cursor: help;
+}
+.construction-calculator-module .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+.construction-calculator-module .tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+.construction-calculator-module .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--border-color) transparent transparent transparent;
+}
+
+
+/* Icon styles */
+.construction-calculator-module .icon-wrapper {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+}
+.construction-calculator-module .icon-wrapper svg {
+    width: 100%;
+    height: 100%;
+    vertical-align: top;
+}
+
+.construction-calculator-module .main-action-container {
+    padding-bottom: 16px; 
+}
+
+.construction-calculator-module .summary-card--pinned {
+    border-color: var(--primary-color);
+    border-width: 2px;
+    position: relative;
+    background-color: var(--secondary-bg-color);
+}
+.construction-calculator-module .summary-card__title {
+    margin-top: 0;
+}
+
+.construction-calculator-module .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.construction-calculator-module .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 16px;
+}
+.construction-calculator-module .summary-item:last-child {
+    border-bottom: none;
+}
+.construction-calculator-module .summary-item span {
+    color: var(--hint-color);
+    padding-right: 16px;
+}
+.construction-calculator-module .summary-item__value {
+    white-space: pre-line;
+    text-align: right;
+}
+
+.construction-calculator-module .summary-total-cost {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid var(--text-color);
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Estimate Modal Styles */
+.construction-calculator-module .modal-body .calc-input-group {
+    padding-bottom: 0;
+}
+.construction-calculator-module .estimates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+.construction-calculator-module .estimate-item {
+    background-color: var(--bg-color);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.construction-calculator-module .estimate-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+.construction-calculator-module .estimate-info strong {
+    display: block;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.construction-calculator-module .estimate-info span {
+    font-size: 12px;
+    color: var(--hint-color);
+}
+.construction-calculator-module .estimate-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.construction-calculator-module .estimate-actions .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto;
+}
+.construction-calculator-module .exclusion-item {
+    align-items: start;
+    grid-template-areas: "content delete";
+}
+.construction-calculator-module .exclusion-item-content {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.construction-calculator-module .exclusion-options {
+    border: none;
+    margin-top: 0;
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.construction-calculator-module .opening-item--flex {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.construction-calculator-module .opening-item__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.construction-calculator-module .geometric-element-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.construction-calculator-module .results-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+.construction-calculator-module .results-actions button:last-child {
+    grid-column: 1 / -1;
+}
+
+/* Filter buttons */
+.construction-calculator-module .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.construction-calculator-module .filter-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.construction-calculator-module .filter-btn.active {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border-color: var(--primary-color);
+}
+
+.construction-calculator-module .material-item {
+    cursor: pointer;
+}
+.construction-calculator-module .material-item:hover {
+    background-color: color-mix(in srgb, var(--bg-color) 80%, var(--primary-color));
+}
+
+.construction-calculator-module .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Arbitrary Materials Calculator Styles */
+.construction-calculator-module .arbitrary-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.construction-calculator-module .arbitrary-items-list.has-items {
+    margin-top: 16px;
+}
+.construction-calculator-module .arbitrary-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+}
+.construction-calculator-module .arbitrary-item-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.construction-calculator-module .arbitrary-name-input {
+    font-weight: 500;
+}
+.construction-calculator-module .arbitrary-item-fields {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1.2fr;
+    gap: 8px;
+    align-items: flex-start;
+}
+.construction-calculator-module .arbitrary-item-fields .calc-input-group,
+.construction-calculator-module .arbitrary-item-fields .calc-input-group:last-child {
+    margin-bottom: 0;
+}
+.construction-calculator-module .arbitrary-item-fields .calc-label-wrapper label {
+    font-size: 13px;
+    font-weight: 400;
+}
+.construction-calculator-module .arbitrary-item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Align with the start of the input fields below the name input */
+    margin-top: 34px; 
+}
+.construction-calculator-module .arbitrary-item-actions .btn-tertiary {
+    padding: 6px;
+}
+.construction-calculator-module .arbitrary-item-actions .btn-tertiary .icon-wrapper {
+    width: 20px;
+    height: 20px;
+}
+.construction-calculator-module .arbitrary-item-actions .btn-tertiary:not(:disabled):hover {
+    color: var(--primary-color);
+}
+.construction-calculator-module .arbitrary-item-actions .btn-tertiary:last-child:not(:disabled):hover {
+    color: var(--danger-color);
+}
+
+.construction-calculator-module .btn-add-arbitrary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--hint-color);
+    margin-top: 16px;
+    transition: background-color 0.2s, color 0.2s;
+}
+.construction-calculator-module .btn-add-arbitrary:hover {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Supplier Request Modal */
+.construction-calculator-module .supplier-request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.construction-calculator-module .supplier-request-item {
+    background-color: var(--bg-color);
+    padding: 12px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "name   delete"
+        "details details"
+        "note   note";
+    gap: 8px 12px;
+}
+.construction-calculator-module .supplier-item-name { grid-area: name; font-weight: 500; }
+.construction-calculator-module .supplier-request-item .btn-tertiary { grid-area: delete; padding: 4px; }
+.construction-calculator-module .supplier-item-details { grid-area: details; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.construction-calculator-module .supplier-item-note { grid-area: note; font-size: 14px; }
+
+
+/* === Responsive adjustments === */
+@media (max-width: 480px) {
+    .construction-calculator-module .app-container {
+        padding: 8px;
+        padding-top: 64px;
+    }
+    .construction-calculator-module .summary-card--pinned {
+        position: relative;
+    }
+    .construction-calculator-module .calc-header {
+        padding: 10px 8px;
+        margin: -8px -8px 8px -8px;
+    }
+    .construction-calculator-module .calc-header h1 {
+        font-size: 20px;
+    }
+    .construction-calculator-module h3,
+    .construction-calculator-module .project-section-header h3 { font-size: 17px; }
+    .construction-calculator-module h4,
+    .construction-calculator-module .material-calculator-card h4 { font-size: 16px; }
+
+    .construction-calculator-module .toggle-switch button {
+        padding: 8px 10px;
+        font-size: 13px;
+        height: auto;
+        white-space: normal;
+        line-height: 1.2;
+    }
+    
+    .construction-calculator-module .opening-item,
+    .construction-calculator-module .opening-item--flex {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .construction-calculator-module .opening-item > .item-type-toggle,
+    .construction-calculator-module .exclusion-item-content {
+        order: 1;
+    }
+    .construction-calculator-module .opening-item > .opening-inputs-wrapper {
+        order: 2;
+    }
+    .construction-calculator-module .opening-item > .opening-options {
+        order: 3;
+    }
+    .construction-calculator-module .opening-item > .btn-tertiary {
+        order: 0;
+        align-self: flex-end;
+        padding: 0;
+        margin: -4px 0 -8px 0;
+    }
+    
+    .construction-calculator-module .opening-inputs-wrapper {
+        grid-template-columns: 1fr 1fr;
+    }
+    .construction-calculator-module .opening-inputs-wrapper .calc-input-group:nth-child(3n) {
+        grid-column: 1 / -1;
+    }
+    
+    .construction-calculator-module .grand-total {
+        font-size: 20px;
+    }
+
+    .construction-calculator-module .calc-summary-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        text-align: left;
+        padding: 8px 0;
+    }
+
+    .construction-calculator-module .calc-summary-grid > div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .construction-calculator-module .calc-summary-grid > div:last-child {
+        border-bottom: none;
+    }
+    
+    .construction-calculator-module .calc-summary-grid strong {
+        font-size: 16px;
+    }
+
+    .construction-calculator-module .material-summary-grid {
+        grid-template-columns: unset;
+    }
+
+    .construction-calculator-module .material-summary-grid > div {
+        padding: 12px 16px;
+    }
+    .construction-calculator-module .results-actions {
+        flex-direction: column;
+        grid-template-columns: 1fr;
+    }
+    
+    .construction-calculator-module .arbitrary-item-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+    .construction-calculator-module .arbitrary-item-fields .calc-input-group:last-child {
+         grid-column: 1 / -1;
+    }
+}

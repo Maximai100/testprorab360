@@ -46,6 +46,7 @@ import { OverallFinancialReportScreen } from './components/views/OverallFinancia
 import { WorkspaceView } from './components/views/WorkspaceView';
 import { ScratchpadView } from './components/views/ScratchpadView';
 import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
+import { CalculatorView } from './components/views/CalculatorView';
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
 import AuthScreen from './components/views/AuthScreen';
@@ -151,7 +152,8 @@ const App: React.FC = () => {
               type,
               estimate_id
             )
-          `);
+          `)
+          .eq('user_id', session?.user?.id || '');
 
         if (error) {
           console.error('🔧 App: Ошибка загрузки смет:', error);
@@ -315,6 +317,7 @@ const App: React.FC = () => {
             setContextActiveProjectId(appState.activeProjectId);
         }
     }, [appState.activeProjectId, contextProjectId, setContextActiveProjectId]);
+    
 
     // Load initial data
     useEffect(() => {
@@ -468,6 +471,23 @@ const App: React.FC = () => {
         return projectsHook.projects.find(p => p.id === id) || null;
     }, [appState.activeProjectId, projectsHook.projects]);
 
+    // Переопределяем функцию refreshData для обновления всех данных
+    useEffect(() => {
+        appState.refreshData = async () => {
+            console.log('🔄 App: refreshData вызвана - обновляем все данные');
+            try {
+                await Promise.all([
+                    estimatesHook.fetchAllEstimates(),
+                    projectsHook.loadProjectsFromSupabase(),
+                    projectDataHook.loadProjectData(activeProject?.id || '')
+                ]);
+                console.log('🔄 App: все данные обновлены');
+            } catch (error) {
+                console.error('🔄 App: ошибка при обновлении данных:', error);
+            }
+        };
+    }, [appState, estimatesHook, projectsHook, projectDataHook, activeProject?.id]);
+
     // Get project financials
     const projectFinancials = useMemo(() => {
         if (!activeProject) return null;
@@ -544,12 +564,26 @@ const App: React.FC = () => {
         }
     }, [estimatesHook, appState]);
 
-    const handleDeleteEstimate = useCallback((id: string) => {
-        safeShowConfirm('Вы уверены, что хотите удалить эту смету?', (ok) => {
+    const handleDeleteEstimate = useCallback(async (id: string) => {
+        safeShowConfirm('Вы уверены, что хотите удалить эту смету?', async (ok) => {
             if (ok) {
-                estimatesHook.deleteEstimate(id);
-                if (appState.activeEstimateId === id) {
-                    appState.goBack();
+                try {
+                    console.log('[DEBUG] handleDeleteEstimate: начинаем удаление сметы:', id);
+                    await estimatesHook.deleteEstimate(id);
+                    console.log('[DEBUG] handleDeleteEstimate: смета успешно удалена');
+                    
+                    // Если удаляемая смета была активной, возвращаемся назад
+                    if (appState.activeEstimateId === id) {
+                        console.log('[DEBUG] handleDeleteEstimate: возвращаемся назад, так как удалена активная смета');
+                        appState.goBack();
+                    }
+                    
+                    // Показываем уведомление об успешном удалении
+                    safeShowAlert('Смета успешно удалена!');
+                    
+                } catch (error) {
+                    console.error('[DEBUG] handleDeleteEstimate: Ошибка при удалении сметы:', error);
+                    safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
                 }
             }
         });
@@ -1143,10 +1177,17 @@ const App: React.FC = () => {
             
             case 'projectDetail':
                 if (!activeProject) return null;
+                
+                const projectEstimates = estimatesHook.getEstimatesByProject(activeProject.id);
+                console.log('[DEBUG] Шаг 7: App.tsx - передача смет в ProjectDetailView.');
+                console.log('[DEBUG] activeProject.id:', activeProject.id);
+                console.log('[DEBUG] projectEstimates для передачи:', projectEstimates);
+                console.log('[DEBUG] Количество projectEstimates:', projectEstimates.length);
+                
                 return (
                     <ProjectDetailView
                         activeProject={activeProject}
-                        estimates={estimatesHook.getEstimatesByProject(activeProject.id)}
+                        estimates={projectEstimates}
                         financeEntries={projectDataHook.getFinanceEntriesByProject(activeProject.id)}
                         photoReports={projectsHook.getPhotoReportsByProject(activeProject.id)}
                         documents={projectsHook.getDocumentsByProject(activeProject.id)}
@@ -1318,6 +1359,9 @@ const App: React.FC = () => {
                     />
                 );
             
+            case 'calculator':
+                return <CalculatorView appState={appState} />;
+            
             default:
                 return (
                     <WorkspaceView
@@ -1401,6 +1445,9 @@ const App: React.FC = () => {
                     <button onClick={() => appState.openModal('estimatesList')} className="header-btn" aria-label="Список смет">
                         <IconClipboard />
                     </button>
+                    <button onClick={() => appState.navigateToView('reports')} className="header-btn" aria-label="Отчеты">
+                        <IconTrendingUp />
+                    </button>
                     <button onClick={() => appState.openModal('settings')} className="header-btn" aria-label="Настройки">
                         <IconSettings />
                     </button>
@@ -1458,18 +1505,18 @@ const App: React.FC = () => {
                     <span>Инвентарь</span>
                 </button>
                 <button 
-                    onClick={() => appState.navigateToView('reports')} 
-                    className={appState.activeView === 'reports' ? 'active' : ''}
-                >
-                    <IconTrendingUp />
-                    <span>Отчеты</span>
-                </button>
-                <button 
                     onClick={() => appState.navigateToView('allTasks')} 
                     className={appState.activeView === 'allTasks' ? 'active' : ''}
                 >
                     <IconCheckSquare />
                     <span>Задачи</span>
+                </button>
+                <button 
+                    onClick={() => appState.navigateToView('calculator')} 
+                    className={appState.activeView === 'calculator' ? 'active' : ''}
+                >
+                    <IconSparkles />
+                    <span>Калькулятор</span>
                 </button>
             </nav>
 

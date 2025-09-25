@@ -139,7 +139,8 @@ export const useProjects = () => {
             console.log('🔄 loadProjectsFromSupabase: Запрос к Supabase завершен');
 
             if (error) {
-                console.error('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
+                console.warn('loadProjectsFromSupabase: Ошибка загрузки проектов из Supabase:', error);
+                console.log('loadProjectsFromSupabase: Продолжаем работу в офлайн-режиме с localStorage');
                 return;
             }
 
@@ -166,7 +167,8 @@ export const useProjects = () => {
                 console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');
             }
         } catch (error) {
-            console.error('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
+            console.warn('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
+            console.log('loadProjectsFromSupabase: Продолжаем работу в офлайн-режиме с localStorage');
         }
         console.log('✅ loadProjectsFromSupabase: Функция завершена');
     }, []);

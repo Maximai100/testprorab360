@@ -25,7 +25,8 @@ const STORAGE_KEYS = {
     ACTIVE_PROJECT_ID: 'activeProjectId',
     ACTIVE_VIEW: 'activeView',
     THEME_MODE: 'themeMode',
-    ESTIMATE_TEMPLATES: 'estimateTemplates'
+    ESTIMATE_TEMPLATES: 'estimateTemplates',
+    CALCULATOR_STATE: 'calculatorState'
 } as const;
 
 // Generic storage functions
@@ -34,9 +35,26 @@ export const storageService = {
     get<T>(key: string, defaultValue: T): T {
         try {
             const item = localStorage.getItem(key);
-            return item ? JSON.parse(item) : defaultValue;
+            if (!item) {
+                return defaultValue;
+            }
+            
+            // Для строковых значений (например, themeMode) проверяем, что это валидный JSON
+            if (typeof defaultValue === 'string') {
+                try {
+                    const parsed = JSON.parse(item);
+                    return typeof parsed === 'string' ? parsed : defaultValue;
+                } catch {
+                    // Если не удается распарсить как JSON, но это строка, возвращаем как есть
+                    return item as T;
+                }
+            }
+            
+            return JSON.parse(item);
         } catch (error) {
             console.error(`Error reading from localStorage key "${key}":`, error);
+            // Очищаем некорректное значение
+            localStorage.removeItem(key);
             return defaultValue;
         }
     },
@@ -294,6 +312,23 @@ export const dataService = {
 
     setEstimateTemplates(templates: Omit<Estimate, 'id' | 'clientInfo' | 'number' | 'date' | 'status' | 'projectId' | 'createdAt' | 'updatedAt'>[]): void {
         storageService.set(STORAGE_KEYS.ESTIMATE_TEMPLATES, templates);
+    },
+
+    // Calculator State
+    getCalculatorState(): { step: number; activeRoomId: number; rooms: any[] } {
+        const defaultState = { step: 1, activeRoomId: 0, rooms: [] };
+        const savedState = storageService.get(STORAGE_KEYS.CALCULATOR_STATE, defaultState);
+        
+        // Ensure all required properties exist (for backward compatibility)
+        return {
+            step: savedState.step || defaultState.step,
+            activeRoomId: savedState.activeRoomId || defaultState.activeRoomId,
+            rooms: Array.isArray(savedState.rooms) ? savedState.rooms : defaultState.rooms
+        };
+    },
+
+    setCalculatorState(state: { step: number; activeRoomId: number; rooms: any[] }): void {
+        storageService.set(STORAGE_KEYS.CALCULATOR_STATE, state);
     }
 };
 

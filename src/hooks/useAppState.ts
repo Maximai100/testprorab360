@@ -303,6 +303,12 @@ export const useAppState = () => {
         }
     }, []);
     
+    // Функция для принудительного обновления данных
+    const refreshData = useCallback(() => {
+        console.log('🔄 AppState: refreshData вызвана - принудительное обновление данных');
+        // Эта функция будет переопределена в App.tsx для обновления всех хуков
+    }, []);
+    
     return {
         // State
         activeView,
@@ -369,6 +375,9 @@ export const useAppState = () => {
         
         // Modals
         openModal,
-        closeModal
+        closeModal,
+        
+        // Data refresh
+        refreshData
     };
 };

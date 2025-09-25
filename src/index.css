@@ -1737,6 +1737,12 @@ input[type=number] { -moz-appearance: textfield; }
     flex-shrink: 0;
 }
 
+/* Приводим SVG внутри скрепки к единому размеру (как в ListItem) */
+.document-list-item .icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+}
+
 .doc-info {
     flex-grow: 1;
     overflow: hidden;
@@ -1767,11 +1773,18 @@ input[type=number] { -moz-appearance: textfield; }
     border: none;
     cursor: pointer;
     color: var(--hint-color);
-    padding: 4px;
+    padding: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-icon:hover {
-    color: var(--text-color);
+    color: #fff;
+    background-color: var(--color-danger);
 }
 
 .btn-icon .icon-wrapper {
