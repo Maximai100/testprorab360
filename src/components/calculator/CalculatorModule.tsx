@@ -7,6 +7,7 @@ import { dataService } from '../../services/storageService';
 import { useEstimates } from '../../hooks/useEstimates';
 import { useProjectContext } from '../../context/ProjectContext';
 import { supabase } from '../../supabaseClient';
+import { copyToClipboard } from '../../utils';
 import type { Session } from '@supabase/supabase-js';
 
 declare global {
@@ -2504,16 +2505,19 @@ const SupplierRequestModal: React.FC<{
         return text;
     }, [requestItems]);
 
-    const handleCopyToClipboard = () => {
+    const handleCopyToClipboard = async () => {
         const text = formatRequestText();
-        navigator.clipboard.writeText(text).then(() => {
+        
+        // Используем надежную функцию копирования
+        const success = await copyToClipboard(text);
+        
+        if (success) {
             setCopyButtonText('Скопировано!');
             tg?.HapticFeedback.notificationOccurred('success');
             setTimeout(() => setCopyButtonText('Скопировать'), 2000);
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
-            safeShowAlert('Не удалось скопировать текст.');
-        });
+        } else {
+            safeShowAlert('Не удалось скопировать текст. Попробуйте выделить и скопировать вручную.');
+        }
     };
 
     const handleExportPDF = async () => {

@@ -11,7 +11,72 @@ export const generateUUID = () => {
     });
 };
 
-export const tg = window.Telegram;
+/**
+ * Надежная функция копирования текста в буфер обмена
+ * @param text Текст для копирования
+ * @returns Promise<boolean> - true если копирование успешно, false если нет
+ */
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+        // Пробуем современный API
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            
+            // Дополнительная проверка успешности копирования
+            try {
+                const clipboardText = await navigator.clipboard.readText();
+                if (clipboardText === text) {
+                    return true;
+                }
+            } catch (readError) {
+                // Если не можем прочитать буфер, считаем что копирование прошло успешно
+                console.log('Cannot read clipboard, but write was successful');
+            }
+            
+            // Если дошли сюда, считаем копирование успешным
+            return true;
+        }
+        
+        // Fallback для старых браузеров или небезопасного контекста
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        return successful;
+        
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+        return false;
+    }
+};
+
+/**
+ * Безопасная функция копирования с уведомлением пользователя
+ * @param text Текст для копирования
+ * @param onSuccess Callback при успешном копировании
+ * @param onError Callback при ошибке копирования
+ */
+export const safeCopyToClipboard = async (
+    text: string, 
+    onSuccess?: () => void, 
+    onError?: () => void
+): Promise<void> => {
+    const success = await copyToClipboard(text);
+    
+    if (success) {
+        onSuccess?.();
+    } else {
+        onError?.();
+    }
+};
 
 /**
  * Safely shows an alert. Falls back to browser's alert if Telegram API is unavailable or outdated.
