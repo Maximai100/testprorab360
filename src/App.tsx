@@ -428,81 +428,109 @@ const App: React.FC = () => {
         let initialViewportHeight = window.innerHeight;
         
         const stabilizeMenus = () => {
-            // Стабилизируем верхнее меню
+            // Полностью сбрасываем все стили и принудительно перерисовываем элементы
             const appHeader = document.querySelector('.app-header') as HTMLElement;
+            const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
+            
             if (appHeader) {
-                // Убираем transform, чтобы избежать конфликтов со скроллом
-                appHeader.style.transform = 'none';
-                appHeader.style.willChange = 'auto';
-                appHeader.style.backfaceVisibility = 'visible';
-                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'visible';
-                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'none';
+                // Полностью очищаем все inline стили
+                appHeader.style.cssText = '';
                 
-                // Фиксированная высота
-                appHeader.style.height = '64px';
-                appHeader.style.minHeight = '64px';
-                appHeader.style.maxHeight = '64px';
-                
-                // Предотвращаем изменение позиции
+                // Принудительно устанавливаем базовые стили
                 appHeader.style.position = 'fixed';
                 appHeader.style.top = '0';
                 appHeader.style.left = '0';
                 appHeader.style.right = '0';
+                appHeader.style.zIndex = '500';
+                appHeader.style.height = '64px';
+                appHeader.style.minHeight = '64px';
+                appHeader.style.maxHeight = '64px';
+                appHeader.style.display = 'flex';
+                appHeader.style.alignItems = 'center';
+                appHeader.style.justifyContent = 'space-between';
+                appHeader.style.padding = '10px 16px';
+                appHeader.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                appHeader.style.backdropFilter = 'blur(10px)';
+                appHeader.style.borderBottom = '1px solid #e0e0e0';
+                appHeader.style.gap = '10px';
+                appHeader.style.flexShrink = '0';
+                appHeader.style.maxWidth = '600px';
+                appHeader.style.margin = '0 auto';
                 
-                // Дополнительная стабилизация для iOS
-                appHeader.style.overflow = 'hidden';
-                (appHeader.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
+                // Принудительно убираем все transform
+                appHeader.style.transform = 'none';
+                appHeader.style.webkitTransform = 'none';
+                appHeader.style.willChange = 'auto';
+                appHeader.style.backfaceVisibility = 'visible';
+                appHeader.style.webkitBackfaceVisibility = 'visible';
+                
+                // Принудительная перерисовка
+                appHeader.offsetHeight;
             }
             
-            // Стабилизируем нижнее меню
-            const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
             if (bottomNav) {
-                // Убираем transform, чтобы избежать конфликтов со скроллом
-                bottomNav.style.transform = 'none';
-                bottomNav.style.willChange = 'auto';
-                bottomNav.style.backfaceVisibility = 'visible';
-                (bottomNav.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'visible';
-                (bottomNav.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'none';
+                // Полностью очищаем все inline стили
+                bottomNav.style.cssText = '';
                 
-                // Фиксированная высота
-                bottomNav.style.height = '60px';
-                bottomNav.style.minHeight = '60px';
-                bottomNav.style.maxHeight = '60px';
-                
-                // Предотвращаем изменение позиции
+                // Принудительно устанавливаем базовые стили
                 bottomNav.style.position = 'fixed';
                 bottomNav.style.bottom = '0';
                 bottomNav.style.left = '0';
                 bottomNav.style.right = '0';
-                
-                // Дополнительная стабилизация для iOS
+                bottomNav.style.zIndex = '1000';
+                bottomNav.style.height = '60px';
+                bottomNav.style.minHeight = '60px';
+                bottomNav.style.maxHeight = '60px';
+                bottomNav.style.display = 'flex';
+                bottomNav.style.justifyContent = 'space-around';
+                bottomNav.style.backgroundColor = '#f3f2f8';
+                bottomNav.style.borderTop = '1px solid #e0e0e0';
+                bottomNav.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.1)';
+                bottomNav.style.maxWidth = '600px';
+                bottomNav.style.margin = '0 auto';
+                bottomNav.style.padding = '8px 0';
+                bottomNav.style.paddingBottom = 'calc(8px + env(safe-area-inset-bottom))';
                 bottomNav.style.overflow = 'hidden';
-                (bottomNav.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
                 
-                // Дополнительно: принудительно устанавливаем z-index выше чем у других элементов
-                bottomNav.style.zIndex = '9999';
+                // Принудительно убираем все transform
+                bottomNav.style.transform = 'none';
+                bottomNav.style.webkitTransform = 'none';
+                bottomNav.style.willChange = 'auto';
+                bottomNav.style.backfaceVisibility = 'visible';
+                bottomNav.style.webkitBackfaceVisibility = 'visible';
+                
+                // Принудительная перерисовка
+                bottomNav.offsetHeight;
             }
             
             // Стабилизируем заголовки экранов
             const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
             screenHeaders.forEach(header => {
                 const headerElement = header as HTMLElement;
-                // Убираем transform, чтобы избежать конфликтов со скроллом
-                headerElement.style.transform = 'none';
-                headerElement.style.willChange = 'auto';
-                headerElement.style.backfaceVisibility = 'visible';
-                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'visible';
-                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'none';
+                // Полностью очищаем все inline стили
+                headerElement.style.cssText = '';
                 
-                // Предотвращаем изменение позиции
+                // Принудительно устанавливаем базовые стили
                 headerElement.style.position = 'sticky';
                 headerElement.style.top = '0';
                 headerElement.style.left = '0';
                 headerElement.style.right = '0';
+                headerElement.style.zIndex = '100';
+                headerElement.style.padding = '16px';
+                headerElement.style.margin = '-16px -16px 16px -16px';
+                headerElement.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                headerElement.style.backdropFilter = 'blur(10px)';
+                headerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
                 
-                // Дополнительная стабилизация для iOS
-                headerElement.style.overflow = 'hidden';
-                (headerElement.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
+                // Принудительно убираем все transform
+                headerElement.style.transform = 'none';
+                headerElement.style.webkitTransform = 'none';
+                headerElement.style.willChange = 'auto';
+                headerElement.style.backfaceVisibility = 'visible';
+                headerElement.style.webkitBackfaceVisibility = 'visible';
+                
+                // Принудительная перерисовка
+                headerElement.offsetHeight;
             });
         };
 
@@ -513,50 +541,30 @@ const App: React.FC = () => {
             
             // Если высота изменилась более чем на 150px, вероятно, открылась клавиатура
             if (Math.abs(heightDiff) > 150) {
-                // Увеличиваем z-index нижнего меню, чтобы оно оставалось поверх клавиатуры
-                const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
-                if (bottomNav) {
-                    // Устанавливаем высоту, чтобы избежать сдвига
-                    bottomNav.style.height = '60px';
-                    bottomNav.style.minHeight = '60px';
-                    bottomNav.style.maxHeight = '60px';
-                    
-                    // Увеличиваем z-index, чтобы меню оставалось на виду
-                    bottomNav.style.zIndex = '10000';
-                }
-            } else {
-                // Если клавиатура закрыта, возвращаем нормальный z-index и принудительно стабилизируем
-                const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
-                if (bottomNav) {
-                    bottomNav.style.zIndex = '1000';
-                    
-                    // Принудительно сбрасываем все transform и позиционирование
-                    bottomNav.style.transform = 'none';
-                    bottomNav.style.webkitTransform = 'none';
-                    bottomNav.style.position = 'fixed';
-                    bottomNav.style.bottom = '0';
-                    bottomNav.style.left = '0';
-                    bottomNav.style.right = '0';
-                }
-                
-                // Также стабилизируем верхнее меню
-                const appHeader = document.querySelector('.app-header') as HTMLElement;
-                if (appHeader) {
-                    appHeader.style.transform = 'none';
-                    appHeader.style.webkitTransform = 'none';
-                    appHeader.style.position = 'fixed';
-                    appHeader.style.top = '0';
-                    appHeader.style.left = '0';
-                    appHeader.style.right = '0';
-                }
-            }
-            
-            // В любом случае, стабилизируем меню с задержкой для корректной обработки
-            setTimeout(() => {
-                requestAnimationFrame(() => {
+                // При открытии клавиатуры - принудительно стабилизируем
+                setTimeout(() => {
                     stabilizeMenus();
-                });
-            }, 100);
+                }, 50);
+            } else {
+                // При закрытии клавиатуры - делаем радикальную стабилизацию
+                setTimeout(() => {
+                    // Полностью перерисовываем все меню
+                    stabilizeMenus();
+                    
+                    // Дополнительная принудительная перерисовка через несколько циклов
+                    setTimeout(() => {
+                        stabilizeMenus();
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        stabilizeMenus();
+                    }, 300);
+                    
+                    setTimeout(() => {
+                        stabilizeMenus();
+                    }, 500);
+                }, 100);
+            }
         };
 
         // Стабилизируем при загрузке
@@ -566,76 +574,71 @@ const App: React.FC = () => {
         window.addEventListener('resize', handleViewportChange);
         window.addEventListener('orientationchange', handleViewportChange);
 
-        // Стабилизируем при скролле
-        window.addEventListener('scroll', stabilizeMenus, { passive: true });
+        // Стабилизируем при скролле - более агрессивно
+        window.addEventListener('scroll', () => {
+            requestAnimationFrame(() => {
+                stabilizeMenus();
+            });
+        }, { passive: true });
         
-        // Стабилизируем при изменении фокуса (например, при открытии/закрытии клавиатуры)
+        // Радикальная стабилизация при изменении фокуса
         document.addEventListener('focusin', () => {
+            // При открытии клавиатуры
             setTimeout(() => {
-                requestAnimationFrame(() => {
-                    stabilizeMenus();
-                });
-            }, 300);
+                stabilizeMenus();
+            }, 100);
         });
         
         document.addEventListener('focusout', () => {
-            // При закрытии клавиатуры делаем дополнительную стабилизацию
+            // При закрытии клавиатуры - радикальная стабилизация
             setTimeout(() => {
-                // Добавляем класс для CSS стабилизации
-                document.body.classList.add('keyboard-closed');
-                
-                // Принудительно сбрасываем все стили меню
-                const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
-                const appHeader = document.querySelector('.app-header') as HTMLElement;
-                
-                if (bottomNav) {
-                    bottomNav.style.transform = 'none';
-                    bottomNav.style.webkitTransform = 'none';
-                    bottomNav.style.position = 'fixed';
-                    bottomNav.style.bottom = '0';
-                    bottomNav.style.left = '0';
-                    bottomNav.style.right = '0';
-                    bottomNav.style.zIndex = '1000';
-                }
-                
-                if (appHeader) {
-                    appHeader.style.transform = 'none';
-                    appHeader.style.webkitTransform = 'none';
-                    appHeader.style.position = 'fixed';
-                    appHeader.style.top = '0';
-                    appHeader.style.left = '0';
-                    appHeader.style.right = '0';
-                }
-                
-                requestAnimationFrame(() => {
-                    stabilizeMenus();
-                });
-                
-                // Убираем класс через некоторое время
-                setTimeout(() => {
-                    document.body.classList.remove('keyboard-closed');
-                }, 1000);
+                stabilizeMenus();
+            }, 100);
+            
+            setTimeout(() => {
+                stabilizeMenus();
             }, 300);
+            
+            setTimeout(() => {
+                stabilizeMenus();
+            }, 600);
+            
+            setTimeout(() => {
+                stabilizeMenus();
+            }, 1000);
         });
         
         // Стабилизируем при изменении видимости
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        stabilizeMenus();
-                    });
+                    stabilizeMenus();
                 }, 100);
             }
+        });
+        
+        // Дополнительная стабилизация при любых изменениях DOM
+        const observer = new MutationObserver(() => {
+            setTimeout(() => {
+                stabilizeMenus();
+            }, 50);
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
         });
 
         return () => {
             window.removeEventListener('resize', handleViewportChange);
             window.removeEventListener('orientationchange', handleViewportChange);
-            window.removeEventListener('scroll', stabilizeMenus);
+            window.removeEventListener('scroll', () => {});
             document.removeEventListener('focusin', () => {});
             document.removeEventListener('focusout', () => {});
             document.removeEventListener('visibilitychange', () => {});
+            observer.disconnect();
         };
     }, []);
 

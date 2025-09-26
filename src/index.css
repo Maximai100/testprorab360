@@ -964,15 +964,24 @@ body.dark-theme .btn-ai {
  * что их не переопределит никакое другое правило.
  */
 body .bottom-nav {
+  /* Принудительно фиксируем позицию */
   position: fixed !important;
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 1000 !important;
 
-  /* Убираем transform, чтобы избежать конфликтов со скроллом */
+  /* Принудительно убираем все transform */
   transform: none !important; 
   -webkit-transform: none !important;
+  will-change: auto !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+  
+  /* Стабильные размеры */
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
   
   /* Остальные стили для сохранения внешнего вида */
   display: flex !important;
@@ -982,11 +991,13 @@ body .bottom-nav {
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
   max-width: 600px !important;
   margin: 0 auto !important;
-  height: 60px !important;
   padding: 8px 0 !important;
   padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
-  -webkit-overflow-scrolling: touch !important;
   overflow: hidden !important;
+  
+  /* Принудительная перерисовка */
+  contain: layout style paint;
+  isolation: isolate;
 }
 
 /* Дополнительная стабилизация для мобильных устройств */
@@ -1706,8 +1717,29 @@ input[type=number] { -moz-appearance: textfield; }
     }
 }
 
+/* Радикальная стабилизация меню - принудительное позиционирование */
 .app-header {
-    max-width: 600px; /* Match app container */
+    /* Принудительно фиксируем позицию */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 500 !important;
+    
+    /* Принудительно убираем все transform */
+    transform: none !important;
+    -webkit-transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    
+    /* Стабильные размеры */
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    
+    /* Базовые стили */
+    max-width: 600px;
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -1718,30 +1750,11 @@ input[type=number] { -moz-appearance: textfield; }
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
     gap: 10px;
-    z-index: 500;
-    height: 64px; /* Fixed height */
-    flex-shrink: 0; /* Не сжимаем заголовок */
+    flex-shrink: 0;
     
-    /* Убираем transform, чтобы избежать конфликтов со скроллом */
-    transform: none !important;
-    will-change: auto !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
-    -webkit-transform: none !important;
-    
-    /* Стабильная высота и предотвращение "прыжков" */
-    min-height: 64px !important;
-    max-height: 64px !important;
-    
-    /* Дополнительная стабилизация для iOS */
-    -webkit-overflow-scrolling: touch;
-    overflow: hidden;
-    
-    /* Фиксируем шапку вверху */
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    /* Принудительная перерисовка */
+    contain: layout style paint;
+    isolation: isolate;
 }
 
 .app-header-left {
