@@ -81,6 +81,16 @@ body {
     padding: 16px;
     padding-top: 80px; /* Space for sticky header */
     padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+    /* Дополнительная защита от смещения контента на мобильных устройствах */
+    margin-bottom: 0;
+    /* Убедимся, что контент не перекрывается нижним меню */
+    min-height: calc(100vh - 80px - 60px - env(safe-area-inset-bottom));
+}
+
+/* Убедимся, что body не влияет на позиционирование нижнего меню */
+body {
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 header {
@@ -984,6 +994,22 @@ body.dark-theme .btn-ai {
     /* Предотвращаем изменение позиции при скролле */
     position: fixed !important;
     bottom: 0 !important;
+    
+    /* Дополнительная стабилизация для предотвращения смещения при скролле и вводе текста */
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+}
+
+/* Дополнительная стабилизация для мобильных устройств */
+@media (max-width: 768px) {
+    .bottom-nav {
+        /* Дополнительная фиксация позиции для предотвращения смещения */
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        will-change: transform !important;
+        /* Убедимся, что элемент рендерится в отдельном слое */
+        z-index: 9999 !important;
+    }
 }
 body.dark-theme .bottom-nav {
     box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
