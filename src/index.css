@@ -966,14 +966,17 @@ body .bottom-nav {
   /* Принудительно фиксируем позицию */
   position: fixed !important;
   bottom: 0 !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  transform: none !important;
   width: 100% !important;
   max-width: 600px !important;
   z-index: 1000 !important;
 
   /* Принудительно убираем все transform кроме центрирования */
-  -webkit-transform: translateX(-50%) !important;
+  -webkit-transform: none !important;
   will-change: auto !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
@@ -1002,8 +1005,8 @@ body .bottom-nav {
 @media (max-width: 768px) {
     .bottom-nav {
         /* Сохраняем центрирование через transform */
-        transform: translateX(-50%) !important;
-        -webkit-transform: translateX(-50%) !important;
+        transform: none !important;
+        -webkit-transform: none !important;
         will-change: auto !important;
         /* Убедимся, что элемент рендерится в отдельном слое */
         z-index: 9999 !important;
@@ -1022,8 +1025,11 @@ body.dark-theme .bottom-nav {
     .bottom-nav {
         position: fixed !important;
         bottom: 0 !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+        transform: none !important;
         width: 100% !important;
         max-width: 600px !important;
         height: 60px !important;
@@ -1032,7 +1038,7 @@ body.dark-theme .bottom-nav {
         z-index: 10000 !important;
         
         /* Сохраняем центрирование через transform */
-        -webkit-transform: translateX(-50%) !important;
+        -webkit-transform: none !important;
         will-change: auto !important;
         backface-visibility: visible !important;
         -webkit-backface-visibility: visible !important;
@@ -2449,8 +2455,8 @@ input[type=number] { -moz-appearance: textfield; }
     }
     
     body.keyboard-closed .bottom-nav {
-        transform: translateX(-50%) !important;
-        -webkit-transform: translateX(-50%) !important;
+        transform: none !important;
+        -webkit-transform: none !important;
         position: fixed !important;
     }
     
@@ -3273,11 +3279,14 @@ input[type=number] { -moz-appearance: textfield; }
     
     .bottom-nav {
         /* Сохраняем центрирование через transform */
-        transform: translateX(-50%) !important;
+        transform: none !important;
         /* Предотвращаем изменение позиции при скролле */
         position: fixed !important;
         bottom: 0 !important;
-        left: 50% !important;
+        left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
         width: 100% !important;
         max-width: 600px !important;
         /* Стабильная высота */
@@ -3286,7 +3295,7 @@ input[type=number] { -moz-appearance: textfield; }
         max-height: 60px !important;
         
         /* Убираем дополнительные transform для мобильных */
-        -webkit-transform: translateX(-50%) !important;
+        -webkit-transform: none !important;
         will-change: auto !important;
         backface-visibility: visible !important;
         -webkit-backface-visibility: visible !important;
@@ -3320,8 +3329,8 @@ input[type=number] { -moz-appearance: textfield; }
         
         .bottom-nav {
             /* Сохраняем центрирование через transform для iOS */
-            -webkit-transform: translateX(-50%) !important;
-            transform: translateX(-50%) !important;
+            -webkit-transform: none !important;
+            transform: none !important;
             will-change: auto !important;
             backface-visibility: visible !important;
             -webkit-backface-visibility: visible !important;
@@ -3329,7 +3338,10 @@ input[type=number] { -moz-appearance: textfield; }
             /* Фиксированная позиция */
             position: fixed !important;
             bottom: 0 !important;
-            left: 50% !important;
+            left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
             width: 100% !important;
             max-width: 600px !important;
             

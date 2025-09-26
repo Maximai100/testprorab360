@@ -439,9 +439,9 @@ const App: React.FC = () => {
             }
             
             if (bottomNav) {
-                // Для bottom-nav сохраняем центрирование через transform
-                bottomNav.style.transform = 'translateX(-50%)';
-                bottomNav.style.webkitTransform = 'translateX(-50%)';
+                // Для bottom-nav убираем transform, используем margin: auto
+                bottomNav.style.transform = 'none';
+                bottomNav.style.webkitTransform = 'none';
             }
         };
 
