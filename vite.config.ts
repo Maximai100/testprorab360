@@ -59,10 +59,7 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
             
-            // App chunks
-            if (id.includes('src/components/calculator')) {
-              return 'calculator';
-            }
+            // App chunks - объединяем calculator с основным чанком для доступа к React
             if (id.includes('src/components/modals')) {
               return 'modals';
             }
@@ -78,6 +75,7 @@ export default defineConfig(({ mode }) => {
             if (id.includes('src/utils')) {
               return 'utils';
             }
+            // calculator и context остаются в основном чанке
           },
           // Add hash to filenames for better caching
           entryFileNames: 'assets/[name]-[hash].js',
@@ -87,7 +85,8 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      include: ['jspdf', 'jspdf-autotable', 'react', 'react-dom']
+      include: ['jspdf', 'jspdf-autotable', 'react', 'react-dom'],
+      force: true
     },
     define: {
       global: 'globalThis'
