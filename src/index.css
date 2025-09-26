@@ -58,12 +58,11 @@ body {
     /* Layout and positioning */
     position: relative;
     width: 100%;
-    min-height: 100vh;
-    min-height: calc(var(--vh, 1vh) * 100);
+    height: var(--app-height); /* Используем стабильную высоту */
+    overflow-y: auto; /* Убедись, что скролл работает */
     
     /* Scrolling and overflow */
     overflow-x: hidden;
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     
     /* Touch and overscroll behavior */
@@ -81,7 +80,7 @@ body {
     padding: 16px;
     padding-top: 80px; /* Space for fixed header */
     padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for fixed bottom nav */
-    min-height: calc(100vh - 80px - 60px - env(safe-area-inset-bottom)); /* Учитываем высоту фиксированных элементов */
+    min-height: calc(var(--app-height) - 80px - 60px - env(safe-area-inset-bottom)); /* Используем стабильную высоту */
 }
 
 /* Убедимся, что body не влияет на позиционирование */
@@ -3222,7 +3221,7 @@ input[type=number] { -moz-appearance: textfield; }
     body {
         position: relative;
         width: 100%;
-        min-height: 100vh;
+        height: var(--app-height); /* Используем стабильную высоту */
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -3236,7 +3235,7 @@ input[type=number] { -moz-appearance: textfield; }
         padding: 16px;
         padding-top: 80px; /* Space for fixed header */
         padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for fixed bottom nav */
-        min-height: calc(100vh - 80px - 60px - env(safe-area-inset-bottom));
+        min-height: calc(var(--app-height) - 80px - 60px - env(safe-area-inset-bottom)); /* Используем стабильную высоту */
         /* Убираем фиксированное позиционирование, чтобы избежать конфликтов со скроллом */
         transform: none;
         will-change: auto;

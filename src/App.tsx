@@ -62,9 +62,12 @@ import { useInventory } from './hooks/useInventory';
 import { useNotes } from './hooks/useNotes';
 import { useTasks } from './hooks/useTasks';
 import { useFileStorage } from './hooks/useFileStorage';
+import { useViewportHeight } from './hooks/useViewportHeight';
 import { dataService, storageService } from './services/storageService';
 
 const App: React.FC = () => {
+    // Вызываем хук. Он автоматически установит CSS-переменную --app-height
+    useViewportHeight();
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
