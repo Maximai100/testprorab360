@@ -75,22 +75,26 @@ body {
     transform: none !important;
 }
 
+/* 
+ * Главный контейнер приложения.
+ * Превращаем его в flex-колонку, которая занимает 100% высоты экрана.
+ */
 .app-container {
     max-width: 600px;
     margin: 0 auto;
-    padding: 16px;
-    padding-top: 80px; /* Space for sticky header */
-    padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
-    /* Дополнительная защита от смещения контента на мобильных устройствах */
-    margin-bottom: 0;
-    /* Убедимся, что контент не перекрывается нижним меню */
-    min-height: calc(100vh - 80px - 60px - env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100); /* Используем переменную для корректной высоты на мобильных */
+    overflow: hidden; /* Предотвращаем двойной скролл */
+    position: relative; /* Добавляем, чтобы внутренние элементы могли использовать absolute/fixed при необходимости */
 }
 
-/* Убедимся, что body не влияет на позиционирование нижнего меню */
+/* Убедимся, что body не влияет на позиционирование */
 body {
-    padding-bottom: 0;
-    margin-bottom: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; /* Предотвращаем скролл на уровне body */
 }
 
 header {
@@ -960,10 +964,6 @@ body.dark-theme .btn-ai {
 
 /* Bottom Navigation Bar */
 .bottom-nav {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
     display: flex;
     justify-content: space-around;
     background-color: var(--secondary-bg-color);
@@ -972,6 +972,7 @@ body.dark-theme .btn-ai {
     z-index: 9999 !important;
     max-width: 600px;
     margin: 0 auto;
+    flex-shrink: 0; /* Не сжимаем нижнюю панель */
     
     /* Критически важные стили для стабилизации на мобильных */
     transform: translate3d(0, 0, 0) !important;
@@ -990,10 +991,6 @@ body.dark-theme .btn-ai {
     /* Дополнительная стабилизация для iOS */
     -webkit-overflow-scrolling: touch;
     overflow: hidden;
-    
-    /* Предотвращаем изменение позиции при скролле */
-    position: fixed !important;
-    bottom: 0 !important;
     
     /* Дополнительная стабилизация для предотвращения смещения при скролле и вводе текста */
     -webkit-transform: translateZ(0) !important;
@@ -1675,10 +1672,6 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 .app-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
     max-width: 600px; /* Match app container */
     margin: 0 auto;
     display: flex;
@@ -1692,6 +1685,7 @@ input[type=number] { -moz-appearance: textfield; }
     gap: 10px;
     z-index: 500;
     height: 64px; /* Fixed height */
+    flex-shrink: 0; /* Не сжимаем заголовок */
     
     /* Критически важные стили для стабилизации на мобильных */
     transform: translate3d(0, 0, 0) !important;
@@ -1707,10 +1701,6 @@ input[type=number] { -moz-appearance: textfield; }
     /* Дополнительная стабилизация для iOS */
     -webkit-overflow-scrolling: touch;
     overflow: hidden;
-    
-    /* Предотвращаем изменение позиции при скролле */
-    position: fixed !important;
-    top: 0 !important;
 }
 
 .app-header-left {
@@ -3336,4 +3326,35 @@ input[type=number] { -moz-appearance: textfield; }
 .delete-photo-btn:hover {
     background-color: var(--danger-color);
     color: white;
+}
+
+/* Основная область контента */
+main {
+    flex-grow: 1;
+    overflow-y: auto; /* Разрешаем вертикальный скролл только в основном контенте */
+    padding-top: 0; /* Убираем верхний отступ, так как шапка фиксирована в макете */
+    padding-bottom: 0; /* Убираем нижний отступ */
+    -webkit-overflow-scrolling: touch; /* Для плавности скролла на iOS */
+}
+
+/* 
+ * Добавляем отступы для учёта зафиксированных элементов при скролле.
+ * Это нужно для того, чтобы контент не скрывался за шапкой или нижним меню.
+ */
+main > *:first-child {
+    margin-top: 0;
+    padding-top: 16px; /* Добавляем отступ сверху для видимости контента */
+}
+
+/* Для мобильных устройств - дополнительная стабилизация */
+@media (max-width: 768px) {
+    .app-container {
+        /* Убедимся, что на мобильных устройствах используется правильная высота */
+        height: 100vh;
+        min-height: calc(var(--vh, 1vh) * 100);
+    }
+    
+    main {
+        -webkit-overflow-scrolling: touch; /* Улучшаем скролл на iOS */
+    }
 }

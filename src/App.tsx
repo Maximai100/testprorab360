@@ -472,9 +472,6 @@ const App: React.FC = () => {
                 bottomNav.style.left = '0';
                 bottomNav.style.right = '0';
                 
-                // Устанавливаем z-index, чтобы гарантировать, что меню поверх других элементов
-                bottomNav.style.zIndex = '9999';
-                
                 // Дополнительная стабилизация для iOS
                 bottomNav.style.overflow = 'hidden';
                 (bottomNav.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
@@ -519,10 +516,6 @@ const App: React.FC = () => {
         
         // Стабилизируем при изменении видимости
         document.addEventListener('visibilitychange', stabilizeMenus);
-        
-        // Дополнительные события для лучшей стабилизации на мобильных устройствах
-        window.addEventListener('focusin', stabilizeMenus); // Когда элемент получает фокус (например, при открытии клавиатуры)
-        window.addEventListener('focusout', stabilizeMenus); // Когда элемент теряет фокус
 
         return () => {
             window.removeEventListener('resize', stabilizeMenus);
@@ -531,9 +524,6 @@ const App: React.FC = () => {
             window.removeEventListener('touchstart', stabilizeMenus);
             window.removeEventListener('touchmove', stabilizeMenus);
             document.removeEventListener('visibilitychange', stabilizeMenus);
-            // Удаляем дополнительные обработчики
-            window.removeEventListener('focusin', stabilizeMenus);
-            window.removeEventListener('focusout', stabilizeMenus);
         };
     }, []);
 
