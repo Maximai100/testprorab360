@@ -27,23 +27,14 @@
             // Enable closing confirmation
             tg.enableClosingConfirmation();
             
-            // Set viewport height for mobile browsers with stabilization
+            // Set viewport height for mobile browsers
             const setViewportHeight = () => {
                 const vh = window.innerHeight * 0.01;
                 document.documentElement.style.setProperty('--vh', `${vh}px`);
-                
-                // Дополнительная стабилизация для мобильных браузеров
-                document.documentElement.style.setProperty('--real-vh', `${window.innerHeight}px`);
-                document.documentElement.style.setProperty('--safe-area-inset-top', 'env(safe-area-inset-top)');
-                document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom)');
             };
             
             setViewportHeight();
             window.addEventListener('resize', setViewportHeight);
-            window.addEventListener('orientationchange', () => {
-                // Задержка для корректного получения размеров после поворота
-                setTimeout(setViewportHeight, 100);
-            });
             
             // Pull-to-refresh отключен по запросу пользователя
             
@@ -53,23 +44,14 @@
             // Fallback for non-Telegram browsers
             console.log('Telegram WebApp not available, using fallback');
             
-            // Set viewport height for mobile browsers with stabilization
+            // Set viewport height for mobile browsers
             const setViewportHeight = () => {
                 const vh = window.innerHeight * 0.01;
                 document.documentElement.style.setProperty('--vh', `${vh}px`);
-                
-                // Дополнительная стабилизация для мобильных браузеров
-                document.documentElement.style.setProperty('--real-vh', `${window.innerHeight}px`);
-                document.documentElement.style.setProperty('--safe-area-inset-top', 'env(safe-area-inset-top)');
-                document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom)');
             };
             
             setViewportHeight();
             window.addEventListener('resize', setViewportHeight);
-            window.addEventListener('orientationchange', () => {
-                // Задержка для корректного получения размеров после поворота
-                setTimeout(setViewportHeight, 100);
-            });
             
             // Pull-to-refresh отключен по запросу пользователя
         }

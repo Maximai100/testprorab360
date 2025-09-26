@@ -389,128 +389,107 @@ const App: React.FC = () => {
         document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
     }, [companyProfileHook.profile?.name]);
 
-    // Улучшенная стабилизация верхнего и нижнего меню для мобильных устройств
+    // Стабилизация верхнего и нижнего меню, а также заголовков экранов в мобильной версии
     useEffect(() => {
-        let stabilizationTimer: NodeJS.Timeout | null = null;
-        
-        const applyStabilizationStyles = (element: HTMLElement, isFixed = false) => {
-            // Основные стили для GPU ускорения
-            element.style.transform = 'translate3d(0, 0, 0)';
-            element.style.willChange = 'transform';
-            element.style.backfaceVisibility = 'hidden';
-            element.style.webkitBackfaceVisibility = 'hidden';
-            element.style.webkitTransform = 'translate3d(0, 0, 0)';
-            
-            // Дополнительные стили для стабилизации
-            element.style.webkitUserSelect = 'none';
-            element.style.userSelect = 'none';
-            element.style.webkitTransformStyle = 'preserve-3d';
-            element.style.transformStyle = 'preserve-3d';
-            element.style.webkitPerspective = '1000px';
-            element.style.perspective = '1000px';
-            
-            // Предотвращение влияния скролла
-            element.style.overflow = 'hidden';
-            element.style.webkitOverflowScrolling = 'touch';
-            
-            if (isFixed) {
-                // Принудительная фиксация позиции
-                element.style.position = 'fixed';
-                element.style.zIndex = '9999';
-            }
-        };
-        
         const stabilizeMenus = () => {
-            // Очищаем предыдущий таймер
-            if (stabilizationTimer) {
-                clearTimeout(stabilizationTimer);
+            // Стабилизируем верхнее меню
+            const appHeader = document.querySelector('.app-header');
+            if (appHeader) {
+                // Принудительно устанавливаем стабильную позицию
+                appHeader.style.transform = 'translate3d(0, 0, 0)';
+                appHeader.style.willChange = 'transform';
+                appHeader.style.backfaceVisibility = 'hidden';
+                appHeader.style.webkitBackfaceVisibility = 'hidden';
+                appHeader.style.webkitTransform = 'translate3d(0, 0, 0)';
+                
+                // Фиксированная высота
+                appHeader.style.height = '64px';
+                appHeader.style.minHeight = '64px';
+                appHeader.style.maxHeight = '64px';
+                
+                // Предотвращаем изменение позиции
+                appHeader.style.position = 'fixed';
+                appHeader.style.top = '0';
+                appHeader.style.left = '0';
+                appHeader.style.right = '0';
+                
+                // Дополнительная стабилизация для iOS
+                appHeader.style.overflow = 'hidden';
+                appHeader.style.webkitOverflowScrolling = 'touch';
             }
             
-            // Стабилизируем с небольшой задержкой для лучшей производительности
-            stabilizationTimer = setTimeout(() => {
-                // Стабилизируем верхнее меню
-                const appHeader = document.querySelector('.app-header') as HTMLElement;
-                if (appHeader) {
-                    applyStabilizationStyles(appHeader, true);
-                    appHeader.style.top = '0';
-                    appHeader.style.left = '0';
-                    appHeader.style.right = '0';
-                    appHeader.style.height = '64px';
-                    appHeader.style.minHeight = '64px';
-                    appHeader.style.maxHeight = '64px';
-                }
+            // Стабилизируем нижнее меню
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                // Принудительно устанавливаем стабильную позицию
+                bottomNav.style.transform = 'translate3d(0, 0, 0)';
+                bottomNav.style.willChange = 'transform';
+                bottomNav.style.backfaceVisibility = 'hidden';
+                bottomNav.style.webkitBackfaceVisibility = 'hidden';
+                bottomNav.style.webkitTransform = 'translate3d(0, 0, 0)';
                 
-                // Стабилизируем нижнее меню
-                const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
-                if (bottomNav) {
-                    applyStabilizationStyles(bottomNav, true);
-                    bottomNav.style.bottom = '0';
-                    bottomNav.style.left = '0';
-                    bottomNav.style.right = '0';
-                    bottomNav.style.height = '60px';
-                    bottomNav.style.minHeight = '60px';
-                    bottomNav.style.maxHeight = '60px';
-                }
+                // Фиксированная высота
+                bottomNav.style.height = '60px';
+                bottomNav.style.minHeight = '60px';
+                bottomNav.style.maxHeight = '60px';
                 
-                // Стабилизируем заголовки экранов
-                const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
-                screenHeaders.forEach(header => {
-                    const headerElement = header as HTMLElement;
-                    applyStabilizationStyles(headerElement);
-                    headerElement.style.position = 'sticky';
-                    headerElement.style.top = '0';
-                    headerElement.style.left = '0';
-                    headerElement.style.right = '0';
-                    headerElement.style.minHeight = '64px';
-                });
+                // Предотвращаем изменение позиции
+                bottomNav.style.position = 'fixed';
+                bottomNav.style.bottom = '0';
+                bottomNav.style.left = '0';
+                bottomNav.style.right = '0';
                 
-                stabilizationTimer = null;
-            }, 16); // ~60fps
+                // Дополнительная стабилизация для iOS
+                bottomNav.style.overflow = 'hidden';
+                bottomNav.style.webkitOverflowScrolling = 'touch';
+            }
+            
+            // Стабилизируем заголовки экранов
+            const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
+            screenHeaders.forEach(header => {
+                // Принудительно устанавливаем стабильную позицию
+                header.style.transform = 'translate3d(0, 0, 0)';
+                header.style.willChange = 'transform';
+                header.style.backfaceVisibility = 'hidden';
+                header.style.webkitBackfaceVisibility = 'hidden';
+                header.style.webkitTransform = 'translate3d(0, 0, 0)';
+                
+                // Предотвращаем изменение позиции
+                header.style.position = 'sticky';
+                header.style.top = '0';
+                header.style.left = '0';
+                header.style.right = '0';
+                
+                // Дополнительная стабилизация для iOS
+                header.style.overflow = 'hidden';
+                header.style.webkitOverflowScrolling = 'touch';
+            });
         };
 
         // Стабилизируем при загрузке
         stabilizeMenus();
 
-        // Более агрессивная стабилизация для мобильных
-        const events = [
-            'resize',
-            'orientationchange', 
-            'scroll',
-            'touchstart',
-            'touchmove',
-            'touchend',
-            'gesturestart',
-            'gesturechange',
-            'gestureend'
-        ];
-        
-        events.forEach(event => {
-            window.addEventListener(event, stabilizeMenus, { passive: true });
-        });
-        
-        // Дополнительная стабилизация при изменении видимости
-        document.addEventListener('visibilitychange', stabilizeMenus);
-        
-        // Стабилизация при изменении фокуса (важно для iOS)
-        window.addEventListener('focus', stabilizeMenus);
-        window.addEventListener('blur', stabilizeMenus);
+        // Стабилизируем при изменении размера окна
+        window.addEventListener('resize', stabilizeMenus);
+        window.addEventListener('orientationchange', stabilizeMenus);
 
-        // Периодическая проверка стабильности (для особо проблемных устройств)
-        const stabilityCheck = setInterval(stabilizeMenus, 1000);
+        // Стабилизируем при скролле
+        window.addEventListener('scroll', stabilizeMenus, { passive: true });
+        
+        // Стабилизируем при изменении viewport
+        window.addEventListener('touchstart', stabilizeMenus, { passive: true });
+        window.addEventListener('touchmove', stabilizeMenus, { passive: true });
+        
+        // Стабилизируем при изменении видимости
+        document.addEventListener('visibilitychange', stabilizeMenus);
 
         return () => {
-            if (stabilizationTimer) {
-                clearTimeout(stabilizationTimer);
-            }
-            
-            events.forEach(event => {
-                window.removeEventListener(event, stabilizeMenus);
-            });
-            
+            window.removeEventListener('resize', stabilizeMenus);
+            window.removeEventListener('orientationchange', stabilizeMenus);
+            window.removeEventListener('scroll', stabilizeMenus);
+            window.removeEventListener('touchstart', stabilizeMenus);
+            window.removeEventListener('touchmove', stabilizeMenus);
             document.removeEventListener('visibilitychange', stabilizeMenus);
-            window.removeEventListener('focus', stabilizeMenus);
-            window.removeEventListener('blur', stabilizeMenus);
-            clearInterval(stabilityCheck);
         };
     }, []);
 
