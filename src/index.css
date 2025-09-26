@@ -957,45 +957,35 @@ body.dark-theme .btn-ai {
 
 /* --- NEW PROJECT & NAVIGATION STYLES --- */
 
-/* Bottom Navigation Bar */
-.bottom-nav {
-    display: flex;
-    justify-content: space-around;
-    background-color: var(--secondary-bg-color);
-    border-top: 1px solid var(--border-color);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 9999 !important;
-    max-width: 600px;
-    margin: 0 auto;
-    flex-shrink: 0; /* Не сжимаем нижнюю панель */
-    
-    /* Критически важные стили для стабилизации на мобильных */
-    transform: translate3d(0, 0, 0) !important;
-    will-change: transform !important;
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
-    -webkit-transform: translate3d(0, 0, 0) !important;
-    
-    /* Стабильная высота и предотвращение "прыжков" */
-    height: 60px !important;
-    min-height: 60px !important;
-    max-height: 60px !important;
-    padding: 8px 0;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    
-    /* Дополнительная стабилизация для iOS */
-    -webkit-overflow-scrolling: touch;
-    overflow: hidden;
-    
-    /* Дополнительная стабилизация для предотвращения смещения при скролле и вводе текста */
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-    
-    /* Фиксируем меню внизу */
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+/* 
+ * Принудительная фиксация нижнего меню.
+ * Мы используем селектор `body .bottom-nav`, чтобы повысить его специфичность.
+ * Мы добавляем `!important` к ключевым свойствам, чтобы гарантировать,
+ * что их не переопределит никакое другое правило.
+ */
+body .bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+
+  /* Убедимся, что никакие другие свойства не мешают */
+  transform: none !important; 
+  
+  /* Остальные стили для сохранения внешнего вида */
+  display: flex !important;
+  justify-content: space-around !important;
+  background-color: var(--secondary-bg-color) !important;
+  border-top: 1px solid var(--border-color) !important;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  height: 60px !important;
+  padding: 8px 0 !important;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  -webkit-overflow-scrolling: touch !important;
+  overflow: hidden !important;
 }
 
 /* Дополнительная стабилизация для мобильных устройств */
@@ -3339,7 +3329,7 @@ input[type=number] { -moz-appearance: textfield; }
 main {
     overflow-y: auto; /* Разрешаем вертикальный скролл */
     padding-top: 0;
-    padding-bottom: 0;
+    padding-bottom: 60px; /* Отступ, равный высоте нижнего меню */
     -webkit-overflow-scrolling: touch; /* Для плавности скролла на iOS */
 }
 
