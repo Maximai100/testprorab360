@@ -112,12 +112,12 @@ header {
     margin: -16px -16px 16px -16px; /* Adjust for container padding */
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     
-    /* Критически важные стили для стабилизации на мобильных */
-    transform: translate3d(0, 0, 0) !important;
-    will-change: transform !important;
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
-    -webkit-transform: translate3d(0, 0, 0) !important;
+    /* Убираем transform, чтобы избежать конфликтов со скроллом */
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    -webkit-transform: none !important;
     
     /* Дополнительная стабилизация для iOS */
     -webkit-overflow-scrolling: touch;
@@ -1697,12 +1697,12 @@ input[type=number] { -moz-appearance: textfield; }
     height: 64px; /* Fixed height */
     flex-shrink: 0; /* Не сжимаем заголовок */
     
-    /* Критически важные стили для стабилизации на мобильных */
-    transform: translate3d(0, 0, 0) !important;
-    will-change: transform !important;
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
-    -webkit-transform: translate3d(0, 0, 0) !important;
+    /* Убираем transform, чтобы избежать конфликтов со скроллом */
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    -webkit-transform: none !important;
     
     /* Стабильная высота и предотвращение "прыжков" */
     min-height: 64px !important;
@@ -3180,8 +3180,8 @@ input[type=number] { -moz-appearance: textfield; }
     
     /* Дополнительная стабилизация для верхнего и нижнего меню */
     .app-header {
-        /* Принудительно используем GPU для рендеринга */
-        transform: translate3d(0, 0, 0) !important;
+        /* Убираем transform, чтобы избежать конфликтов со скроллом */
+        transform: none !important;
         /* Предотвращаем изменение позиции при скролле */
         position: fixed !important;
         top: 0 !important;
@@ -3190,11 +3190,11 @@ input[type=number] { -moz-appearance: textfield; }
         min-height: 64px !important;
         max-height: 64px !important;
         
-        /* Дополнительная стабилизация для мобильных */
-        -webkit-transform: translate3d(0, 0, 0) !important;
-        will-change: transform !important;
-        backface-visibility: hidden !important;
-        -webkit-backface-visibility: hidden !important;
+        /* Убираем дополнительные transform для мобильных */
+        -webkit-transform: none !important;
+        will-change: auto !important;
+        backface-visibility: visible !important;
+        -webkit-backface-visibility: visible !important;
         
         /* Предотвращаем "прыжки" при скролле */
         overflow: hidden !important;
@@ -3226,12 +3226,12 @@ input[type=number] { -moz-appearance: textfield; }
     /* Специальные стили для iOS Safari */
     @supports (-webkit-touch-callout: none) {
         .app-header {
-            /* Дополнительная стабилизация для iOS */
-            -webkit-transform: translate3d(0, 0, 0) !important;
-            transform: translate3d(0, 0, 0) !important;
-            will-change: transform !important;
-            backface-visibility: hidden !important;
-            -webkit-backface-visibility: hidden !important;
+            /* Убираем transform для iOS, чтобы избежать конфликтов со скроллом */
+            -webkit-transform: none !important;
+            transform: none !important;
+            will-change: auto !important;
+            backface-visibility: visible !important;
+            -webkit-backface-visibility: visible !important;
             
             /* Фиксированная позиция */
             position: fixed !important;
@@ -3269,12 +3269,12 @@ input[type=number] { -moz-appearance: textfield; }
         .estimate-header,
         .projects-list-header,
         .project-detail-header {
-            /* Дополнительная стабилизация для iOS */
-            -webkit-transform: translate3d(0, 0, 0) !important;
-            transform: translate3d(0, 0, 0) !important;
-            will-change: transform !important;
-            backface-visibility: hidden !important;
-            -webkit-backface-visibility: hidden !important;
+            /* Убираем transform для iOS, чтобы избежать конфликтов со скроллом */
+            -webkit-transform: none !important;
+            transform: none !important;
+            will-change: auto !important;
+            backface-visibility: visible !important;
+            -webkit-backface-visibility: visible !important;
             
             /* Фиксированная позиция */
             position: sticky !important;

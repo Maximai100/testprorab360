@@ -431,12 +431,12 @@ const App: React.FC = () => {
             // Стабилизируем верхнее меню
             const appHeader = document.querySelector('.app-header') as HTMLElement;
             if (appHeader) {
-                // Принудительно устанавливаем стабильную позицию
-                appHeader.style.transform = 'translate3d(0, 0, 0)';
-                appHeader.style.willChange = 'transform';
-                appHeader.style.backfaceVisibility = 'hidden';
-                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'hidden';
-                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'translate3d(0, 0, 0)';
+                // Убираем transform, чтобы избежать конфликтов со скроллом
+                appHeader.style.transform = 'none';
+                appHeader.style.willChange = 'auto';
+                appHeader.style.backfaceVisibility = 'visible';
+                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'visible';
+                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'none';
                 
                 // Фиксированная высота
                 appHeader.style.height = '64px';
@@ -487,12 +487,12 @@ const App: React.FC = () => {
             const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
             screenHeaders.forEach(header => {
                 const headerElement = header as HTMLElement;
-                // Принудительно устанавливаем стабильную позицию
-                headerElement.style.transform = 'translate3d(0, 0, 0)';
-                headerElement.style.willChange = 'transform';
-                headerElement.style.backfaceVisibility = 'hidden';
-                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'hidden';
-                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'translate3d(0, 0, 0)';
+                // Убираем transform, чтобы избежать конфликтов со скроллом
+                headerElement.style.transform = 'none';
+                headerElement.style.willChange = 'auto';
+                headerElement.style.backfaceVisibility = 'visible';
+                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'visible';
+                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'none';
                 
                 // Предотвращаем изменение позиции
                 headerElement.style.position = 'sticky';
