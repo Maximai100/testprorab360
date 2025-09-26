@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { ThemeMode } from '../types';
 import { dataService } from '../services/storageService';
 
@@ -93,61 +93,69 @@ export const useAppState = () => {
     
     // Navigation helpers
     const navigateToView = useCallback((view: string, data?: any) => {
-        setActiveView(view);
-        // Если переданы данные для scratchpad, сохраняем их
-        if (view === 'scratchpad' && data) {
-            setScratchpadData(data);
-        }
+        startTransition(() => {
+            setActiveView(view);
+            // Если переданы данные для scratchpad, сохраняем их
+            if (view === 'scratchpad' && data) {
+                setScratchpadData(data);
+            }
+        });
     }, []);
     
     const navigateToProject = useCallback((projectId: string) => {
-        setActiveProjectId(projectId);
-        setActiveView('projectDetail');
+        startTransition(() => {
+            setActiveProjectId(projectId);
+            setActiveView('projectDetail');
+        });
     }, []);
     
     const navigateToEstimate = useCallback((estimateId: string) => {
-        setActiveEstimateId(estimateId);
-        setActiveView('estimate');
+        startTransition(() => {
+            setActiveEstimateId(estimateId);
+            setActiveView('estimate');
+        });
     }, []);
     
     const goBack = useCallback(() => {
-        if (activeView === 'projectDetail') {
-            setActiveView('projects');
-            // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
-        } else if (activeView === 'projectTasks') {
-            // Возвращаемся в детали проекта, если есть активный проект
-            if (activeProjectId) {
-                setActiveView('projectDetail');
-            } else {
+        startTransition(() => {
+            if (activeView === 'projectDetail') {
                 setActiveView('projects');
-            }
-        } else if (activeView === 'allTasks') {
-            // Возвращаемся на главный экран
-            setActiveView('workspace');
-        } else if (activeView === 'estimate') {
-            if (activeProjectId) {
-                setActiveView('projectDetail');
+                // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
+            } else if (activeView === 'projectTasks') {
+                // Возвращаемся в детали проекта, если есть активный проект
+                if (activeProjectId) {
+                    setActiveView('projectDetail');
+                } else {
+                    setActiveView('projects');
+                }
+            } else if (activeView === 'allTasks') {
+                // Возвращаемся на главный экран
+                setActiveView('workspace');
+            } else if (activeView === 'estimate') {
+                if (activeProjectId) {
+                    setActiveView('projectDetail');
+                } else {
+                    setActiveView('workspace');
+                }
+                setActiveEstimateId(null);
+            } else if (activeView === 'inventory') {
+                setActiveView('workspace');
+            } else if (activeView === 'reports') {
+                setActiveView('workspace');
+            } else if (activeView === 'scratchpad') {
+                // Возвращаемся к предыдущему экрану в зависимости от контекста
+                const previousView = scratchpadData?.previousView;
+                if (previousView) {
+                    setActiveView(previousView);
+                } else if (activeProjectId) {
+                    setActiveView('projectDetail');
+                } else {
+                    setActiveView('workspace');
+                }
             } else {
                 setActiveView('workspace');
             }
-            setActiveEstimateId(null);
-        } else if (activeView === 'inventory') {
-            setActiveView('workspace');
-        } else if (activeView === 'reports') {
-            setActiveView('workspace');
-        } else if (activeView === 'scratchpad') {
-            // Возвращаемся к предыдущему экрану в зависимости от контекста
-            const previousView = scratchpadData?.previousView;
-            if (previousView) {
-                setActiveView(previousView);
-            } else if (activeProjectId) {
-                setActiveView('projectDetail');
-            } else {
-                setActiveView('workspace');
-            }
-        } else {
-            setActiveView('workspace');
-        }
+        });
     }, [activeView, activeProjectId]);
     
     // Modal helpers

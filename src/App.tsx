@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, startTransition } from 'react';
 
 import { GoogleGenAI } from '@google/genai';
 import { 
@@ -748,7 +748,9 @@ const App: React.FC = () => {
     const handleAddNewEstimateInProject = (projectId: string) => {
         appState.setActiveProjectId(projectId);
         estimatesHook.createNewEstimate(projectId);
-        appState.setActiveView('estimate');
+        startTransition(() => {
+            appState.setActiveView('estimate');
+        });
     };
 
     const handleDeleteTemplate = useCallback((templateId: string) => {
@@ -798,7 +800,9 @@ const App: React.FC = () => {
         // projectsHook автоматически синхронизируется с локальным хранилищем
         // Перейти к созданному проекту
         appState.setActiveProjectId(created.id);
-        appState.setActiveView('projectDetail');
+        startTransition(() => {
+            appState.setActiveView('projectDetail');
+        });
         return created;
     }, []);
 
@@ -1682,7 +1686,9 @@ const App: React.FC = () => {
                         if (!estimatesHook.currentEstimate) {
                             estimatesHook.createNewEstimate();
                         }
-                        appState.setActiveView('estimate');
+                        startTransition(() => {
+                            appState.setActiveView('estimate');
+                        });
                     }} 
                     className={appState.activeView === 'estimate' ? 'active' : ''}
                 >
