@@ -46,7 +46,7 @@ const ScratchpadView = React.lazy(() => import('./components/views/ScratchpadVie
 const ProjectTasksScreen = React.lazy(() => import('./components/views/ProjectTasksScreen').then(m => ({ default: m.ProjectTasksScreen })));
 const CalculatorView = React.lazy(() => import('./components/views/CalculatorView').then(m => ({ default: m.CalculatorView })));
 import { ListItem } from './components/ui/ListItem';
-import { useProjectContext } from './context/ProjectContext';
+import { useProjectContext, ProjectProvider } from './context/ProjectContext';
 const AuthScreen = React.lazy(() => import('./components/views/AuthScreen').then(m => ({ default: m.default })));
 import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
@@ -1573,15 +1573,16 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="app-container">
-            {/* Auth gate */}
-            {(!session) ? (
-                <main>
-                    <AuthScreen />
-                </main>
-            ) : (
-            <>
-            {/* Global Header */}
+        <ProjectProvider>
+            <div className="app-container">
+                {/* Auth gate */}
+                {(!session) ? (
+                    <main>
+                        <AuthScreen />
+                    </main>
+                ) : (
+                <>
+                {/* Global Header */}
             <header className="app-header">
                 <div className="app-header-left">
                     <img
@@ -1952,9 +1953,10 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
-            </>
-            )}
-        </div>
+                </>
+                )}
+            </div>
+        </ProjectProvider>
     );
 };
 

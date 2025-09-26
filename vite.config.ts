@@ -43,10 +43,6 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             // Vendor chunks
             if (id.includes('node_modules')) {
-              // React and related
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'react-vendor';
-              }
               // Supabase
               if (id.includes('@supabase')) {
                 return 'supabase-vendor';
@@ -59,7 +55,7 @@ export default defineConfig(({ mode }) => {
               if (id.includes('@google/genai')) {
                 return 'ai-vendor';
               }
-              // Other vendor libraries
+              // Other vendor libraries (excluding React to avoid context issues)
               return 'vendor';
             }
             
@@ -91,7 +87,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      include: ['jspdf', 'jspdf-autotable']
+      include: ['jspdf', 'jspdf-autotable', 'react', 'react-dom']
     },
     define: {
       global: 'globalThis'
