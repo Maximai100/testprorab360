@@ -1019,6 +1019,31 @@ body.dark-theme .bottom-nav {
         min-height: 60px !important;
         max-height: 60px !important;
         z-index: 10000 !important;
+        
+        /* Принудительно сбрасываем transform при работе с клавиатурой */
+        transform: none !important;
+        -webkit-transform: none !important;
+        will-change: auto !important;
+        backface-visibility: visible !important;
+        -webkit-backface-visibility: visible !important;
+    }
+    
+    .app-header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        z-index: 10000 !important;
+        
+        /* Принудительно сбрасываем transform при работе с клавиатурой */
+        transform: none !important;
+        -webkit-transform: none !important;
+        will-change: auto !important;
+        backface-visibility: visible !important;
+        -webkit-backface-visibility: visible !important;
     }
 }
 .bottom-nav button {
@@ -2394,6 +2419,34 @@ input[type=number] { -moz-appearance: textfield; }
     /* Prevent app from closing on swipe down */
     body {
         -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Дополнительная стабилизация при работе с клавиатурой */
+    input:focus,
+    textarea:focus,
+    select:focus {
+        /* Стабилизируем меню при фокусе на поле ввода */
+        transform: none !important;
+    }
+    
+    /* Принудительная стабилизация меню после закрытия клавиатуры */
+    body.keyboard-closed .app-header,
+    body.keyboard-closed .bottom-nav {
+        transform: none !important;
+        -webkit-transform: none !important;
+        position: fixed !important;
+    }
+    
+    body.keyboard-closed .app-header {
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+    
+    body.keyboard-closed .bottom-nav {
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
     }
 }
 

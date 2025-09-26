@@ -525,17 +525,38 @@ const App: React.FC = () => {
                     bottomNav.style.zIndex = '10000';
                 }
             } else {
-                // Если клавиатура закрыта, возвращаем нормальный z-index
+                // Если клавиатура закрыта, возвращаем нормальный z-index и принудительно стабилизируем
                 const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
                 if (bottomNav) {
                     bottomNav.style.zIndex = '1000';
+                    
+                    // Принудительно сбрасываем все transform и позиционирование
+                    bottomNav.style.transform = 'none';
+                    bottomNav.style.webkitTransform = 'none';
+                    bottomNav.style.position = 'fixed';
+                    bottomNav.style.bottom = '0';
+                    bottomNav.style.left = '0';
+                    bottomNav.style.right = '0';
+                }
+                
+                // Также стабилизируем верхнее меню
+                const appHeader = document.querySelector('.app-header') as HTMLElement;
+                if (appHeader) {
+                    appHeader.style.transform = 'none';
+                    appHeader.style.webkitTransform = 'none';
+                    appHeader.style.position = 'fixed';
+                    appHeader.style.top = '0';
+                    appHeader.style.left = '0';
+                    appHeader.style.right = '0';
                 }
             }
             
-            // В любом случае, стабилизируем меню
-            requestAnimationFrame(() => {
-                stabilizeMenus();
-            });
+            // В любом случае, стабилизируем меню с задержкой для корректной обработки
+            setTimeout(() => {
+                requestAnimationFrame(() => {
+                    stabilizeMenus();
+                });
+            }, 100);
         };
 
         // Стабилизируем при загрузке
@@ -548,17 +569,73 @@ const App: React.FC = () => {
         // Стабилизируем при скролле
         window.addEventListener('scroll', stabilizeMenus, { passive: true });
         
-        // Стабилизируем при изменении viewport (включая открытие клавиатуры)
-        window.addEventListener('resize', handleViewportChange);
+        // Стабилизируем при изменении фокуса (например, при открытии/закрытии клавиатуры)
+        document.addEventListener('focusin', () => {
+            setTimeout(() => {
+                requestAnimationFrame(() => {
+                    stabilizeMenus();
+                });
+            }, 300);
+        });
+        
+        document.addEventListener('focusout', () => {
+            // При закрытии клавиатуры делаем дополнительную стабилизацию
+            setTimeout(() => {
+                // Добавляем класс для CSS стабилизации
+                document.body.classList.add('keyboard-closed');
+                
+                // Принудительно сбрасываем все стили меню
+                const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
+                const appHeader = document.querySelector('.app-header') as HTMLElement;
+                
+                if (bottomNav) {
+                    bottomNav.style.transform = 'none';
+                    bottomNav.style.webkitTransform = 'none';
+                    bottomNav.style.position = 'fixed';
+                    bottomNav.style.bottom = '0';
+                    bottomNav.style.left = '0';
+                    bottomNav.style.right = '0';
+                    bottomNav.style.zIndex = '1000';
+                }
+                
+                if (appHeader) {
+                    appHeader.style.transform = 'none';
+                    appHeader.style.webkitTransform = 'none';
+                    appHeader.style.position = 'fixed';
+                    appHeader.style.top = '0';
+                    appHeader.style.left = '0';
+                    appHeader.style.right = '0';
+                }
+                
+                requestAnimationFrame(() => {
+                    stabilizeMenus();
+                });
+                
+                // Убираем класс через некоторое время
+                setTimeout(() => {
+                    document.body.classList.remove('keyboard-closed');
+                }, 1000);
+            }, 300);
+        });
         
         // Стабилизируем при изменении видимости
-        document.addEventListener('visibilitychange', stabilizeMenus);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        stabilizeMenus();
+                    });
+                }, 100);
+            }
+        });
 
         return () => {
             window.removeEventListener('resize', handleViewportChange);
             window.removeEventListener('orientationchange', handleViewportChange);
             window.removeEventListener('scroll', stabilizeMenus);
-            document.removeEventListener('visibilitychange', stabilizeMenus);
+            document.removeEventListener('focusin', () => {});
+            document.removeEventListener('focusout', () => {});
+            document.removeEventListener('visibilitychange', () => {});
         };
     }, []);
 
