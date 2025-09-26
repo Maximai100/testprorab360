@@ -75,7 +75,9 @@ const App: React.FC = () => {
 
     // Error handler
     const handleError = (error: Error) => {
-        console.error('App error:', error);
+        if (import.meta.env.DEV) {
+            console.error('App error:', error);
+        }
         setHasError(true);
         setErrorMessage(error.message);
     };
@@ -83,7 +85,9 @@ const App: React.FC = () => {
     // Global error handler
     useEffect(() => {
         const handleGlobalError = (event: ErrorEvent) => {
-            console.error('Global error:', event.error);
+            if (import.meta.env.DEV) {
+                console.error('Global error:', event.error);
+            }
             setHasError(true);
             setErrorMessage(event.error?.message || 'Произошла неизвестная ошибка');
         };
