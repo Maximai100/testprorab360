@@ -449,9 +449,9 @@ const App: React.FC = () => {
                 appHeader.style.alignItems = 'center';
                 appHeader.style.justifyContent = 'space-between';
                 appHeader.style.padding = '10px 16px';
-                appHeader.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                appHeader.style.backgroundColor = 'color-mix(in srgb, var(--bg-color) 90%, transparent)';
                 appHeader.style.backdropFilter = 'blur(10px)';
-                appHeader.style.borderBottom = '1px solid #e0e0e0';
+                appHeader.style.borderBottom = '1px solid var(--border-color)';
                 appHeader.style.gap = '10px';
                 appHeader.style.flexShrink = '0';
                 appHeader.style.maxWidth = '600px';
@@ -518,7 +518,7 @@ const App: React.FC = () => {
                 headerElement.style.zIndex = '100';
                 headerElement.style.padding = '16px';
                 headerElement.style.margin = '-16px -16px 16px -16px';
-                headerElement.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                headerElement.style.backgroundColor = 'color-mix(in srgb, var(--bg-color) 90%, transparent)';
                 headerElement.style.backdropFilter = 'blur(10px)';
                 headerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
                 
