@@ -135,7 +135,7 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
         {/* Выполненные работы */}
         <div className="card">
           <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconCheckCircle style={{ marginRight: 'var(--spacing-s)' }} />
+            <IconCheckCircle />
             Выполненные работы
           </h3>
 
@@ -165,7 +165,7 @@ export const ClientReportScreen: React.FC<ClientReportScreenProps> = ({
         {/* Фотоотчет */}
         <div className="card">
           <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconImage style={{ marginRight: 'var(--spacing-s)' }} />
+            <IconImage />
             Фотоотчет
           </h3>
 

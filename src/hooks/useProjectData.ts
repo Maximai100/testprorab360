@@ -165,7 +165,7 @@ export const useProjectData = () => {
         }
         
         // Оптимистично добавляем
-        const id = generateUUID();
+        const id = crypto.randomUUID();
         const now = new Date().toISOString();
         const optimistic: FinanceEntry = {
             id,
@@ -269,7 +269,7 @@ export const useProjectData = () => {
         } catch (error) {
             console.error('Ошибка при обновлении финансовой записи:', error);
             // Откатываем локально
-            setFinanceEntries(prev => prev.map(e => e.id === id ? (prevEntry as FinanceEntry) : e));
+            setFinanceEntries(prev => prev.map(e => e.id === id ? e : e));
             throw error;
         }
     }, [uploadFileWithFallback]);

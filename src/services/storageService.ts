@@ -84,7 +84,7 @@ export const storageService = {
             if (typeof defaultValue === 'string') {
                 try {
                     const parsed = JSON.parse(item);
-                    return typeof parsed === 'string' ? parsed : defaultValue;
+                    return typeof parsed === 'string' ? (parsed as T) : defaultValue;
                 } catch {
                     // Если не удается распарсить как JSON, но это строка, возвращаем как есть
                     return item as T;

@@ -52,7 +52,7 @@ export const EditConsumableModal: React.FC<EditConsumableModalProps> = ({ consum
                         <input
                             type="text"
                             value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
+                            onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
                             className="form-control"
                         />
                     </div>

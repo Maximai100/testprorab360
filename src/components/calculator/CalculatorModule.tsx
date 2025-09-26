@@ -7,7 +7,7 @@ import { dataService } from '../../services/storageService';
 import { useEstimates } from '../../hooks/useEstimates';
 import { useProjectContext } from '../../context/ProjectContext';
 import { supabase } from '../../supabaseClient';
-import { copyToClipboard } from '../../utils';
+import { copyToClipboard, tg } from '../../utils';
 import type { Session } from '@supabase/supabase-js';
 
 declare global {
@@ -130,6 +130,8 @@ interface MaterialResult {
         cost: number;
         unit?: string; // Добавляем единицу измерения для элементов группы
     }[];
+    showNote: boolean;
+    text: string;
 }
 type MaterialCategory = 'plaster' | 'putty' | 'paint' | 'wallpaper' | 'tile' | 'flooring' | 'screed' | 'skirting' | 'drywall' | 'arbitrary';
 
@@ -634,7 +636,7 @@ const WallpaperCalculator: React.FC<{ perimeter: number, height: number } & Mate
             cost: totalCost,
             unit: 'рулон', // Изменяем на упаковочную единицу
             details: {
-                "Количество": quantityText,
+                "Количество": quantityText || '',
                 "Стоимость": `${totalCost.toFixed(2)} ₽`,
                 "Цена за рулон": `${nPrice.toFixed(2)} ₽`,
                 "Всего рулонов": `${totalRolls} шт.`
@@ -1042,7 +1044,8 @@ const DrywallCalculator: React.FC<{ wallArea: number, floorArea: number, perimet
             quantity: quantityText,
             cost: 0, // No cost calculation for this complex component
             details: lines.reduce((acc, curr) => ({...acc, [curr.label]: curr.value }), {}),
-            showNote: lines.length > 0
+            showNote: lines.length > 0,
+            text: `${lines.length} позиций`
         };
     }, [surface, wallArea, floorArea, perimeter, sheetWidth, sheetLength, margin]);
     
@@ -1184,7 +1187,9 @@ const ArbitraryMaterialsCalculator: React.FC<ArbitraryMaterialCalculatorProps> =
             cost: totalCost,
             details,
             isGroup: true,
-            items: resultItems
+            items: resultItems,
+            showNote: resultItems.length > 0,
+            text: `${resultItems.length} позиций - ${totalCost.toFixed(2)} ₽`
         };
     }, [items]);
 
@@ -1281,7 +1286,7 @@ const RoomEditor: React.FC<{
 
     if (!activeRoom || !activeRoomCalculations) return <div>Ошибка: помещение не найдено.</div>;
 
-    const handleRoomChange = (roomId: number, field: keyof RoomData, value: any) => {
+    const handleRoomChange = (roomId: number, field: keyof RoomData, value: string | number | Opening[] | ExclusionZone[] | GeometricElement[]) => {
         setRooms(prev => prev.map(r => r.id === roomId ? { ...r, [field]: value } : r));
     };
 
@@ -1309,14 +1314,14 @@ const RoomEditor: React.FC<{
 
     const handleAddOpening = () => handleRoomChange(activeRoomId, 'openings', [...activeRoom.openings, { id: Date.now(), width: '', height: '', count: '1', type: 'window', includeSillArea: false, sillHeight: '' }]);
     const handleRemoveOpening = (id: number) => handleRoomChange(activeRoomId, 'openings', activeRoom.openings.filter(op => op.id !== id));
-    const handleOpeningChange = (opId: number, field: keyof Omit<Opening, 'id'>, value: any) => {
+    const handleOpeningChange = (opId: number, field: keyof Omit<Opening, 'id'>, value: string | number | boolean) => {
         const newOpenings = activeRoom.openings.map(op => op.id === opId ? { ...op, [field]: value } : op);
         handleRoomChange(activeRoomId, 'openings', newOpenings);
     };
 
     const handleAddExclusion = () => handleRoomChange(activeRoomId, 'exclusions', [...activeRoom.exclusions, { id: Date.now(), name: '', width: '', height: '', count: '1', affectsPerimeter: true, affectsWallArea: true }]);
     const handleRemoveExclusion = (id: number) => handleRoomChange(activeRoomId, 'exclusions', activeRoom.exclusions.filter(ex => ex.id !== id));
-    const handleExclusionChange = (exId: number, field: keyof Omit<ExclusionZone, 'id'>, value: any) => {
+    const handleExclusionChange = (exId: number, field: keyof Omit<ExclusionZone, 'id'>, value: string | number | boolean) => {
         const newExclusions = activeRoom.exclusions.map(ex => ex.id === exId ? { ...ex, [field]: value } : ex);
         handleRoomChange(activeRoomId, 'exclusions', newExclusions);
     };
@@ -1659,10 +1664,11 @@ const ResultsPage: React.FC<{
         
         const newEstimateItems = Object.entries(materialResults)
             .filter(([_, result]) => result && result.quantity.trim())
-            .map(([name, result]) => {
+            .flatMap(([name, result]) => {
                 if (name === 'Произвольные материалы' && result?.isGroup && result.items) {
                     // Для произвольных материалов создаем отдельные позиции
                     return result.items.map(item => ({
+                        id: crypto.randomUUID(),
                         name: item.name,
                         quantity: parseFloat(item.quantity) || 0,
                         unit: 'шт',
@@ -1691,6 +1697,7 @@ const ResultsPage: React.FC<{
                         : 0;
                     
                     return {
+                        id: crypto.randomUUID(),
                         name: name,
                         quantity: quantity, // Используем извлеченное количество
                         unit: result.unit || 'комплект', // Используем реальную единицу измерения
@@ -1699,9 +1706,8 @@ const ResultsPage: React.FC<{
                         image: null
                     };
                 }
-                return null;
+                return [];
             })
-            .flat()
             .filter(Boolean);
 
         // ПРАВИЛЬНЫЙ ПОРЯДОК ДЕЙСТВИЙ
@@ -1786,16 +1792,20 @@ const ResultsPage: React.FC<{
             const base = (import.meta as any).env?.BASE_URL ?? '/';
             const prefix = base.endsWith('/') ? base : base + '/';
             
-            const [regularFont, boldFont] = await Promise.all([
+            const [regularFontRes, boldFontRes] = await Promise.allSettled([
                 loadFontBase64(`${prefix}fonts/Roboto-Regular.ttf`),
                 loadFontBase64(`${prefix}fonts/Roboto-Bold.ttf`)
             ]);
 
             // Добавляем шрифты в документ
-            doc.addFileToVFS('Roboto-Regular.ttf', regularFont);
-            doc.addFileToVFS('Roboto-Bold.ttf', boldFont);
-            doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-            doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+            if (regularFontRes.status === 'fulfilled') {
+                doc.addFileToVFS('Roboto-Regular.ttf', regularFontRes.value);
+                doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+            }
+            if (boldFontRes.status === 'fulfilled') {
+                doc.addFileToVFS('Roboto-Bold.ttf', boldFontRes.value);
+                doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+            }
 
             // Устанавливаем шрифт Roboto
             doc.setFont('Roboto', 'bold');

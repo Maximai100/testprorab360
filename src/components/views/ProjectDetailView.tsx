@@ -396,7 +396,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                      <div className="project-section-header">
                         <h3>Сметы ({projectEstimates.length})</h3>
                         <div className="header-actions">
-                            <button className="add-in-header-btn" onClick={() => handleAddNewEstimateForProject(activeProject.id)}><IconPlus/></button>
+                            <button className="add-in-header-btn" onClick={() => handleAddNewEstimateForProject()}><IconPlus/></button>
                             <button className="add-in-header-btn" onClick={onOpenEstimatesListModal}><IconFolder/></button>
                         </div>
                     </div>
@@ -421,11 +421,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                             try {
                                                 handleDeleteProjectEstimate(est.id);
                                             } catch (error) {
-                                                console.error('[DEBUG] ProjectDetailView: Ошибка при удалении сметы:', error);
-                                                safeShowAlert('Ошибка при удалении сметы: ' + error.message);
+                                                safeShowAlert('Ошибка при удалении сметы: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
                                             }
                                         } else {
-                                            console.error('[DEBUG] ProjectDetailView: handleDeleteProjectEstimate не доступна');
                                             safeShowAlert('Ошибка: Функция удаления сметы не доступна.');
                                         }
                                     }}
@@ -434,7 +432,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                 <div className="empty-state-container">
                                     <IconDocument />
                                     <p>Смет для этого проекта пока нет.</p>
-                                    <button onClick={() => handleAddNewEstimateForProject(activeProject.id)} className="btn btn-primary">+ Добавить смету</button>
+                                    <button onClick={() => handleAddNewEstimateForProject()} className="btn btn-primary">+ Добавить смету</button>
                                 </div>
                             )}
                         </div>
@@ -615,11 +613,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         <button 
                             onClick={() => {
 
-                                appState.navigateToView('scratchpad', { 
-                                    content: projectNote, 
-                                    onSave: (content: string) => notesHook.saveNote('project', content, activeProject.id),
-                                    previousView: 'projectDetail'
-                                });
+                                // appState.navigateToView('scratchpad', { 
+                                //     content: projectNote, 
+                                //     onSave: (content: string) => notesHook.saveNote('project', content, activeProject.id),
+                                //     previousView: 'projectDetail'
+                                // });
                             }} 
                             className="expand-btn" 
                             aria-label="Развернуть блокнот"
@@ -696,7 +694,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <FinanceEntryModal
                     onClose={() => setEditingFinance(null)}
                     onSave={async (entry, receiptFile) => {
-                        await projectDataHook.updateFinanceEntry(editingFinance.id, entry, receiptFile);
+                        await projectDataHook?.updateFinanceEntry(editingFinance.id, entry, receiptFile);
                         setEditingFinance(null);
                     }}
                     showAlert={safeShowAlert}

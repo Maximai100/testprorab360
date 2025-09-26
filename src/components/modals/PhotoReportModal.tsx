@@ -103,7 +103,10 @@ export const PhotoReportModal: React.FC<PhotoReportModalProps> = ({ onClose, onS
                 }
             });
 
-            const uploadedPhotos = await Promise.all(uploadPromises);
+            const uploadedPhotosRes = await Promise.allSettled(uploadPromises);
+            const uploadedPhotos = uploadedPhotosRes
+                .filter((result): result is PromiseFulfilledResult<{ url: string; path: string; caption: string; isBase64: boolean; }> => result.status === 'fulfilled')
+                .map(result => result.value);
 
             // Проверяем, есть ли файлы сохраненные как base64
             const base64Count = uploadedPhotos.filter(photo => photo.isBase64).length;

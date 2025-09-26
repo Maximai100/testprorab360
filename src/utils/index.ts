@@ -1,5 +1,8 @@
 import { Estimate } from '../types';
 
+// Safe access to Telegram WebApp
+export const tg = typeof window !== 'undefined' && (window as any).Telegram?.WebApp ? (window as any).Telegram.WebApp : null;
+
 export const generateUUID = () => {
     if (typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -106,7 +109,6 @@ export const safeShowConfirm = (message: string, callback: (ok: boolean) => void
         try {
             tg.showConfirm(message, callback);
         } catch (error) {
-            console.error('[DEBUG] safeShowConfirm: Ошибка Telegram API:', error);
             // Fallback to browser confirm
             const result = window.confirm(message);
             callback(result);
@@ -116,7 +118,6 @@ export const safeShowConfirm = (message: string, callback: (ok: boolean) => void
             const result = window.confirm(message);
             callback(result);
         } catch (error) {
-            console.error('[DEBUG] safeShowConfirm: Ошибка window.confirm:', error);
             // Если и это не работает, считаем что пользователь согласился
             callback(true);
         }

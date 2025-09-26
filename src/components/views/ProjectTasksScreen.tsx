@@ -23,7 +23,7 @@ export const ProjectTasksScreen: React.FC<ProjectTasksScreenProps> = ({ tasks, p
     const [activeFilters, setActiveFilters] = useState<{ projectId: string | null; tag: string | null; }>({ projectId: null, tag: null });
 
     const handleSaveTask = (title: string, selectedProjectId: string | number | null, priority?: string, dueDate?: string | null) => {
-        onAddTask(title, selectedProjectId, priority, dueDate);
+        onAddTask(title, selectedProjectId?.toString() || null, priority, dueDate);
     };
 
     const handleSelectTaskForEdit = (task: Task) => {

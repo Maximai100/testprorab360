@@ -144,12 +144,12 @@ export const ToolDetailsScreen: React.FC<ToolDetailsScreenProps> = ({ tool, proj
 
                         <div className="meta-field">
                             <label htmlFor="purchaseDate">Дата покупки</label>
-                            <input type="date" id="purchaseDate" name="purchaseDate" value={editableTool.purchaseDate && !isNaN(new Date(editableTool.purchaseDate).getTime()) ? new Date(editableTool.purchaseDate).toISOString().split('T')[0] : ''} onChange={handleInputChange} />
+                            <input type="date" id="purchaseDate" name="purchaseDate" value={editableTool.purchase_date && !isNaN(new Date(editableTool.purchase_date).getTime()) ? new Date(editableTool.purchase_date).toISOString().split('T')[0] : ''} onChange={handleInputChange} />
                         </div>
 
                         <div className="meta-field">
                             <label htmlFor="purchasePrice">Цена</label>
-                            <input type="number" id="purchasePrice" name="purchasePrice" value={editableTool.purchasePrice || ''} onChange={handleInputChange} />
+                            <input type="number" id="purchasePrice" name="purchasePrice" value={editableTool.purchase_price || ''} onChange={handleInputChange} />
                         </div>
 
                         <div className="meta-field">

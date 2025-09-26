@@ -2,7 +2,7 @@ export type ProjectStatus = 'planned' | 'in_progress' | 'on_hold' | 'completed' 
 export type ToolLocation = 'on_base' | 'in_repair' | 'on_project';
 export type FinanceCategory = 'materials' | 'labor' | 'transport' | 'tools_rental' | 'other';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type ToolCondition = 'excellent' | 'good' | 'needs_service';
+export type ToolCondition = 'excellent' | 'good' | 'needs_service' | 'in_repair';
 export type WorkStageStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ItemType = 'material' | 'work';
 export type LibraryItemCategory = 'electrics' | 'plumbing' | 'finishing_materials';
@@ -76,6 +76,8 @@ export interface Tool {
     image_url?: string; // URL-адрес изображения (соответствует Supabase)
     purchase_date?: string; // ISO 8601 format (соответствует Supabase)
     purchase_price?: number; // соответствует Supabase
+    purchaseDate?: string; // ISO 8601 format (для совместимости)
+    purchasePrice?: number; // для совместимости
     projectId?: string | null; // Required if location is 'on_project'
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
@@ -87,6 +89,8 @@ export interface Note {
     content: string; // Содержимое заметки
     context: NoteContext; // Контекст заметки
     entityId?: string | null; // ID связанной сущности (например, project_id)
+    projectId?: string; // ID проекта (для совместимости)
+    text?: string; // Текст заметки (для совместимости)
     createdAt: string; // ISO 8601 format
     updatedAt: string; // ISO 8601 format
 }
@@ -105,6 +109,7 @@ export interface Project {
 export interface Task {
     id: string; // Генерируется UUID
     title: string;
+    description?: string; // Описание задачи
     projectId: string | null;
     isCompleted: boolean;
     priority: TaskPriority;
@@ -140,7 +145,7 @@ export interface CompanyProfile {
     logo: string | null; // URL-адрес изображения
 }
 
-export type EstimateStatus = 'draft' | 'sent' | 'approved' | 'rejected';
+export type EstimateStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'completed';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -211,13 +216,6 @@ export interface WorkStage {
     updatedAt: string; // ISO 8601 format
 }
 
-export interface Note {
-    id: string; // Генерируется UUID
-    projectId: string;
-    text: string;
-    createdAt: string; // ISO 8601 format
-    updatedAt: string; // ISO 8601 format
-}
 
 export interface InventoryItem {
     id: string; // Генерируется UUID

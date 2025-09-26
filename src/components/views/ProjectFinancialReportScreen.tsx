@@ -217,7 +217,7 @@ export const ProjectFinancialReportScreen: React.FC<ProjectFinancialReportScreen
         {/* Расходы по категориям */}
         <div className="card">
           <h3 style={{ marginBottom: 'var(--spacing-m)', color: 'var(--color-text-primary)' }}>
-            <IconCreditCard style={{ marginRight: 'var(--spacing-s)' }} />
+            <IconCreditCard />
             Расходы по категориям
           </h3>
           

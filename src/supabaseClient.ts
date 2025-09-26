@@ -1,8 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Получаем переменные окружения или используем значения по умолчанию
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://prorab360.online'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE'
+// Получаем переменные окружения
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Проверяем наличие обязательных переменных окружения
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('🚨 ОШИБКА: Отсутствуют обязательные переменные окружения!')
+  console.error('📋 Необходимо настроить:')
+  console.error('1. VITE_SUPABASE_URL - URL вашего Supabase проекта')
+  console.error('2. VITE_SUPABASE_ANON_KEY - anon public ключ из Supabase Dashboard')
+  console.error('3. Добавьте эти переменные в .env файл или в настройки Vercel')
+  throw new Error('Отсутствуют обязательные переменные окружения Supabase')
+}
 
 
 // Проверяем, используется ли демо-ключ

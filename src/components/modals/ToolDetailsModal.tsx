@@ -6,6 +6,7 @@ const conditionMap: Record<ToolCondition, string> = {
     excellent: 'Отличное',
     good: 'Хорошее',
     needs_service: 'Требует обслуживания',
+    in_repair: 'В ремонте',
 };
 
 export const ToolDetailsModal: React.FC<ToolDetailsModalProps> = ({ 

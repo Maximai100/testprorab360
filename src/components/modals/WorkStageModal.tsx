@@ -42,7 +42,7 @@ export const WorkStageModal: React.FC<WorkStageModalProps> = ({ stage, onClose, 
             showAlert('Дата начала не может быть позже даты окончания.');
             return;
         }
-        onSave({ title: title.trim(), startDate, endDate, status, progress });
+        onSave({ title: title.trim(), description: '', startDate, endDate, status, progress });
     };
 
     return (

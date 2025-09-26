@@ -8,7 +8,6 @@ import { supabase } from '../supabaseClient';
 import { useFileStorage } from './useFileStorage';
 
 export const useProjects = () => {
-    console.log('useProjects: Хук useProjects инициализируется');
     const [projects, setProjects] = useState<Project[]>([]);
     const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
     const [photoReports, setPhotoReports] = useState<PhotoReport[]>([]);
@@ -43,7 +42,6 @@ export const useProjects = () => {
     
     // Save data to storage when it changes
     useEffect(() => {
-        console.log('useProjects: projects изменились:', projects);
         dataService.setProjects(projects);
     }, [projects]);
     
@@ -124,7 +122,6 @@ export const useProjects = () => {
                 return;
             }
 
-            console.log('loadProjectsFromSupabase: Получены данные из Supabase:', projectsData);
 
             if (projectsData) {
                 const mappedProjects = projectsData.map((row: any) => ({
@@ -137,20 +134,15 @@ export const useProjects = () => {
                     updatedAt: row.updated_at,
                 }));
                 
-                console.log('loadProjectsFromSupabase: Загружено проектов из Supabase:', mappedProjects.length, mappedProjects);
-                console.log('loadProjectsFromSupabase: Устанавливаем проекты в состояние...');
                 setProjects(mappedProjects);
                 // Сохраняем кеш для мгновенного старта в следующий раз
                 dataService.setProjects(mappedProjects);
-                console.log('loadProjectsFromSupabase: Проекты установлены в состояние');
             } else {
-                console.log('loadProjectsFromSupabase: Данные проектов отсутствуют');
             }
         } catch (error) {
             console.warn('❌ loadProjectsFromSupabase: Ошибка при загрузке проектов:', error);
             console.log('loadProjectsFromSupabase: Продолжаем работу в офлайн-режиме с localStorage');
         }
-        console.log('✅ loadProjectsFromSupabase: Функция завершена');
     }, []);
 
     // Load documents from Supabase
@@ -159,7 +151,6 @@ export const useProjects = () => {
 
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                console.log('loadDocumentsFromSupabase: Пользователь не авторизован');
                 return;
             }
 
@@ -174,7 +165,6 @@ export const useProjects = () => {
                 return;
             }
 
-            console.log('loadDocumentsFromSupabase: Получены данные документов из Supabase:', documentsData);
 
             if (documentsData) {
                 const mappedDocuments = documentsData.map((row: any) => ({
@@ -188,7 +178,6 @@ export const useProjects = () => {
                     updatedAt: row.updated_at,
                 }));
                 
-                console.log('loadDocumentsFromSupabase: Загружено документов из Supabase:', mappedDocuments.length);
                 
                 // Разделяем документы на проектные и глобальные
                 const projectDocuments = mappedDocuments.filter(doc => doc.projectId);
@@ -197,16 +186,13 @@ export const useProjects = () => {
                 setDocuments(projectDocuments);
                 setGlobalDocuments(globalDocuments);
                 
-                console.log('loadDocumentsFromSupabase: Документы установлены в состояние');
             } else {
-                console.log('loadDocumentsFromSupabase: Данные документов отсутствуют');
                 setDocuments([]);
                 setGlobalDocuments([]);
             }
         } catch (error) {
             console.error('❌ loadDocumentsFromSupabase: Ошибка при загрузке документов:', error);
         }
-        console.log('✅ loadDocumentsFromSupabase: Функция завершена');
     }, []);
 
     // Load photo reports from Supabase
@@ -470,7 +456,7 @@ export const useProjects = () => {
     
     // Photo reports management
     const addPhotoReport = useCallback((projectId: string, reportData: Omit<PhotoReport, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        const newReport = dataUtils.createEntity({
+        const newReport: PhotoReport = dataUtils.createEntity({
             ...reportData,
             projectId
         });
@@ -494,9 +480,9 @@ export const useProjects = () => {
     
     // Documents management
     const addDocument = useCallback((projectId: string | null, documentData: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>) => {
-        const newDocument = dataUtils.createEntity({
+        const newDocument: Document = dataUtils.createEntity({
             ...documentData,
-            projectId
+            projectId: projectId || undefined
         });
         if (projectId) {
             setDocuments(prev => [...prev, newDocument]);
@@ -526,7 +512,7 @@ export const useProjects = () => {
     
     // Work stages management
     const addWorkStage = useCallback((projectId: string, stageData: Omit<WorkStage, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        const newStage = dataUtils.createEntity({
+        const newStage: WorkStage = dataUtils.createEntity({
             ...stageData,
             projectId
         });
@@ -550,9 +536,12 @@ export const useProjects = () => {
     
     // Notes management
     const addNote = useCallback((projectId: string, text: string) => {
-        const newNote = dataUtils.createEntity({
+        const newNote: Note = dataUtils.createEntity({
             projectId,
-            text
+            text,
+            userId: '', // Будет заполнено при сохранении в Supabase
+            content: text,
+            context: 'project' as const
         });
         setNotes(prev => [...prev, newNote]);
         return newNote;

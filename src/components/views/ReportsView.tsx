@@ -10,19 +10,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ projects, estimates, f
             return projects;
         }
         return projects.filter(p => {
-            const projectEstimates = estimates.filter(e => e.projectId === p.id);
+            const projectEstimates = estimates.filter(e => e.project_id === p.id);
             if (projectEstimates.length === 0) return false;
             const firstEstimateDate = new Date(projectEstimates[0].date);
             return firstEstimateDate >= new Date(startDate) && firstEstimateDate <= new Date(endDate);
         });
     }, [projects, estimates, startDate, endDate]);
 
-    const calculateProjectData = (projectId: number) => {
-        const projectEstimates = estimates.filter(e => e.projectId === projectId);
+    const calculateProjectData = (projectId: string) => {
+        const projectEstimates = estimates.filter(e => e.project_id === projectId);
         const estimateTotal = projectEstimates.reduce((sum, est) => sum + est.items.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.price)), 0), 0);
         const projectFinances = financeEntries.filter(f => f.projectId === projectId);
         const totalExpenses = projectFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
-        const totalPayments = projectFinances.filter(f => f.type === 'payment').reduce((sum, f) => sum + f.amount, 0);
+        const totalPayments = projectFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
         const profit = estimateTotal - totalExpenses;
         return { estimateTotal, totalExpenses, totalPayments, profit };
     };

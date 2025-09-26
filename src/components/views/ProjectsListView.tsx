@@ -17,7 +17,7 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
         <header className="projects-list-header">
             <h1>Проекты</h1>
             <div className="header-actions">
-                <button onClick={() => handleOpenProjectModal()} className="header-btn" aria-label="Новый проект"><IconPlus/></button>
+                <button onClick={() => handleOpenProjectModal(null)} className="header-btn" aria-label="Новый проект"><IconPlus/></button>
             </div>
         </header>
         <main>
@@ -44,7 +44,7 @@ export const ProjectsListView: React.FC<ProjectsListViewProps> = ({
                     <div className="empty-state-container">
                         <IconFolder />
                         <p>У вас пока нет проектов. Начните свой первый проект прямо сейчас!</p>
-                        <button onClick={() => handleOpenProjectModal()} className="btn btn-primary">+ Создать новый проект</button>
+                        <button onClick={() => handleOpenProjectModal(null)} className="btn btn-primary">+ Создать новый проект</button>
                     </div>
                 )}
             </div>

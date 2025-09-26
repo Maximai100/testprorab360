@@ -42,6 +42,8 @@ export const useNotes = (session: Session | null) => {
                 content: note.content || '',
                 context: note.context,
                 entityId: note.entity_id || null,
+                projectId: note.entity_id || undefined,
+                text: note.content || '',
                 createdAt: note.created_at,
                 updatedAt: note.updated_at,
             }));
@@ -100,6 +102,8 @@ export const useNotes = (session: Session | null) => {
                 content,
                 context,
                 entityId,
+                projectId: entityId || undefined,
+                text: content,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -173,6 +177,8 @@ export const useNotes = (session: Session | null) => {
                         content: data.content,
                         context: data.context,
                         entityId: data.entity_id || null,
+                        projectId: data.entity_id || undefined,
+                        text: data.content,
                         createdAt: data.created_at,
                         updatedAt: data.updated_at,
                     };

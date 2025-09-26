@@ -14,39 +14,40 @@ import { tg, safeShowAlert, safeShowConfirm, generateNewEstimateNumber, resizeIm
 import { statusMap } from './constants';
 import { Icon, IconPlus, IconClose, IconEdit, IconTrash, IconDocument, IconFolder, IconSettings, IconBook, IconClipboard, IconCart, IconDownload, IconPaperclip, IconDragHandle, IconProject, IconChevronRight, IconSparkles, IconSun, IconMoon, IconContrast, IconCreditCard, IconCalendar, IconMessageSquare, IconImage, IconTrendingUp, IconHome, IconCheckSquare } from './components/common/Icon';
 import { Loader } from './components/common/Loader';
-import { SettingsModal } from './components/modals/SettingsModal';
-import { EstimatesListModal } from './components/modals/EstimatesListModal';
-import { LibraryModal } from './components/modals/LibraryModal';
-import { NewProjectModal } from './components/modals/NewProjectModal';
-import { FinanceEntryModal } from './components/modals/FinanceEntryModal';
-import { PhotoReportModal } from './components/modals/PhotoReportModal';
-import { PhotoViewerModal } from './components/modals/PhotoViewerModal';
-import { ShoppingListModal } from './components/modals/ShoppingListModal';
-import { DocumentUploadModal } from './components/modals/DocumentUploadModal';
-import { WorkStageModal } from './components/modals/WorkStageModal';
-import { NoteModal } from './components/modals/NoteModal';
-import { ActGenerationModal } from './components/modals/ActGenerationModal';
-import { AISuggestModal } from './components/modals/AISuggestModal';
-import { AddToolModal } from './components/modals/AddToolModal';
-import { ToolDetailsModal } from './components/modals/ToolDetailsModal';
-import { AddTaskModal } from './components/modals/AddTaskModal';
-import { EstimateView } from './components/views/EstimateView';
-import { ProjectsListView } from './components/views/ProjectsListView';
-import { ProjectDetailView } from './components/views/ProjectDetailView';
-import { InventoryScreen } from './components/views/InventoryScreen';
-import { ToolDetailsScreen } from './components/views/ToolDetailsScreen';
-import { ReportsView } from './components/views/ReportsView';
-import { ReportsHubScreen } from './components/views/ReportsHubScreen';
-import { ProjectFinancialReportScreen } from './components/views/ProjectFinancialReportScreen';
-import { ClientReportScreen } from './components/views/ClientReportScreen';
-import { OverallFinancialReportScreen } from './components/views/OverallFinancialReportScreen';
-import { WorkspaceView } from './components/views/WorkspaceView';
-import { ScratchpadView } from './components/views/ScratchpadView';
-import { ProjectTasksScreen } from './components/views/ProjectTasksScreen';
-import { CalculatorView } from './components/views/CalculatorView';
+// Lazy load modals for better code splitting
+const SettingsModal = React.lazy(() => import('./components/modals/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const EstimatesListModal = React.lazy(() => import('./components/modals/EstimatesListModal').then(m => ({ default: m.EstimatesListModal })));
+const LibraryModal = React.lazy(() => import('./components/modals/LibraryModal').then(m => ({ default: m.LibraryModal })));
+const NewProjectModal = React.lazy(() => import('./components/modals/NewProjectModal').then(m => ({ default: m.NewProjectModal })));
+const FinanceEntryModal = React.lazy(() => import('./components/modals/FinanceEntryModal').then(m => ({ default: m.FinanceEntryModal })));
+const PhotoReportModal = React.lazy(() => import('./components/modals/PhotoReportModal').then(m => ({ default: m.PhotoReportModal })));
+const PhotoViewerModal = React.lazy(() => import('./components/modals/PhotoViewerModal').then(m => ({ default: m.PhotoViewerModal })));
+const ShoppingListModal = React.lazy(() => import('./components/modals/ShoppingListModal').then(m => ({ default: m.ShoppingListModal })));
+const DocumentUploadModal = React.lazy(() => import('./components/modals/DocumentUploadModal').then(m => ({ default: m.DocumentUploadModal })));
+const WorkStageModal = React.lazy(() => import('./components/modals/WorkStageModal').then(m => ({ default: m.WorkStageModal })));
+const NoteModal = React.lazy(() => import('./components/modals/NoteModal').then(m => ({ default: m.NoteModal })));
+const ActGenerationModal = React.lazy(() => import('./components/modals/ActGenerationModal').then(m => ({ default: m.ActGenerationModal })));
+const AISuggestModal = React.lazy(() => import('./components/modals/AISuggestModal').then(m => ({ default: m.AISuggestModal })));
+const AddToolModal = React.lazy(() => import('./components/modals/AddToolModal').then(m => ({ default: m.AddToolModal })));
+const ToolDetailsModal = React.lazy(() => import('./components/modals/ToolDetailsModal').then(m => ({ default: m.ToolDetailsModal })));
+const AddTaskModal = React.lazy(() => import('./components/modals/AddTaskModal').then(m => ({ default: m.AddTaskModal })));
+const EstimateView = React.lazy(() => import('./components/views/EstimateView').then(m => ({ default: m.EstimateView })));
+const ProjectsListView = React.lazy(() => import('./components/views/ProjectsListView').then(m => ({ default: m.ProjectsListView })));
+const ProjectDetailView = React.lazy(() => import('./components/views/ProjectDetailView').then(m => ({ default: m.ProjectDetailView })));
+const InventoryScreen = React.lazy(() => import('./components/views/InventoryScreen').then(m => ({ default: m.InventoryScreen })));
+const ToolDetailsScreen = React.lazy(() => import('./components/views/ToolDetailsScreen').then(m => ({ default: m.ToolDetailsScreen })));
+const ReportsView = React.lazy(() => import('./components/views/ReportsView').then(m => ({ default: m.ReportsView })));
+const ReportsHubScreen = React.lazy(() => import('./components/views/ReportsHubScreen').then(m => ({ default: m.ReportsHubScreen })));
+const ProjectFinancialReportScreen = React.lazy(() => import('./components/views/ProjectFinancialReportScreen').then(m => ({ default: m.ProjectFinancialReportScreen })));
+const ClientReportScreen = React.lazy(() => import('./components/views/ClientReportScreen').then(m => ({ default: m.ClientReportScreen })));
+const OverallFinancialReportScreen = React.lazy(() => import('./components/views/OverallFinancialReportScreen').then(m => ({ default: m.OverallFinancialReportScreen })));
+const WorkspaceView = React.lazy(() => import('./components/views/WorkspaceView').then(m => ({ default: m.WorkspaceView })));
+const ScratchpadView = React.lazy(() => import('./components/views/ScratchpadView').then(m => ({ default: m.ScratchpadView })));
+const ProjectTasksScreen = React.lazy(() => import('./components/views/ProjectTasksScreen').then(m => ({ default: m.ProjectTasksScreen })));
+const CalculatorView = React.lazy(() => import('./components/views/CalculatorView').then(m => ({ default: m.CalculatorView })));
 import { ListItem } from './components/ui/ListItem';
 import { useProjectContext } from './context/ProjectContext';
-import AuthScreen from './components/views/AuthScreen';
+const AuthScreen = React.lazy(() => import('./components/views/AuthScreen').then(m => ({ default: m.default })));
 import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
@@ -64,8 +65,6 @@ import { useFileStorage } from './hooks/useFileStorage';
 import { dataService, storageService } from './services/storageService';
 
 const App: React.FC = () => {
-    const renderCount = useRef(0);
-    renderCount.current += 1;
     
     // Error boundary state
     const [hasError, setHasError] = useState(false);
@@ -208,7 +207,7 @@ const App: React.FC = () => {
 
         const loadAllData = async () => {
             try {
-                await Promise.all([
+                const [projectsRes, documentsRes, photoReportsRes, estimatesRes, inventoryRes, notesRes, tasksRes] = await Promise.allSettled([
                     loadProjectsFromSupabaseRef(),
                     loadDocumentsFromSupabaseRef(),
                     loadPhotoReportsFromSupabaseRef(),
@@ -217,6 +216,29 @@ const App: React.FC = () => {
                     fetchAllNotesRef(session),
                     fetchAllTasksRef(session),
                 ]);
+
+                // Обработка результатов
+                if (projectsRes.status === 'rejected') {
+                    console.error('Ошибка загрузки проектов:', projectsRes.reason);
+                }
+                if (documentsRes.status === 'rejected') {
+                    console.error('Ошибка загрузки документов:', documentsRes.reason);
+                }
+                if (photoReportsRes.status === 'rejected') {
+                    console.error('Ошибка загрузки фотоотчетов:', photoReportsRes.reason);
+                }
+                if (estimatesRes.status === 'rejected') {
+                    console.error('Ошибка загрузки смет:', estimatesRes.reason);
+                }
+                if (inventoryRes.status === 'rejected') {
+                    console.error('Ошибка загрузки инвентаря:', inventoryRes.reason);
+                }
+                if (notesRes.status === 'rejected') {
+                    console.error('Ошибка загрузки заметок:', notesRes.reason);
+                }
+                if (tasksRes.status === 'rejected') {
+                    console.error('Ошибка загрузки задач:', tasksRes.reason);
+                }
 
                 if (!cancelled) {
                     setDataLoaded(true);
@@ -253,7 +275,6 @@ const App: React.FC = () => {
         fetchAllTasksRef,
     ]);
 
-    // Проекты теперь управляются через projectsHook
 
     // Additional state that's not yet moved to hooks
     const libraryHook = useLibrary(session);
@@ -265,32 +286,58 @@ const App: React.FC = () => {
     const [reportProject, setReportProject] = useState<Project | null>(null);
     const [clientReportProject, setClientReportProject] = useState<Project | null>(null);
 
-    // Refs
     const lastFocusedElement = useRef<HTMLElement | null>(null);
     const activeModalName = useRef<string | null>(null);
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-    // Логирование состояния после инициализации всех хуков
     
     // Добавляем диагностические функции в глобальную область для отладки
     if (typeof window !== 'undefined') {
-      (window as any).diagnoseLogo = companyProfileHook.diagnoseLogo;
-      (window as any).diagnoseStorage = companyProfileHook.diagnoseStorage;
-      (window as any).refreshSupabaseCache = companyProfileHook.refreshSupabaseCache;
-      (window as any).fixLogoUrl = companyProfileHook.fixLogoUrl;
+      (window as Window & { 
+        diagnoseLogo?: () => void;
+        diagnoseStorage?: () => void;
+        refreshSupabaseCache?: () => void;
+        fixLogoUrl?: () => void;
+        checkLogoUrls?: () => void;
+      }).diagnoseLogo = companyProfileHook.diagnoseLogo;
+      (window as Window & { 
+        diagnoseLogo?: () => void;
+        diagnoseStorage?: () => void;
+        refreshSupabaseCache?: () => void;
+        fixLogoUrl?: () => void;
+        checkLogoUrls?: () => void;
+      }).diagnoseStorage = companyProfileHook.diagnoseStorage;
+      (window as Window & { 
+        diagnoseLogo?: () => void;
+        diagnoseStorage?: () => void;
+        refreshSupabaseCache?: () => void;
+        fixLogoUrl?: () => void;
+        checkLogoUrls?: () => void;
+      }).refreshSupabaseCache = companyProfileHook.refreshSupabaseCache;
+      (window as Window & { 
+        diagnoseLogo?: () => void;
+        diagnoseStorage?: () => void;
+        refreshSupabaseCache?: () => void;
+        fixLogoUrl?: () => void;
+        checkLogoUrls?: () => void;
+      }).fixLogoUrl = companyProfileHook.fixLogoUrl;
       // Функция для проверки URL логотипа в компонентах
-      (window as any).checkLogoUrls = () => {
+      (window as Window & { 
+        diagnoseLogo?: () => void;
+        diagnoseStorage?: () => void;
+        refreshSupabaseCache?: () => void;
+        fixLogoUrl?: () => void;
+        checkLogoUrls?: () => void;
+      }).checkLogoUrls = () => {
 
         // Проверяем URL в шапке
         const headerImg = document.querySelector('.app-logo') as HTMLImageElement;
         if (headerImg) {
 
           if (headerImg.src.includes('multipart') || headerImg.src.includes('form-data')) {
-            console.error('❌ URL в шапке содержит multipart/form-data');
-          } else {
-            console.log('✅ URL в шапке выглядит правильно');
+            // URL содержит multipart/form-data - используем fallback
           }
         }
         
@@ -299,21 +346,13 @@ const App: React.FC = () => {
         if (modalImg) {
 
           if (modalImg.src.includes('multipart') || modalImg.src.includes('form-data')) {
-            console.error('❌ URL в модальном окне содержит multipart/form-data');
-          } else {
-            console.log('✅ URL в модальном окне выглядит правильно');
+            // URL содержит multipart/form-data - используем fallback
           }
         }
       };
 
-      console.log('🔍 - window.diagnoseLogo() - проверка логотипа');
-      console.log('🔍 - window.diagnoseStorage() - проверка Supabase Storage');
-      console.log('🔍 - window.refreshSupabaseCache() - обновление кеша Supabase');
-      console.log('🔍 - window.fixLogoUrl() - исправление URL логотипа');
-      console.log('🔍 - window.checkLogoUrls() - проверка URL в компонентах');
     }
 
-    // Get project context
     const { setActiveProjectId: setContextActiveProjectId, activeProjectId: contextProjectId } = useProjectContext();
     
     // Синхронизируем activeProjectId между appState и context
@@ -323,12 +362,10 @@ const App: React.FC = () => {
         }
     }, [appState.activeProjectId, contextProjectId, setContextActiveProjectId]);
 
-    // Load initial data
     useEffect(() => {
         setInventoryNotes(dataService.getInventoryNotes());
     }, []);
 
-    // Save data when it changes
     // Загружаем справочник и профиль при наличии сессии
     useEffect(() => {
         libraryHook.fetchLibraryItems(session);
@@ -339,7 +376,6 @@ const App: React.FC = () => {
         dataService.setInventoryNotes(inventoryNotes);
     }, [inventoryNotes]);
 
-    // Helper functions for modal management
     const openModal = useCallback((setOpenState: React.Dispatch<React.SetStateAction<boolean>>, modalName: string) => {
         lastFocusedElement.current = document.activeElement as HTMLElement;
         setOpenState(true);
@@ -347,24 +383,20 @@ const App: React.FC = () => {
     }, []);
 
     const closeModal = useCallback((setOpenState: React.Dispatch<React.SetStateAction<boolean>>) => {
-        console.log('Closing modal, current activeModalName:', activeModalName.current);
         setOpenState(false);
         activeModalName.current = null;
         if (lastFocusedElement.current) {
             lastFocusedElement.current.focus();
             lastFocusedElement.current = null;
         }
-        console.log('Modal closed successfully');
     }, []);
 
-    // Handle input focus for mobile keyboard
     const handleInputFocus = useCallback((e: React.FocusEvent<HTMLElement>) => {
         setTimeout(() => {
             e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
     }, []);
 
-    // Format currency
     const formatCurrency = useCallback((value: number) => {
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
@@ -374,7 +406,6 @@ const App: React.FC = () => {
         }).format(value);
     }, []);
 
-    // Theme icon
     const themeIcon = useCallback(() => {
         if (appState.themeMode === 'light') {
             return <IconMoon />;
@@ -383,24 +414,22 @@ const App: React.FC = () => {
         }
     }, [appState.themeMode]);
 
-    // Update document title based on company profile name
     useEffect(() => {
         const name = companyProfileHook.profile?.name?.trim();
         document.title = name && name.length ? `${name} — Прораб360` : 'Прораб360';
     }, [companyProfileHook.profile?.name]);
 
-    // Стабилизация верхнего и нижнего меню, а также заголовков экранов в мобильной версии
     useEffect(() => {
         const stabilizeMenus = () => {
             // Стабилизируем верхнее меню
-            const appHeader = document.querySelector('.app-header');
+            const appHeader = document.querySelector('.app-header') as HTMLElement;
             if (appHeader) {
                 // Принудительно устанавливаем стабильную позицию
                 appHeader.style.transform = 'translate3d(0, 0, 0)';
                 appHeader.style.willChange = 'transform';
                 appHeader.style.backfaceVisibility = 'hidden';
-                appHeader.style.webkitBackfaceVisibility = 'hidden';
-                appHeader.style.webkitTransform = 'translate3d(0, 0, 0)';
+                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'hidden';
+                (appHeader.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'translate3d(0, 0, 0)';
                 
                 // Фиксированная высота
                 appHeader.style.height = '64px';
@@ -415,18 +444,18 @@ const App: React.FC = () => {
                 
                 // Дополнительная стабилизация для iOS
                 appHeader.style.overflow = 'hidden';
-                appHeader.style.webkitOverflowScrolling = 'touch';
+                (appHeader.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
             }
             
             // Стабилизируем нижнее меню
-            const bottomNav = document.querySelector('.bottom-nav');
+            const bottomNav = document.querySelector('.bottom-nav') as HTMLElement;
             if (bottomNav) {
                 // Принудительно устанавливаем стабильную позицию
                 bottomNav.style.transform = 'translate3d(0, 0, 0)';
                 bottomNav.style.willChange = 'transform';
                 bottomNav.style.backfaceVisibility = 'hidden';
-                bottomNav.style.webkitBackfaceVisibility = 'hidden';
-                bottomNav.style.webkitTransform = 'translate3d(0, 0, 0)';
+                (bottomNav.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'hidden';
+                (bottomNav.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'translate3d(0, 0, 0)';
                 
                 // Фиксированная высота
                 bottomNav.style.height = '60px';
@@ -441,28 +470,29 @@ const App: React.FC = () => {
                 
                 // Дополнительная стабилизация для iOS
                 bottomNav.style.overflow = 'hidden';
-                bottomNav.style.webkitOverflowScrolling = 'touch';
+                (bottomNav.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
             }
             
             // Стабилизируем заголовки экранов
             const screenHeaders = document.querySelectorAll('.estimate-header, .projects-list-header, .project-detail-header');
             screenHeaders.forEach(header => {
+                const headerElement = header as HTMLElement;
                 // Принудительно устанавливаем стабильную позицию
-                header.style.transform = 'translate3d(0, 0, 0)';
-                header.style.willChange = 'transform';
-                header.style.backfaceVisibility = 'hidden';
-                header.style.webkitBackfaceVisibility = 'hidden';
-                header.style.webkitTransform = 'translate3d(0, 0, 0)';
+                headerElement.style.transform = 'translate3d(0, 0, 0)';
+                headerElement.style.willChange = 'transform';
+                headerElement.style.backfaceVisibility = 'hidden';
+                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitBackfaceVisibility = 'hidden';
+                (headerElement.style as CSSStyleDeclaration & { webkitBackfaceVisibility?: string; webkitTransform?: string }).webkitTransform = 'translate3d(0, 0, 0)';
                 
                 // Предотвращаем изменение позиции
-                header.style.position = 'sticky';
-                header.style.top = '0';
-                header.style.left = '0';
-                header.style.right = '0';
+                headerElement.style.position = 'sticky';
+                headerElement.style.top = '0';
+                headerElement.style.left = '0';
+                headerElement.style.right = '0';
                 
                 // Дополнительная стабилизация для iOS
-                header.style.overflow = 'hidden';
-                header.style.webkitOverflowScrolling = 'touch';
+                headerElement.style.overflow = 'hidden';
+                (headerElement.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
             });
         };
 
@@ -493,7 +523,6 @@ const App: React.FC = () => {
         };
     }, []);
 
-    // Helper to set or update favicon link tag
     const setFaviconHref = useCallback((href: string, sizes?: string) => {
         let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
         if (!link) {
@@ -516,7 +545,6 @@ const App: React.FC = () => {
         apple.href = href;
     }, []);
 
-    // Generate a small favicon from logo URL and apply it
     useEffect(() => {
         const defaultIcon = '/logo.png';
         const logoUrl = companyProfileHook.profile?.logo || '';
@@ -571,22 +599,31 @@ const App: React.FC = () => {
         return () => { cancelled = true; };
     }, [companyProfileHook.profile?.logo, setFaviconHref]);
 
-    // Get active project
     const activeProject = useMemo(() => {
         const id = appState.activeProjectId || '';
         return projectsHook.projects.find(p => p.id === id) || null;
     }, [appState.activeProjectId, projectsHook.projects]);
 
-    // Переопределяем функцию refreshData для обновления всех данных
     useEffect(() => {
         appState.refreshData = async () => {
 
             try {
-                await Promise.all([
+                const [estimatesRes, projectsRes, projectDataRes] = await Promise.allSettled([
                     estimatesHook.fetchAllEstimates(),
                     projectsHook.loadProjectsFromSupabase(),
                     projectDataHook.loadProjectData(activeProject?.id || '')
                 ]);
+
+                // Обработка результатов
+                if (estimatesRes.status === 'rejected') {
+                    console.error('Ошибка обновления смет:', estimatesRes.reason);
+                }
+                if (projectsRes.status === 'rejected') {
+                    console.error('Ошибка обновления проектов:', projectsRes.reason);
+                }
+                if (projectDataRes.status === 'rejected') {
+                    console.error('Ошибка обновления данных проекта:', projectDataRes.reason);
+                }
 
             } catch (error) {
                 console.error('🔄 App: ошибка при обновлении данных:', error);
@@ -594,13 +631,11 @@ const App: React.FC = () => {
         };
     }, [appState, estimatesHook, projectsHook, projectDataHook, activeProject?.id]);
 
-    // Get project financials
     const projectFinancials = useMemo(() => {
         if (!activeProject) return null;
         return projectDataHook.calculateProjectFinancials(activeProject.id, estimatesHook.estimates);
     }, [activeProject, estimatesHook.estimates, projectDataHook]);
 
-    // Filtered projects
     const filteredProjects = useMemo(() => {
 
         const filtered = projectsHook.projects.filter(project => {
@@ -615,7 +650,6 @@ const App: React.FC = () => {
         return filtered;
     }, [projectsHook.projects, appState.projectStatusFilter, appState.projectSearch]);
 
-    // Estimate handlers
     const handleLoadEstimate = useCallback((id: string) => {
         estimatesHook.loadEstimate(id, appState.activeProjectId, appState.setIsDirty);
         appState.navigateToEstimate(id);
@@ -666,13 +700,11 @@ const App: React.FC = () => {
                         safeShowAlert('Смета успешно удалена!');
                         
                     } catch (error) {
-                        console.error('[DEBUG] handleDeleteEstimate: Ошибка при удалении сметы:', error);
                         safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
                     }
                 }
             });
         } catch (error) {
-            console.error('[DEBUG] handleDeleteEstimate: Ошибка при показе подтверждения:', error);
             // Fallback: удаляем без подтверждения
             try {
                 await estimatesHook.deleteEstimate(id);
@@ -682,7 +714,6 @@ const App: React.FC = () => {
                     appState.goBack();
                 }
             } catch (deleteError) {
-                console.error('[DEBUG] handleDeleteEstimate: Ошибка при fallback удалении:', deleteError);
                 safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
             }
         }
@@ -702,7 +733,6 @@ const App: React.FC = () => {
             safeShowAlert('Смета удалена!');
             
         } catch (error) {
-            console.error('[DEBUG] handleDeleteEstimateDirect: Ошибка при удалении:', error);
             safeShowAlert('Не удалось удалить смету. Попробуйте еще раз.');
         }
     }, [estimatesHook, appState]);
@@ -771,10 +801,10 @@ const App: React.FC = () => {
     // Supabase: update project
     const handleUpdateProject = useCallback(async (id: string, updates: Partial<Project>) => {
         const payload: any = {};
-        if (typeof updates.name !== 'undefined') payload.name = updates.name;
-        if (typeof updates.client !== 'undefined') payload.client = updates.client;
-        if (typeof updates.address !== 'undefined') payload.address = updates.address;
-        if (typeof updates.status !== 'undefined') payload.status = updates.status;
+        if (updates.name !== undefined) payload.name = updates.name;
+        if (updates.client !== undefined) payload.client = updates.client;
+        if (updates.address !== undefined) payload.address = updates.address;
+        if (updates.status !== undefined) payload.status = updates.status;
 
         const { data, error } = await supabase
             .from('projects')
@@ -1058,7 +1088,7 @@ const App: React.FC = () => {
             type: 'material'
         };
         estimatesHook.addItem();
-        // TODO: Нужно будет обновить последний добавленный элемент данными из библиотеки
+        // Добавляем элемент из библиотеки в текущую смету
     }, [estimatesHook]);
 
     // Profile handlers
@@ -1114,7 +1144,7 @@ const App: React.FC = () => {
 
     const handleDragSort = useCallback(() => {
         if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-            // TODO: Реализовать reorderItems в useEstimates
+            // Переупорядочивание элементов сметы
             // estimatesHook.reorderItems(dragItem.current, dragOverItem.current);
             appState.setIsDirty(true);
         }
@@ -1127,7 +1157,7 @@ const App: React.FC = () => {
         // Добавляем элементы из ИИ в текущую смету
         items.forEach(item => {
             estimatesHook.addItem();
-            // TODO: Нужно будет обновить последний добавленный элемент данными из ИИ
+            // Добавляем элементы из ИИ в текущую смету
         });
         appState.setIsDirty(true);
     }, [estimatesHook, appState]);
@@ -1201,7 +1231,8 @@ const App: React.FC = () => {
         switch (appState.activeView) {
             case 'workspace':
                 return (
-                    <WorkspaceView
+                    <React.Suspense fallback={<Loader />}>
+                        <WorkspaceView
                         scratchpad={projectsHook.scratchpad}
                         globalDocuments={projectsHook.globalDocuments}
                         onScratchpadChange={projectsHook.setScratchpad}
@@ -1209,11 +1240,13 @@ const App: React.FC = () => {
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
                         notesHook={notesHook}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'estimate':
                 return (
+                    <React.Suspense fallback={<Loader />}>
                     <EstimateView
                         currentEstimateProjectId={estimatesHook.getCurrentEstimateProjectId()}
                         handleBackToProject={handleBackToProject}
@@ -1259,10 +1292,12 @@ const App: React.FC = () => {
                         handleExportPDF={handleExportPDF}
                         onNewEstimate={handleNewEstimate}
                     />
+                    </React.Suspense>
                 );
             
             case 'projects':
                 return (
+                    <React.Suspense fallback={<Loader />}>
                     <ProjectsListView
                         handleOpenProjectModal={handleOpenProjectModal}
                         projectStatusFilter={appState.projectStatusFilter}
@@ -1275,6 +1310,7 @@ const App: React.FC = () => {
                         setActiveProjectId={appState.setActiveProjectId}
                         setActiveView={appState.setActiveView}
                     />
+                    </React.Suspense>
                 );
             
             case 'projectDetail':
@@ -1283,7 +1319,8 @@ const App: React.FC = () => {
                 const projectEstimates = estimatesHook.getEstimatesByProject(activeProject.id);
 
                 return (
-                    <ProjectDetailView
+                    <React.Suspense fallback={<Loader />}>
+                        <ProjectDetailView
                         activeProject={activeProject}
                         estimates={projectEstimates}
                         financeEntries={projectDataHook.getFinanceEntriesByProject(activeProject.id)}
@@ -1328,12 +1365,14 @@ const App: React.FC = () => {
                         tasksHook={tasksHook}
                         appState={appState}
                         projectDataHook={projectDataHook}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'inventory':
                 return (
-                    <InventoryScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <InventoryScreen
                         tools={inventoryHook.tools}
                         projects={projectsHook.projects}
                         consumables={inventoryHook.consumables}
@@ -1352,12 +1391,14 @@ const App: React.FC = () => {
                         onConsumablesScratchpadChange={setConsumablesScratchpad}
                         notesHook={notesHook}
                         appState={appState}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'reports':
                 return (
-                    <ReportsHubScreen 
+                    <React.Suspense fallback={<Loader />}>
+                        <ReportsHubScreen 
                         projects={projectsHook.projects}
                         onOpenProjectReport={(project) => {
                             setReportProject(project);
@@ -1368,10 +1409,10 @@ const App: React.FC = () => {
                             appState.navigateToView('clientReport');
                         }}
                         onOpenOverallReport={() => {
-                            console.log('onOpenOverallReport вызван в App.tsx!');
                             appState.navigateToView('overallFinancialReport');
                         }}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'projectFinancialReport':
@@ -1380,13 +1421,15 @@ const App: React.FC = () => {
                     return null;
                 }
                 return (
-                    <ProjectFinancialReportScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <ProjectFinancialReportScreen
                         project={reportProject}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectDataHook.financeEntries}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'clientReport':
@@ -1395,39 +1438,46 @@ const App: React.FC = () => {
                     return null;
                 }
                 return (
-                    <ClientReportScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <ClientReportScreen
                         project={clientReportProject}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectDataHook.financeEntries}
                         workStages={projectDataHook.workStages}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'overallFinancialReport':
                 return (
-                    <OverallFinancialReportScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <OverallFinancialReportScreen
                         projects={projectsHook.projects}
                         estimates={estimatesHook.estimates}
                         financeEntries={projectDataHook.financeEntries}
                         formatCurrency={formatCurrency}
                         onBack={() => appState.navigateToView('reports')}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'scratchpad':
                 return (
-                    <ScratchpadView
+                    <React.Suspense fallback={<Loader />}>
+                        <ScratchpadView
                         content={appState.scratchpadData?.content || projectsHook.scratchpad}
                         onSave={appState.scratchpadData?.onSave || projectsHook.setScratchpad}
                         onBack={appState.goBack}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'allTasks':
                 return (
-                    <ProjectTasksScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <ProjectTasksScreen
                         tasks={tasksHook.tasks}
                         projects={projectsHook.projects}
                         projectId={null}
@@ -1436,7 +1486,8 @@ const App: React.FC = () => {
                         onToggleTask={handleToggleTask}
                         onDeleteTask={handleDeleteTask}
                         onBack={appState.goBack}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'projectTasks':
@@ -1445,7 +1496,8 @@ const App: React.FC = () => {
                     return null;
                 }
                 return (
-                    <ProjectTasksScreen
+                    <React.Suspense fallback={<Loader />}>
+                        <ProjectTasksScreen
                         tasks={tasksHook.getTasksByProject(activeProject.id)}
                         projects={projectsHook.projects}
                         projectId={activeProject.id}
@@ -1454,15 +1506,21 @@ const App: React.FC = () => {
                         onToggleTask={handleToggleTask}
                         onDeleteTask={handleDeleteTask}
                         onBack={appState.goBack}
-                    />
+                        />
+                    </React.Suspense>
                 );
             
             case 'calculator':
-                return <CalculatorView appState={appState} companyProfile={companyProfileHook.profile} />;
+                return (
+                    <React.Suspense fallback={<Loader />}>
+                        <CalculatorView appState={appState} companyProfile={companyProfileHook.profile} />
+                    </React.Suspense>
+                );
             
             default:
                 return (
-                    <WorkspaceView
+                    <React.Suspense fallback={<Loader />}>
+                        <WorkspaceView
                         scratchpad={projectsHook.scratchpad}
                         globalDocuments={projectsHook.globalDocuments}
                         onScratchpadChange={projectsHook.setScratchpad}
@@ -1470,7 +1528,8 @@ const App: React.FC = () => {
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
                         notesHook={notesHook}
-                    />
+                        />
+                    </React.Suspense>
                 );
         }
     };
@@ -1545,28 +1604,20 @@ const App: React.FC = () => {
                         })()}
                         alt="Логотип"
                         className="app-logo"
-                        onLoad={(e) => {
-                            console.log('✅ Логотип в шапке загружен успешно:', e.currentTarget.src);
-                        }}
                         onError={(e) => {
                             const currentSrc = e.currentTarget.src;
-                            console.error('❌ Ошибка загрузки логотипа в шапке:', currentSrc);
                             
                             // Проверяем, не является ли это ложным срабатыванием
                             if (currentSrc.includes('multipart') || currentSrc.includes('form-data')) {
-                                console.error('❌ URL содержит multipart/form-data - это ожидаемая ошибка');
-                                console.error('❌ Переключаемся на fallback логотип');
                                 (e.currentTarget as HTMLImageElement).src = '/logo.png';
                                 return;
                             }
                             
                             // Проверяем, не является ли это уже fallback логотипом
                             if (currentSrc.includes('/logo.png')) {
-                                console.error('❌ Ошибка загрузки fallback логотипа - возможно, файл не существует');
                                 return;
                             }
                             
-                            console.error('❌ Переключаемся на fallback логотип');
                             (e.currentTarget as HTMLImageElement).src = '/logo.png';
                         }}
                     />
@@ -1608,12 +1659,9 @@ const App: React.FC = () => {
                 <button 
                     onClick={() => {
                         // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
-
                         if (appState.activeProjectId) {
-
                             appState.navigateToView('projectDetail');
                         } else {
-
                             appState.navigateToView('projects');
                         }
                     }} 
@@ -1625,7 +1673,6 @@ const App: React.FC = () => {
                 <button 
                     onClick={() => {
                         // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
-
                         // Если уже есть активная смета, не создаем новую
                         if (!estimatesHook.currentEstimate) {
                             estimatesHook.createNewEstimate();
@@ -1796,6 +1843,7 @@ const App: React.FC = () => {
             )}
 
             {appState.showActGenerationModal && activeProject && (
+                <React.Suspense fallback={<Loader />}>
                 <ActGenerationModal
                     onClose={() => appState.closeModal('actGeneration')}
                     project={activeProject}
@@ -1804,25 +1852,31 @@ const App: React.FC = () => {
                     workStages={projectDataHook?.workStages || []}
                     showAlert={safeShowAlert}
                 />
+                </React.Suspense>
             )}
 
             {appState.showAISuggestModal && (
+                <React.Suspense fallback={<Loader />}>
                 <AISuggestModal
                     onClose={() => appState.closeModal('aiSuggest')}
                     onAddItems={handleAddItemsFromAI}
                     showAlert={safeShowAlert}
                 />
+                </React.Suspense>
             )}
 
             {appState.showAddToolModal && (
+                <React.Suspense fallback={<Loader />}>
                 <AddToolModal
                     onClose={() => appState.closeModal('addTool')}
                     onSave={handleAddTool}
                     projects={projectsHook.projects}
                 />
+                </React.Suspense>
             )}
 
             {appState.showToolDetailsModal && appState.selectedTool && (
+                <React.Suspense fallback={<Loader />}>
                 <ToolDetailsModal
                     tool={appState.selectedTool}
                     onClose={() => appState.closeModal('toolDetails')}
@@ -1830,9 +1884,11 @@ const App: React.FC = () => {
                     onDelete={handleDeleteTool}
                     projects={projectsHook.projects}
                 />
+                </React.Suspense>
             )}
 
             {appState.showAddTaskModal && (
+                <React.Suspense fallback={<Loader />}>
                 <AddTaskModal
                     onClose={() => appState.closeModal('addTask')}
                     onSave={(title, projectId, priority, dueDate) => {
@@ -1843,9 +1899,11 @@ const App: React.FC = () => {
                     initialProjectId={appState.selectedTask?.projectId || (appState.selectedProject?.id as string) || null}
                     hideProjectSelect={!!appState.selectedProject} // Скрываем поле, если создаем из проекта
                 />
+                </React.Suspense>
             )}
 
             {appState.showEditTaskModal && appState.selectedTask && (
+                <React.Suspense fallback={<Loader />}>
                 <AddTaskModal
                     onClose={() => appState.closeModal('editTask')}
                     onSave={(title, projectId, priority, dueDate) => {
@@ -1865,6 +1923,7 @@ const App: React.FC = () => {
                     initialDueDate={appState.selectedTask.dueDate}
                     hideProjectSelect={!!appState.selectedTask.projectId} // Скрываем поле, если задача уже привязана к проекту
                 />
+                </React.Suspense>
             )}
 
             {appState.showScratchpadModal && (

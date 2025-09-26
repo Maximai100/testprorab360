@@ -181,7 +181,7 @@ export const useCompanyProfile = (session: Session | null) => {
           }
         } catch (fetchError) {
           console.error('❌ Ошибка fetch логотипа:', fetchError);
-          if (fetchError.message.includes('timeout') || fetchError.message.includes('DatabaseTimeout')) {
+          if (fetchError instanceof Error && (fetchError.message.includes('timeout') || fetchError.message.includes('DatabaseTimeout'))) {
             console.error('📋 Возможно, проблема с таймаутом базы данных');
           }
         }
@@ -204,7 +204,7 @@ export const useCompanyProfile = (session: Session | null) => {
     try {
       // 1. Проверяем конфигурацию Supabase
 
-      console.log('🔍 Supabase Key:', supabase.supabaseKey?.substring(0, 20) + '...');
+      console.log('🔍 Supabase Key:', (supabase as any).supabaseKey?.substring(0, 20) + '...');
       
       // 2. Проверяем доступность bucket "logos" с принудительным обновлением
 
@@ -213,7 +213,7 @@ export const useCompanyProfile = (session: Session | null) => {
       
       if (bucketsError) {
         console.error('❌ Ошибка получения списка buckets:', bucketsError);
-        console.error('❌ Код ошибки:', bucketsError.statusCode);
+        console.error('❌ Код ошибки:', (bucketsError as any).statusCode);
         console.error('❌ Сообщение:', bucketsError.message);
         
         // Попробуем альтернативный способ

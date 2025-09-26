@@ -3,7 +3,6 @@ import { ThemeMode } from '../types';
 import { dataService } from '../services/storageService';
 
 export const useAppState = () => {
-    console.log('🎯 useAppState: Хук useAppState инициализируется');
     // App navigation state
     const [activeView, setActiveView] = useState<string>(() => {
         const savedView = dataService.getActiveView();
@@ -15,10 +14,6 @@ export const useAppState = () => {
     });
     const [activeProjectId, setActiveProjectId] = useState<string | null>(() => dataService.getActiveProjectId());
     
-    // Отладочная информация для activeProjectId
-    useEffect(() => {
-
-    }, [activeProjectId]);
     const [activeEstimateId, setActiveEstimateId] = useState<string | null>(() => dataService.getActiveEstimateId());
     
     // Theme state
@@ -106,7 +101,6 @@ export const useAppState = () => {
     }, []);
     
     const navigateToProject = useCallback((projectId: string) => {
-
         setActiveProjectId(projectId);
         setActiveView('projectDetail');
     }, []);
@@ -312,7 +306,6 @@ export const useAppState = () => {
     
     // Функция для принудительного обновления данных
     const refreshData = useCallback(() => {
-
         // Эта функция будет переопределена в App.tsx для обновления всех хуков
     }, []);
     

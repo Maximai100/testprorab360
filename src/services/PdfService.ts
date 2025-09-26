@@ -36,12 +36,16 @@ class PdfService {
     if (this.fontCache.regular && this.fontCache.bold) return;
     const base = (import.meta as any).env?.BASE_URL ?? '/';
     const prefix = base.endsWith('/') ? base : base + '/';
-    const [regular, bold] = await Promise.all([
+    const [regularRes, boldRes] = await Promise.allSettled([
       this.loadFontBase64(`${prefix}fonts/Roboto-Regular.ttf`),
       this.loadFontBase64(`${prefix}fonts/Roboto-Bold.ttf`),
     ]);
-    this.fontCache.regular = regular;
-    this.fontCache.bold = bold;
+    if (regularRes.status === 'fulfilled') {
+      this.fontCache.regular = regularRes.value;
+    }
+    if (boldRes.status === 'fulfilled') {
+      this.fontCache.bold = boldRes.value;
+    }
   }
 
   private static addFontsToDoc(doc: jsPDF): void {

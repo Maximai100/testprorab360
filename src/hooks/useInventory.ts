@@ -29,7 +29,7 @@ export const useInventory = (session: Session | null) => {
         try {
 
             // Загружаем инструменты и расходники параллельно
-            const [toolsRes, consumablesRes] = await Promise.all([
+            const [toolsRes, consumablesRes] = await Promise.allSettled([
                 supabase
                     .from('tools')
                     .select('*')
@@ -42,17 +42,25 @@ export const useInventory = (session: Session | null) => {
                     .order('created_at', { ascending: false })
             ]);
 
-            if (toolsRes.error) {
-                console.error('🔧 useInventory: Ошибка загрузки инструментов:', toolsRes.error);
-                throw toolsRes.error;
+            // Обработка результатов
+            if (toolsRes.status === 'fulfilled' && toolsRes.value.error) {
+                console.error('Ошибка загрузки инструментов:', toolsRes.value.error);
+            } else if (toolsRes.status === 'fulfilled') {
+                setTools(toolsRes.value.data || []);
+            } else {
+                console.error('Ошибка загрузки инструментов:', toolsRes.reason);
             }
-            if (consumablesRes.error) {
-                console.error('🔧 useInventory: Ошибка загрузки расходников:', consumablesRes.error);
-                throw consumablesRes.error;
+
+            if (consumablesRes.status === 'fulfilled' && consumablesRes.value.error) {
+                console.error('Ошибка загрузки расходников:', consumablesRes.value.error);
+            } else if (consumablesRes.status === 'fulfilled') {
+                setConsumables(consumablesRes.value.data || []);
+            } else {
+                console.error('Ошибка загрузки расходников:', consumablesRes.reason);
             }
 
             // Преобразуем данные из Supabase в формат приложения
-            const transformedTools: Tool[] = ((toolsRes.data as any[]) || []).map(tool => {
+            const transformedTools: Tool[] = ((toolsRes.status === 'fulfilled' ? toolsRes.value.data : []) as any[]).map(tool => {
                 // Преобразуем location из формата базы данных в формат приложения
                 let appLocation = tool.location || undefined;
                 if (tool.location && tool.location.startsWith('project_')) {
@@ -75,7 +83,7 @@ export const useInventory = (session: Session | null) => {
                 };
             });
 
-            const transformedConsumables: Consumable[] = ((consumablesRes.data as any[]) || []).map(consumable => ({
+            const transformedConsumables: Consumable[] = ((consumablesRes.status === 'fulfilled' ? consumablesRes.value.data : []) as any[]).map(consumable => ({
                 id: consumable.id,
                 name: consumable.name,
                 quantity: consumable.quantity || 0,
@@ -86,11 +94,13 @@ export const useInventory = (session: Session | null) => {
                 updatedAt: consumable.updated_at,
             }));
 
-            setTools(transformedTools);
-            setConsumables(transformedConsumables);
-            // Кешируем
-            dataService.setTools(transformedTools);
-            dataService.setConsumables(transformedConsumables);
+            // Кешируем данные
+            if (toolsRes.status === 'fulfilled') {
+                dataService.setTools(transformedTools);
+            }
+            if (consumablesRes.status === 'fulfilled') {
+                dataService.setConsumables(transformedConsumables);
+            }
 
         } catch (error) {
             console.error('🔧 useInventory: Ошибка при загрузке данных:', error);
@@ -143,7 +153,7 @@ export const useInventory = (session: Session | null) => {
             // Определяем правильное значение location для базы данных
             let dbLocation = toolData.location || null;
             if (toolData.location === 'on_project' && toolData.projectId) {
-                dbLocation = `project_${toolData.projectId}`;
+                dbLocation = `project_${toolData.projectId}` as any;
             }
 
             const insertPayload = {
@@ -231,7 +241,7 @@ export const useInventory = (session: Session | null) => {
             // Определяем правильное значение location для базы данных
             let dbLocation = toolData.location || null;
             if (toolData.location === 'on_project' && toolData.projectId) {
-                dbLocation = `project_${toolData.projectId}`;
+                dbLocation = `project_${toolData.projectId}` as any;
             }
 
             const updatePayload: any = {

@@ -37,10 +37,51 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext',
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          manualChunks: {
-            pdf: ['jspdf', 'jspdf-autotable']
+          manualChunks: (id) => {
+            // Vendor chunks
+            if (id.includes('node_modules')) {
+              // React and related
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              // Supabase
+              if (id.includes('@supabase')) {
+                return 'supabase-vendor';
+              }
+              // PDF libraries
+              if (id.includes('jspdf') || id.includes('html2canvas')) {
+                return 'pdf-vendor';
+              }
+              // Google AI
+              if (id.includes('@google/genai')) {
+                return 'ai-vendor';
+              }
+              // Other vendor libraries
+              return 'vendor';
+            }
+            
+            // App chunks
+            if (id.includes('src/components/calculator')) {
+              return 'calculator';
+            }
+            if (id.includes('src/components/modals')) {
+              return 'modals';
+            }
+            if (id.includes('src/components/views')) {
+              return 'views';
+            }
+            if (id.includes('src/hooks')) {
+              return 'hooks';
+            }
+            if (id.includes('src/services')) {
+              return 'services';
+            }
+            if (id.includes('src/utils')) {
+              return 'utils';
+            }
           },
           // Add hash to filenames for better caching
           entryFileNames: 'assets/[name]-[hash].js',

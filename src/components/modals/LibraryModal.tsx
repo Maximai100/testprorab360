@@ -3,7 +3,7 @@ import { LibraryItem, LibraryModalProps } from '../../types';
 import { IconClose } from '../common/Icon';
 
 export const LibraryModal: React.FC<LibraryModalProps> = ({ onClose, libraryItems, onAddLibraryItem, onUpdateLibraryItem, onDeleteLibraryItem, onAddItemToEstimate, formatCurrency, onInputFocus, showConfirm, showAlert }) => {
-    const [formItem, setFormItem] = useState<Partial<LibraryItem>>({ name: '', price: 0, unit: '', category: '' });
+    const [formItem, setFormItem] = useState<Partial<LibraryItem>>({ name: '', price: 0, unit: '', category: undefined });
     const [filterCategory, setFilterCategory] = useState<string>('all');
     const [librarySearch, setLibrarySearch] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
@@ -38,7 +38,7 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({ onClose, libraryItem
 
     const handleFormChange = (field: keyof Omit<LibraryItem, 'id'>, value: string | number) => setFormItem(p => ({ ...p, [field]: value }));
     const handleStartEdit = (item: LibraryItem) => setFormItem(item);
-    const handleCancelEdit = () => setFormItem({ name: '', price: 0, unit: '', category: '' });
+    const handleCancelEdit = () => setFormItem({ name: '', price: 0, unit: '', category: undefined });
 
     const handleSaveOrUpdate = () => {
         if (!formItem.name?.trim()) {

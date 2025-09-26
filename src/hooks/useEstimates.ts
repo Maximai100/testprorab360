@@ -139,7 +139,6 @@ export const useEstimates = (session: Session | null) => {
 
   // Загружаем сметы при инициализации
   useEffect(() => {
-    console.log('useEffect сработал, session:', session);
     const loadEstimates = async () => {
       if (session?.user) {
         try {
@@ -162,12 +161,10 @@ export const useEstimates = (session: Session | null) => {
             // Не выбрасываем ошибку, чтобы не ломать приложение
             return;
           } else {
-            console.log('Загружено смет:', data?.length || 0, data);
             
             // Преобразуем данные из Supabase в нужный формат
             const transformedData = transformSupabaseData(data);
             
-            console.log('Преобразованные данные:', transformedData);
             setAllEstimates(transformedData);
           }
         } catch (error) {
@@ -176,7 +173,6 @@ export const useEstimates = (session: Session | null) => {
           setAllEstimates([]);
         }
       } else {
-        console.log('Session или user не определен');
       }
     };
 
@@ -187,17 +183,13 @@ export const useEstimates = (session: Session | null) => {
     
     let finalProjectId: string | null = null;
 
-    console.log('createNewEstimate вызвана с параметром:', projectIdOrObject, 'тип:', typeof projectIdOrObject);
 
     // "Умная" проверка: исправляем данные, если они пришли в неправильном формате
     if (typeof projectIdOrObject === 'string') {
       finalProjectId = projectIdOrObject;
-      console.log('projectId как строка:', finalProjectId);
     } else if (projectIdOrObject && typeof projectIdOrObject === 'object' && 'projectId' in projectIdOrObject) {
       finalProjectId = projectIdOrObject.projectId;
-      console.log('projectId из объекта:', finalProjectId);
     } else {
-      console.log('projectId не определен, используем null');
     }
 
     const newTempId = `temp-${crypto.randomUUID()}`;
@@ -684,7 +676,6 @@ export const useEstimates = (session: Session | null) => {
                     const { error: deleteError } = await supabase.from('estimates').delete().eq('id', id);
                     
                     if (deleteError) {
-                        console.error('[DEBUG] deleteEstimate: Ошибка удаления сметы:', deleteError);
                         // В случае ошибки восстанавливаем данные
                         const { data } = await supabase.from('estimates').select(`
                           *,
@@ -701,7 +692,6 @@ export const useEstimates = (session: Session | null) => {
                     }
 
                 } catch (error) {
-                    console.error('[DEBUG] deleteEstimate: Ошибка при удалении из БД:', error);
                     // Восстанавливаем данные из БД
                     try {
                         const { data } = await supabase.from('estimates').select(`
@@ -716,14 +706,12 @@ export const useEstimates = (session: Session | null) => {
                             setAllEstimates(transformedData);
                         }
                     } catch (restoreError) {
-                        console.error('[DEBUG] deleteEstimate: Ошибка при восстановлении данных:', restoreError);
                     }
                 }
             }, 0);
             
             
         } catch (error) {
-            console.error('[DEBUG] deleteEstimate: Ошибка при удалении сметы:', error);
             throw error;
         }
     },
@@ -810,7 +798,7 @@ export const useEstimates = (session: Session | null) => {
           if (retryCount < 2 && error.message.includes('Database connection error')) {
 
             setTimeout(() => {
-              fetchAllEstimates(retryCount + 1);
+              setAllEstimates([]);
             }, 2000 * (retryCount + 1));
             return;
           }
@@ -836,7 +824,7 @@ export const useEstimates = (session: Session | null) => {
         if (retryCount < 2) {
 
           setTimeout(() => {
-            fetchAllEstimates(retryCount + 1);
+            setAllEstimates([]);
           }, 2000 * (retryCount + 1));
           return;
         }

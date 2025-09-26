@@ -216,7 +216,7 @@ export const useFileStorage = () => {
     return {
       publicUrl: urlData.publicUrl,
       path: uploadData.path,
-      error: null
+      error: undefined
     };
   };
 

@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Функция для рекурсивного поиска файлов
 function findFiles(dir, extensions) {
@@ -94,8 +98,5 @@ function main() {
   console.log('Очистка отладочных логов завершена!');
 }
 
-if (require.main === module) {
-  main();
-}
-
-module.exports = { removeDebugLogs, findFiles };
+// Запускаем основную функцию
+main();

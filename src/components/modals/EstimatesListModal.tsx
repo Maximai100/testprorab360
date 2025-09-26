@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { Estimate, EstimatesListModalProps, EstimateStatus } from '../../types';
+import { Estimate, EstimatesListModalProps, EstimateStatus, EstimateTemplate } from '../../types';
 import { IconClose, IconClipboard, IconTrash } from '../common/Icon';
 import { useProjectContext } from '../../context/ProjectContext';
 
@@ -39,14 +39,17 @@ export const EstimatesListModal: React.FC<EstimatesListModalProps> = ({ onClose,
 
     const { activeProjectId } = useProjectContext();
 
-    const handleSelectTemplate = (template) => {
+    const handleSelectTemplate = (template: EstimateTemplate) => {
 
       // Передаем только необходимые поля шаблона в handleNewEstimate
-      const templateData = {
+      const templateData: EstimateTemplate = {
+        id: template.id,
+        name: template.name,
         items: template.items || [],
         discount: template.discount || 0,
         discountType: template.discountType || 'percent',
-        tax: template.tax || 0
+        tax: template.tax || 0,
+        lastModified: template.lastModified
       };
 
       onNewEstimate(templateData); // Вызываем родительскую функцию с данными шаблона
