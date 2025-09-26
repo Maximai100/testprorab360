@@ -9,11 +9,340 @@ declare module 'jspdf' {
   }
 }
 
+// Цветовая схема для профессионального дизайна
+const COLORS = {
+  primary: [51, 144, 236],      // Основной синий цвет
+  primaryDark: [40, 116, 189],  // Темно-синий
+  secondary: [108, 117, 125],   // Серый
+  success: [40, 167, 69],       // Зеленый
+  warning: [255, 193, 7],       // Желтый
+  danger: [220, 53, 69],        // Красный
+  light: [248, 249, 250],       // Светло-серый
+  dark: [33, 37, 41],           // Темно-серый
+  white: [255, 255, 255],       // Белый
+  border: [222, 226, 230],      // Граница
+  shadow: [0, 0, 0, 0.1],       // Тень
+  accent: [102, 16, 242],       // Акцентный фиолетовый
+  gradient1: [51, 144, 236],    // Начало градиента
+  gradient2: [102, 16, 242],    // Конец градиента
+};
+
 class PdfService {
   private static readonly FONT_NAME = 'Roboto';
 
   // Cache loaded base64 font data to avoid repeated fetches
   private static fontCache: { regular?: string; bold?: string } = {};
+
+  /**
+   * Создает профессиональную шапку документа с градиентом
+   */
+  private static createProfessionalHeader(
+    doc: jsPDF, 
+    title: string, 
+    subtitle: string, 
+    companyProfile: CompanyProfile,
+    startY: number = 20
+  ): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = startY;
+
+    // Создаем градиентный фон для шапки
+    const headerHeight = 45;
+    
+    // Имитация градиента через несколько прямоугольников
+    for (let i = 0; i < headerHeight; i++) {
+      const ratio = i / headerHeight;
+      const r = COLORS.gradient1[0] + (COLORS.gradient2[0] - COLORS.gradient1[0]) * ratio;
+      const g = COLORS.gradient1[1] + (COLORS.gradient2[1] - COLORS.gradient1[1]) * ratio;
+      const b = COLORS.gradient1[2] + (COLORS.gradient2[2] - COLORS.gradient1[2]) * ratio;
+      
+      doc.setFillColor(r, g, b);
+      doc.rect(0, yPosition + i, pageWidth, 1, 'F');
+    }
+
+    // Белый текст на градиентном фоне
+    doc.setTextColor(255, 255, 255);
+    
+    // Название компании
+    doc.setFontSize(20);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text(companyProfile?.name || 'Компания', pageWidth / 2, yPosition + 15, { align: 'center' });
+    
+    // Детали компании (если есть)
+    if (companyProfile?.details) {
+      doc.setFontSize(9);
+      PdfService.ensureCyrillicSupport(doc);
+      const detailsLines = companyProfile.details.split('\n').slice(0, 2); // Максимум 2 строки
+      detailsLines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        if (trimmedLine) {
+          doc.text(trimmedLine, pageWidth / 2, yPosition + 28 + (index * 6), { align: 'center' });
+        }
+      });
+    }
+
+    yPosition += headerHeight + 15;
+
+    // Заголовок документа
+    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    doc.setFontSize(18);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+
+    // Подзаголовок
+    if (subtitle) {
+      doc.setFontSize(12);
+      doc.setTextColor(COLORS.secondary[0], COLORS.secondary[1], COLORS.secondary[2]);
+      PdfService.ensureCyrillicSupport(doc);
+      doc.text(subtitle, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+    }
+
+    // Декоративная линия
+    doc.setLineWidth(2);
+    doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+    const lineWidth = 60;
+    doc.line(pageWidth/2 - lineWidth/2, yPosition, pageWidth/2 + lineWidth/2, yPosition);
+    yPosition += 20;
+
+    return yPosition;
+  }
+
+  /**
+   * Создает информационный блок с современным дизайном
+   */
+  private static createInfoBlock(
+    doc: jsPDF,
+    title: string,
+    content: { label: string; value: string }[],
+    startY: number,
+    color: number[] = COLORS.primary
+  ): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = startY;
+
+    // Заголовок блока
+    doc.setFontSize(12);
+    doc.setTextColor(color[0], color[1], color[2]);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text(title, 20, yPosition);
+    yPosition += 15;
+
+    // Рамка с тенью для информационного блока
+    const blockHeight = content.length * 12 + 20;
+    const blockWidth = pageWidth - 40;
+    
+    // Тень
+    doc.setFillColor(0, 0, 0, 0.1);
+    doc.rect(22, yPosition + 2, blockWidth, blockHeight, 'F');
+    
+    // Основной блок
+    doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+    doc.rect(20, yPosition, blockWidth, blockHeight, 'F');
+    
+    // Граница
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+    doc.rect(20, yPosition, blockWidth, blockHeight);
+
+    // Содержимое блока
+    doc.setFontSize(10);
+    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    PdfService.ensureCyrillicSupport(doc);
+
+    content.forEach((item, index) => {
+      const itemY = yPosition + 15 + (index * 12);
+      
+      // Метка (жирным)
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text(`${item.label}:`, 25, itemY);
+      
+      // Значение (обычным)
+      PdfService.ensureCyrillicSupport(doc);
+      doc.text(item.value, 80, itemY);
+    });
+
+    return yPosition + blockHeight + 20;
+  }
+
+  /**
+   * Создает профессиональную таблицу с современным дизайном
+   */
+  private static createProfessionalTable(
+    doc: jsPDF,
+    headers: string[],
+    data: any[][],
+    startY: number,
+    columnStyles?: any
+  ): number {
+    autoTable(doc, {
+      head: [headers],
+      body: data,
+      startY: startY,
+      styles: {
+        fontSize: 9,
+        font: PdfService.FONT_NAME,
+        fontStyle: 'normal',
+        cellPadding: 6,
+        lineWidth: 0.1,
+        lineColor: COLORS.border,
+        halign: 'left',
+        valign: 'middle',
+      },
+      headStyles: {
+        fillColor: COLORS.primary,
+        textColor: COLORS.white,
+        fontStyle: 'bold',
+        fontSize: 10,
+        font: PdfService.FONT_NAME,
+        halign: 'center',
+        cellPadding: 8,
+      },
+      columnStyles: columnStyles || {},
+      alternateRowStyles: {
+        fillColor: [249, 250, 251],
+      },
+      margin: { left: 20, right: 20 },
+      tableLineColor: COLORS.border,
+      tableLineWidth: 0.1,
+      theme: 'grid',
+    });
+
+    return (doc as any).lastAutoTable.finalY;
+  }
+
+  /**
+   * Создает блок итогов с современным дизайном
+   */
+  private static createTotalsBlock(
+    doc: jsPDF,
+    totals: { label: string; value: string; isTotal?: boolean }[],
+    startY: number
+  ): number {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const blockWidth = 120;
+    const blockHeight = totals.length * 12 + 20;
+    const blockX = pageWidth - blockWidth - 20;
+
+    // Тень блока
+    doc.setFillColor(0, 0, 0, 0.15);
+    doc.rect(blockX + 3, startY + 3, blockWidth, blockHeight, 'F');
+
+    // Основной блок
+    doc.setFillColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
+    doc.rect(blockX, startY, blockWidth, blockHeight, 'F');
+
+    // Граница блока
+    doc.setLineWidth(1);
+    doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+    doc.rect(blockX, startY, blockWidth, blockHeight);
+
+    // Заголовок блока
+    doc.setFontSize(11);
+    doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text('РАСЧЕТ', blockX + blockWidth/2, startY + 12, { align: 'center' });
+
+    // Разделительная линия
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+    doc.line(blockX + 10, startY + 18, blockX + blockWidth - 10, startY + 18);
+
+    // Элементы расчета
+    totals.forEach((item, index) => {
+      const itemY = startY + 30 + (index * 12);
+      
+      if (item.isTotal) {
+        // Итоговая строка - выделяем
+        doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        doc.rect(blockX + 5, itemY - 8, blockWidth - 10, 14, 'F');
+        
+        doc.setFontSize(11);
+        doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
+        PdfService.ensureCyrillicSupport(doc, 'bold');
+      } else {
+        doc.setFontSize(9);
+        doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+        PdfService.ensureCyrillicSupport(doc);
+      }
+
+      // Метка
+      doc.text(item.label, blockX + 10, itemY);
+      
+      // Значение
+      doc.text(item.value, blockX + blockWidth - 10, itemY, { align: 'right' });
+    });
+
+    return startY + blockHeight + 20;
+  }
+
+  /**
+   * Создает профессиональный подвал документа
+   */
+  private static createProfessionalFooter(
+    doc: jsPDF,
+    leftTitle: string,
+    rightTitle: string,
+    showStamp: boolean = false
+  ): void {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const footerY = pageHeight - 70;
+
+    // Разделительная линия
+    doc.setLineWidth(1);
+    doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+    doc.line(20, footerY - 10, pageWidth - 20, footerY - 10);
+
+    // Блоки подписей
+    const blockWidth = 90;
+    const blockHeight = 40;
+
+    // Левый блок (Исполнитель)
+    doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+    doc.rect(20, footerY, blockWidth, blockHeight, 'F');
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+    doc.rect(20, footerY, blockWidth, blockHeight);
+
+    doc.setFontSize(10);
+    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text(leftTitle, 25, footerY + 12);
+
+    doc.setFontSize(9);
+    PdfService.ensureCyrillicSupport(doc);
+    doc.text('_________________________', 25, footerY + 25);
+    doc.text('(подпись)', 25, footerY + 32);
+    
+    if (showStamp) {
+      doc.text('М.П.', 25, footerY + 38);
+    }
+
+    // Правый блок (Заказчик)
+    const rightBlockX = pageWidth - blockWidth - 20;
+    doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+    doc.rect(rightBlockX, footerY, blockWidth, blockHeight, 'F');
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+    doc.rect(rightBlockX, footerY, blockWidth, blockHeight);
+
+    doc.setFontSize(10);
+    PdfService.ensureCyrillicSupport(doc, 'bold');
+    doc.text(rightTitle, rightBlockX + 5, footerY + 12);
+
+    doc.setFontSize(9);
+    PdfService.ensureCyrillicSupport(doc);
+    doc.text('_________________________', rightBlockX + 5, footerY + 25);
+    doc.text('(подпись)', rightBlockX + 5, footerY + 32);
+
+    // Дата в центре
+    doc.setFontSize(9);
+    doc.setTextColor(COLORS.secondary[0], COLORS.secondary[1], COLORS.secondary[2]);
+    PdfService.ensureCyrillicSupport(doc);
+    doc.text(`Дата: ${PdfService.formatDate(new Date().toISOString())}`, pageWidth / 2, footerY + 50, { align: 'center' });
+  }
 
   private static async loadFontBase64(url: string): Promise<string> {
     const res = await fetch(url);
@@ -149,155 +478,126 @@ class PdfService {
   }
 
   /**
-   * Генерирует PDF для заявки поставщику
+   * Генерирует PDF для заявки поставщику с профессиональным дизайном
    */
   static async generateSupplierRequestPDF(requestItems: any[], companyProfile: CompanyProfile | null): Promise<void> {
     try {
       const doc = await PdfService.initializeDoc();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
       let yPosition = 20;
 
-      // Шапка документа
-      doc.setFontSize(16);
-      PdfService.ensureCyrillicSupport(doc, 'bold');
-      try {
-        doc.text('Заявка поставщику', pageWidth / 2, yPosition, { align: 'center' });
-      } catch (error) {
-        console.warn('Ошибка при добавлении заголовка:', error);
-        doc.text('Zayavka postavshchiku', pageWidth / 2, yPosition, { align: 'center' });
-      }
-      yPosition += 15;
+      // Создаем профессиональную шапку
+      yPosition = PdfService.createProfessionalHeader(
+        doc,
+        'ЗАЯВКА ПОСТАВЩИКУ',
+        `№ ${Date.now().toString().slice(-6)} от ${PdfService.formatDate(new Date().toISOString())}`,
+        companyProfile || { name: 'Заказчик', details: '' },
+        yPosition
+      );
 
-      // Информация о заказчике
-      doc.setFontSize(12);
-      PdfService.ensureCyrillicSupport(doc, 'bold');
-      try {
-        doc.text('Информация о заказе:', 14, yPosition);
-      } catch (error) {
-        console.warn('Ошибка при добавлении подзаголовка:', error);
-        doc.text('Informatsiya o zakaze:', 14, yPosition);
-      }
-      yPosition += 12;
-      
-      doc.setFontSize(10);
-      PdfService.ensureCyrillicSupport(doc);
-      try {
-        doc.text(`Заказчик: ${companyProfile?.name || 'Не указан'}`, 14, yPosition);
-      } catch (error) {
-        console.warn('Ошибка при добавлении заказчика:', error);
-        doc.text(`Zakazchik: ${companyProfile?.name || 'Ne ukazan'}`, 14, yPosition);
-      }
-      yPosition += 10;
-      
+      // Информационный блок о заказчике
+      const orderInfo = [
+        { label: 'Заказчик', value: companyProfile?.name || 'Не указан' },
+        { label: 'Дата заявки', value: PdfService.formatDate(new Date().toISOString()) },
+        { label: 'Статус', value: 'Новая заявка' }
+      ];
+
       if (companyProfile?.details) {
-        // Разбиваем details на строки и добавляем каждую отдельно
-        const detailsLines = companyProfile.details.split('\n');
-        
-        detailsLines.forEach((line, index) => {
-          const trimmedLine = line.trim();
-          if (trimmedLine) {
-            try {
-              // Разбиваем длинные строки на несколько строк
-              const wrappedLines = PdfService.wrapText(doc, trimmedLine, pageWidth - 28);
-              wrappedLines.forEach(wrappedLine => {
-                try {
-                  doc.text(wrappedLine, 14, yPosition);
-                  yPosition += 8;
-                } catch (textError) {
-                  console.warn('Ошибка при добавлении текста, пропускаем строку:', textError);
-                  yPosition += 8;
-                }
-              });
-            } catch (wrapError) {
-              console.warn('Ошибка при переносе текста, добавляем как есть:', wrapError);
-              try {
-                doc.text(trimmedLine, 14, yPosition);
-                yPosition += 8;
-              } catch (textError) {
-                console.warn('Не удалось добавить текст:', textError);
-                yPosition += 8;
-              }
-            }
-          }
-        });
-        yPosition += 10; // Увеличенный отступ после details
+        const contactInfo = companyProfile.details.split('\n')[0]; // Первая строка как контакт
+        if (contactInfo.trim()) {
+          orderInfo.push({ label: 'Контакты', value: contactInfo.trim() });
+        }
       }
-      
-      try {
-        doc.text(`Дата заявки: ${PdfService.formatDate(new Date().toISOString())}`, 14, yPosition);
-      } catch (error) {
-        console.warn('Ошибка при добавлении даты:', error);
-        doc.text(`Data zayavki: ${PdfService.formatDate(new Date().toISOString())}`, 14, yPosition);
-      }
-      yPosition += 20;
+
+      yPosition = PdfService.createInfoBlock(
+        doc,
+        'ИНФОРМАЦИЯ О ЗАКАЗЧИКЕ',
+        orderInfo,
+        yPosition,
+        COLORS.accent
+      );
 
       // Проверяем, есть ли материалы для заявки
       if (!requestItems || requestItems.length === 0) {
-        doc.setFontSize(12);
+        // Блок "Нет материалов"
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const emptyBlockHeight = 60;
+        const emptyBlockWidth = pageWidth - 40;
+        
+        // Фон блока
+        doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+        doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight, 'F');
+        
+        // Граница
+        doc.setLineWidth(1);
+        doc.setDrawColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+        doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight);
+
+        // Текст
+        doc.setFontSize(14);
+        doc.setTextColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+        PdfService.ensureCyrillicSupport(doc, 'bold');
+        doc.text('⚠ НЕТ МАТЕРИАЛОВ ДЛЯ ЗАЯВКИ', pageWidth / 2, yPosition + 25, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.setTextColor(COLORS.secondary[0], COLORS.secondary[1], COLORS.secondary[2]);
         PdfService.ensureCyrillicSupport(doc);
-        try {
-          doc.text('Нет материалов для заявки', 14, yPosition);
-        } catch (error) {
-          console.warn('Ошибка при добавлении сообщения о пустой заявке:', error);
-          doc.text('Net materialov dlya zayavki', 14, yPosition);
-        }
-        yPosition += 20;
+        doc.text('Добавьте материалы в смету для создания заявки поставщику', pageWidth / 2, yPosition + 40, { align: 'center' });
+
+        yPosition += emptyBlockHeight + 20;
       } else {
-        // Таблица материалов (без цен)
+        // Заголовок таблицы материалов
+        doc.setFontSize(12);
+        doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        PdfService.ensureCyrillicSupport(doc, 'bold');
+        doc.text('ЗАПРАШИВАЕМЫЕ МАТЕРИАЛЫ', 20, yPosition);
+        yPosition += 15;
+
+        // Таблица материалов (без цен для поставщика)
         const tableData = requestItems.map((item, index) => [
           (index + 1).toString(),
           item.name || 'Не указано',
           item.quantity ? item.quantity.toString() : '0',
           item.unit || 'шт',
-          item.note || '-'
+          item.note || 'Стандартное качество'
         ]);
 
-        autoTable(doc, {
-          head: [['№', 'Наименование материалов', 'Кол-во', 'Ед. изм.', 'Примечание']],
-          body: tableData,
-          startY: yPosition,
-          styles: {
-            fontSize: 9,
-            font: PdfService.FONT_NAME,
-            fontStyle: 'normal',
-            cellPadding: 4,
-            overflow: 'linebreak',
-            cellWidth: 'wrap'
-          },
-          headStyles: {
-            fillColor: [66, 139, 202],
-            textColor: 255,
-            fontStyle: 'bold',
-            font: PdfService.FONT_NAME,
-          },
-          columnStyles: {
-            0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
-            1: { cellWidth: 80, font: PdfService.FONT_NAME },
-            2: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
-            3: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
-            4: { cellWidth: 40, font: PdfService.FONT_NAME },
-          },
-          didDrawPage: (data) => {
-            // Добавляем поддержку кириллицы для каждой страницы
-            PdfService.ensureCyrillicSupport(doc);
-          }
-        });
+        const columnStyles = {
+          0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
+          1: { cellWidth: 80, font: PdfService.FONT_NAME },
+          2: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
+          3: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
+          4: { cellWidth: 45, font: PdfService.FONT_NAME },
+        };
 
-        yPosition = (doc as any).lastAutoTable.finalY + 20;
+        const finalY = PdfService.createProfessionalTable(
+          doc,
+          ['№', 'Наименование материалов', 'Кол-во', 'Ед. изм.', 'Примечание'],
+          tableData,
+          yPosition,
+          columnStyles
+        );
+
+        yPosition = finalY + 20;
+
+        // Блок с инструкциями для поставщика
+        const instructionInfo = [
+          { label: 'Срок поставки', value: 'Согласовать с заказчиком' },
+          { label: 'Условия оплаты', value: 'По договоренности' },
+          { label: 'Качество', value: 'Соответствие ГОСТ/ТУ' },
+          { label: 'Доставка', value: 'Обсуждается отдельно' }
+        ];
+
+        yPosition = PdfService.createInfoBlock(
+          doc,
+          'УСЛОВИЯ ПОСТАВКИ',
+          instructionInfo,
+          yPosition,
+          COLORS.success
+        );
       }
 
-      // Подпись
-      doc.setFontSize(10);
-      PdfService.ensureCyrillicSupport(doc);
-      try {
-        doc.text('Подпись заказчика: _________________', 14, yPosition);
-        doc.text('Дата: _________________', pageWidth - 80, yPosition);
-      } catch (error) {
-        console.warn('Ошибка при добавлении подписи:', error);
-        doc.text('Podpis zakazchika: _________________', 14, yPosition);
-        doc.text('Data: _________________', pageWidth - 80, yPosition);
-      }
+      // Профессиональный подвал для заявки
+      PdfService.createProfessionalFooter(doc, 'ЗАКАЗЧИК', 'ПОСТАВЩИК', false);
 
       // Сохраняем файл
       const fileName = `Заявка_поставщику_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '_')}.pdf`;
@@ -311,7 +611,7 @@ class PdfService {
   }
 
   /**
-   * Генерирует PDF для сметы
+   * Генерирует PDF для сметы с профессиональным дизайном
    */
   static async generateEstimatePDF(
     estimate: Estimate,
@@ -319,88 +619,37 @@ class PdfService {
     companyProfile: CompanyProfile
   ): Promise<void> {
     const doc = await PdfService.initializeDoc();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
-    // Профессиональная шапка документа
+    // Создаем профессиональную шапку
+    yPosition = PdfService.createProfessionalHeader(
+      doc,
+      `СМЕТА № ${estimate.number}`,
+      `от ${PdfService.formatDate(estimate.date)}`,
+      companyProfile,
+      yPosition
+    );
 
-    // Логотип/название компании по центру (более крупно)
-    doc.setFontSize(18);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text(companyProfile?.name || 'Документ', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
+    // Информационный блок о заказе
+    const orderInfo = [
+      { label: 'Заказчик', value: estimate.clientInfo },
+      { label: 'Номер сметы', value: estimate.number },
+      { label: 'Дата составления', value: PdfService.formatDate(estimate.date) }
+    ];
 
-    // Детали компании по центру (мелким шрифтом)
-    if (companyProfile?.details) {
-      doc.setFontSize(9);
-      PdfService.ensureCyrillicSupport(doc);
-      const detailsLines = companyProfile.details.split('\n');
-      detailsLines.forEach((line, index) => {
-        const trimmedLine = line.trim();
-        if (trimmedLine) {
-          try {
-            const wrappedLines = PdfService.wrapText(doc, trimmedLine, pageWidth - 40);
-            wrappedLines.forEach(wrappedLine => {
-              doc.text(wrappedLine, pageWidth / 2, yPosition, { align: 'center' });
-              yPosition += 6;
-            });
-          } catch (error) {
-            console.warn('Ошибка при переносе текста компании:', error);
-            doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
-            yPosition += 6;
-          }
-        }
-      });
-      yPosition += 10;
-    }
-
-    // Разделительная линия
-    doc.setLineWidth(0.5);
-    doc.line(20, yPosition, pageWidth - 20, yPosition);
-    yPosition += 15;
-
-    // Заголовок сметы
-    doc.setFontSize(16);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text(`СМЕТА № ${estimate.number}`, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 8;
-
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`от ${PdfService.formatDate(estimate.date)}`, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 20;
-
-    // Профессиональная секция информации о заказе
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ИНФОРМАЦИЯ О ЗАКАЗЕ', 20, yPosition);
-    yPosition += 12;
-
-    // Улучшенная рамка для информации о заказе
-    const infoBoxY = yPosition;
-    const infoBoxHeight = 30;
-    const infoBoxWidth = pageWidth - 40;
-    
-    // Тень рамки
-    doc.setFillColor(240, 240, 240);
-    doc.rect(22, infoBoxY + 2, infoBoxWidth, infoBoxHeight, 'F');
-    
-    // Основная рамка
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(100, 100, 100);
-    doc.rect(20, infoBoxY, infoBoxWidth, infoBoxHeight);
-
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`Заказчик: ${estimate.clientInfo}`, 25, yPosition + 8);
-    
     if (project) {
-      doc.text(`Объект: ${project.address}`, 25, yPosition + 18);
+      orderInfo.push({ label: 'Объект', value: project.address });
     }
 
-    yPosition += infoBoxHeight + 20;
+    yPosition = PdfService.createInfoBlock(
+      doc,
+      'ИНФОРМАЦИЯ О ЗАКАЗЕ',
+      orderInfo,
+      yPosition,
+      COLORS.primary
+    );
 
+    // Таблица позиций сметы
     const tableData = estimate.items.map((item: Item, index: number) => [
       index + 1,
       item.name,
@@ -410,46 +659,24 @@ class PdfService {
       PdfService.formatCurrency(item.quantity * item.price)
     ]);
 
-    autoTable(doc, {
-      head: [['№', 'Наименование работ/материалов', 'Кол-во', 'Ед. изм.', 'Цена за ед.', 'Сумма']],
-      body: tableData,
-      startY: yPosition,
-      styles: {
-        fontSize: 9,
-        font: PdfService.FONT_NAME,
-        fontStyle: 'normal',
-        cellPadding: 5,
-        lineWidth: 0.2,
-        lineColor: [180, 180, 180],
-        halign: 'left',
-      },
-      headStyles: {
-        fillColor: [40, 40, 40],
-        textColor: 255,
-        fontStyle: 'bold',
-        fontSize: 10,
-        font: PdfService.FONT_NAME,
-        halign: 'center',
-        cellPadding: 6,
-      },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
-        1: { cellWidth: 75, font: PdfService.FONT_NAME, valign: 'top' },
-        2: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
-        3: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
-        4: { halign: 'right', cellWidth: 30, font: PdfService.FONT_NAME },
-        5: { halign: 'right', cellWidth: 30, font: PdfService.FONT_NAME },
-      },
-      alternateRowStyles: {
-        fillColor: [250, 250, 250],
-      },
-      margin: { left: 20, right: 20 },
-      tableLineColor: [200, 200, 200],
-      tableLineWidth: 0.3,
-    });
+    const columnStyles = {
+      0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
+      1: { cellWidth: 75, font: PdfService.FONT_NAME, valign: 'top' },
+      2: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
+      3: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
+      4: { halign: 'right', cellWidth: 30, font: PdfService.FONT_NAME },
+      5: { halign: 'right', cellWidth: 30, font: PdfService.FONT_NAME },
+    };
 
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    const finalY = PdfService.createProfessionalTable(
+      doc,
+      ['№', 'Наименование работ/материалов', 'Кол-во', 'Ед. изм.', 'Цена за ед.', 'Сумма'],
+      tableData,
+      yPosition,
+      columnStyles
+    );
 
+    // Расчет итогов
     const subtotal = estimate.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
     const discountAmount = estimate.discountType === 'percent'
       ? subtotal * (estimate.discount / 100)
@@ -458,102 +685,35 @@ class PdfService {
     const taxAmount = totalAfterDiscount * (estimate.tax / 100);
     const grandTotal = totalAfterDiscount + taxAmount;
 
-    // Улучшенная секция итогов
-    const totalsBoxY = finalY;
-    const totalsBoxWidth = 90;
-    const totalsBoxHeight = 45;
-    
-    // Тень для рамки итогов
-    doc.setFillColor(235, 235, 235);
-    doc.rect(pageWidth - totalsBoxWidth - 18, totalsBoxY + 2, totalsBoxWidth, totalsBoxHeight, 'F');
-    
-    // Основная рамка для итогов
-    doc.setLineWidth(0.8);
-    doc.setDrawColor(60, 60, 60);
-    doc.rect(pageWidth - totalsBoxWidth - 20, totalsBoxY, totalsBoxWidth, totalsBoxHeight);
-    
-    // Заголовок секции итогов
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('РАСЧЕТ', pageWidth - totalsBoxWidth - 15, totalsBoxY + 8);
+    // Блок итогов
+    const totals = [
+      { label: 'Подытог', value: PdfService.formatCurrency(subtotal) }
+    ];
 
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-
-    let currentY = totalsBoxY + 18;
-    const rightAlignX = pageWidth - 25;
-    
-    // Подытог
-    doc.text('Подытог:', pageWidth - totalsBoxWidth - 15, currentY);
-    doc.text(PdfService.formatCurrency(subtotal), rightAlignX, currentY, { align: 'right' });
-    currentY += 7;
-
-    // Скидка (если есть)
     if (discountAmount > 0) {
-      doc.text(
-        `Скидка (${estimate.discountType === 'percent' ? `${estimate.discount}%` : PdfService.formatCurrency(estimate.discount)}):`,
-        pageWidth - totalsBoxWidth - 15,
-        currentY
-      );
-      doc.text(`-${PdfService.formatCurrency(discountAmount)}`, rightAlignX, currentY, { align: 'right' });
-      currentY += 7;
+      totals.push({
+        label: `Скидка (${estimate.discountType === 'percent' ? `${estimate.discount}%` : 'фикс.'})`,
+        value: `-${PdfService.formatCurrency(discountAmount)}`
+      });
     }
 
-    // Налог (если есть)
     if (taxAmount > 0) {
-      doc.text(`НДС (${estimate.tax}%):`, pageWidth - totalsBoxWidth - 15, currentY);
-      doc.text(`+${PdfService.formatCurrency(taxAmount)}`, rightAlignX, currentY, { align: 'right' });
-      currentY += 7;
+      totals.push({
+        label: `НДС (${estimate.tax}%)`,
+        value: `+${PdfService.formatCurrency(taxAmount)}`
+      });
     }
 
-    // Разделительная линия перед итогом
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(100, 100, 100);
-    doc.line(pageWidth - totalsBoxWidth - 15, currentY - 2, pageWidth - 25, currentY - 2);
+    totals.push({
+      label: 'ИТОГО',
+      value: PdfService.formatCurrency(grandTotal),
+      isTotal: true
+    });
 
-    // Итоговая сумма (выделена)
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ИТОГО:', pageWidth - totalsBoxWidth - 15, currentY + 5);
-    doc.text(PdfService.formatCurrency(grandTotal), rightAlignX, currentY + 5, { align: 'right' });
+    PdfService.createTotalsBlock(doc, totals, finalY + 15);
 
-    // Улучшенный профессиональный подвал
-    const footerY = pageHeight - 60;
-    
-    // Разделительная линия перед подписью
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(120, 120, 120);
-    doc.line(20, footerY - 15, pageWidth - 20, footerY - 15);
-    
-    // Блок подписей с рамками
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    
-    // Исполнитель слева
-    const leftBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(20, leftBoxY, 80, 25);
-    
-    doc.text('ИСПОЛНИТЕЛЬ:', 25, leftBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', 25, leftBoxY + 16);
-    doc.text('(подпись)', 25, leftBoxY + 22);
-    
-    // Заказчик справа
-    const rightBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(pageWidth - 100, rightBoxY, 80, 25);
-    
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ЗАКАЗЧИК:', pageWidth - 95, rightBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', pageWidth - 95, rightBoxY + 16);
-    doc.text('(подпись)', pageWidth - 95, rightBoxY + 22);
+    // Профессиональный подвал
+    PdfService.createProfessionalFooter(doc, 'ИСПОЛНИТЕЛЬ', 'ЗАКАЗЧИК', true);
 
     const fileName = `Смета_${estimate.number}_${PdfService.formatDate(estimate.date)}.pdf`;
     doc.save(fileName);
@@ -562,7 +722,7 @@ class PdfService {
 
 
   /**
-   * Генерирует PDF для акта выполненных работ
+   * Генерирует PDF для акта выполненных работ с профессиональным дизайном
    */
   static async generateActPDF(
     project: Project,
@@ -571,208 +731,139 @@ class PdfService {
     totalAmount: number
   ): Promise<void> {
     const doc = await PdfService.initializeDoc();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
-
-    // Профессиональная шапка документа
-    doc.setFontSize(18);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text(companyProfile.name, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
-
-    if (companyProfile.details) {
-      doc.setFontSize(9);
-      PdfService.ensureCyrillicSupport(doc);
-      const detailsLines = companyProfile.details.split('\n');
-      detailsLines.forEach((line, index) => {
-        const trimmedLine = line.trim();
-        if (trimmedLine) {
-          try {
-            const wrappedLines = PdfService.wrapText(doc, trimmedLine, pageWidth - 40);
-            wrappedLines.forEach(wrappedLine => {
-              doc.text(wrappedLine, pageWidth / 2, yPosition, { align: 'center' });
-              yPosition += 6;
-            });
-          } catch (error) {
-            console.warn('Ошибка при переносе текста компании:', error);
-            doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
-            yPosition += 6;
-          }
-        }
-      });
-      yPosition += 10;
-    }
-
-    // Разделительная линия
-    doc.setLineWidth(0.5);
-    doc.line(20, yPosition, pageWidth - 20, yPosition);
-    yPosition += 15;
-
-    // Заголовок акта
-    doc.setFontSize(16);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('АКТ', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 8;
-
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('о приемке выполненных работ', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
 
     const actNumber = `АКТ-${project.id.slice(-6).toUpperCase()}`;
     const currentDate = PdfService.formatDate(new Date().toISOString());
 
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`Акт № ${actNumber} от ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 20;
+    // Создаем профессиональную шапку
+    yPosition = PdfService.createProfessionalHeader(
+      doc,
+      'АКТ ПРИЕМКИ ВЫПОЛНЕННЫХ РАБОТ',
+      `№ ${actNumber} от ${currentDate}`,
+      companyProfile,
+      yPosition
+    );
 
-    // Информация о проекте в рамке
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ИНФОРМАЦИЯ О ПРОЕКТЕ', 20, yPosition);
-    yPosition += 12;
+    // Информационный блок о проекте
+    const projectInfo = [
+      { label: 'Проект', value: project.name },
+      { label: 'Заказчик', value: project.client },
+      { label: 'Адрес объекта', value: project.address },
+      { label: 'Номер акта', value: actNumber },
+      { label: 'Дата составления', value: currentDate }
+    ];
 
-    // Рамка для информации о проекте
-    const infoBoxY = yPosition;
-    const infoBoxHeight = 35;
-    const infoBoxWidth = pageWidth - 40;
-    
-    // Тень рамки
-    doc.setFillColor(240, 240, 240);
-    doc.rect(22, infoBoxY + 2, infoBoxWidth, infoBoxHeight, 'F');
-    
-    // Основная рамка
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(100, 100, 100);
-    doc.rect(20, infoBoxY, infoBoxWidth, infoBoxHeight);
-
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`Проект: ${project.name}`, 25, yPosition + 8);
-    doc.text(`Заказчик: ${project.client}`, 25, yPosition + 18);
-    doc.text(`Адрес объекта: ${project.address}`, 25, yPosition + 28);
-
-    yPosition += infoBoxHeight + 20;
+    yPosition = PdfService.createInfoBlock(
+      doc,
+      'ИНФОРМАЦИЯ О ПРОЕКТЕ',
+      projectInfo,
+      yPosition,
+      COLORS.success
+    );
 
     const completedStages = workStages.filter(stage => stage.status === 'completed');
 
     if (completedStages.length > 0) {
+      // Заголовок таблицы работ
+      doc.setFontSize(12);
+      doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text('ВЫПОЛНЕННЫЕ РАБОТЫ', 20, yPosition);
+      yPosition += 15;
+
+      // Таблица выполненных этапов
       const tableData = completedStages.map((stage: WorkStage, index: number) => [
         index + 1,
         stage.title,
         PdfService.formatDate(stage.startDate),
-        stage.endDate ? PdfService.formatDate(stage.endDate) : 'В процессе'
+        stage.endDate ? PdfService.formatDate(stage.endDate) : 'В процессе',
+        '✓ Выполнено'
       ]);
 
-      autoTable(doc, {
-        head: [['№', 'Наименование этапа', 'Дата начала', 'Дата завершения']],
-        body: tableData,
-        startY: yPosition,
-        styles: {
-          fontSize: 9,
-          font: PdfService.FONT_NAME,
-          fontStyle: 'normal',
-          cellPadding: 5,
-          lineWidth: 0.2,
-          lineColor: [180, 180, 180],
-          halign: 'left',
-        },
-        headStyles: {
-          fillColor: [40, 40, 40],
-          textColor: 255,
-          fontStyle: 'bold',
-          fontSize: 10,
-          font: PdfService.FONT_NAME,
-          halign: 'center',
-          cellPadding: 6,
-        },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
-          1: { cellWidth: 80, font: PdfService.FONT_NAME },
-          2: { halign: 'center', cellWidth: 40, font: PdfService.FONT_NAME },
-          3: { halign: 'center', cellWidth: 40, font: PdfService.FONT_NAME },
-        },
-        alternateRowStyles: {
-          fillColor: [250, 250, 250],
-        },
-        margin: { left: 20, right: 20 },
-        tableLineColor: [200, 200, 200],
-        tableLineWidth: 0.3,
-      });
+      const columnStyles = {
+        0: { halign: 'center', cellWidth: 15, font: PdfService.FONT_NAME },
+        1: { cellWidth: 70, font: PdfService.FONT_NAME },
+        2: { halign: 'center', cellWidth: 35, font: PdfService.FONT_NAME },
+        3: { halign: 'center', cellWidth: 35, font: PdfService.FONT_NAME },
+        4: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME, textColor: COLORS.success },
+      };
 
-      const finalY = (doc as any).lastAutoTable.finalY + 20;
+      const finalY = PdfService.createProfessionalTable(
+        doc,
+        ['№', 'Наименование этапа', 'Дата начала', 'Дата завершения', 'Статус'],
+        tableData,
+        yPosition,
+        columnStyles
+      );
 
-      // Итоговая сумма в рамке
-      const totalBoxY = finalY;
-      const totalBoxWidth = 120;
-      const totalBoxHeight = 25;
-      
-      // Тень для рамки итогов
-      doc.setFillColor(235, 235, 235);
-      doc.rect(pageWidth/2 - totalBoxWidth/2 + 2, totalBoxY + 2, totalBoxWidth, totalBoxHeight, 'F');
-      
-      // Основная рамка для итогов
-      doc.setLineWidth(0.8);
-      doc.setDrawColor(60, 60, 60);
-      doc.rect(pageWidth/2 - totalBoxWidth/2, totalBoxY, totalBoxWidth, totalBoxHeight);
-      
+      // Блок итоговой суммы
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const totalBlockY = finalY + 20;
+      const totalBlockWidth = 140;
+      const totalBlockHeight = 35;
+      const totalBlockX = pageWidth/2 - totalBlockWidth/2;
+
+      // Тень блока
+      doc.setFillColor(0, 0, 0, 0.15);
+      doc.rect(totalBlockX + 3, totalBlockY + 3, totalBlockWidth, totalBlockHeight, 'F');
+
+      // Основной блок
+      doc.setFillColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
+      doc.rect(totalBlockX, totalBlockY, totalBlockWidth, totalBlockHeight, 'F');
+
+      // Граница блока
+      doc.setLineWidth(1);
+      doc.setDrawColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
+      doc.rect(totalBlockX, totalBlockY, totalBlockWidth, totalBlockHeight);
+
+      // Текст итоговой суммы
       doc.setFontSize(12);
+      doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
       PdfService.ensureCyrillicSupport(doc, 'bold');
-      doc.text(`Всего выполнено работ на сумму: ${PdfService.formatCurrency(totalAmount)}`, pageWidth / 2, totalBoxY + 15, { align: 'center' });
+      doc.text('ОБЩАЯ СТОИМОСТЬ РАБОТ', pageWidth / 2, totalBlockY + 15, { align: 'center' });
+      
+      doc.setFontSize(14);
+      doc.text(PdfService.formatCurrency(totalAmount), pageWidth / 2, totalBlockY + 27, { align: 'center' });
+
     } else {
+      // Блок "Нет выполненных работ"
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const emptyBlockHeight = 60;
+      const emptyBlockWidth = pageWidth - 40;
+      
+      // Фон блока
+      doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+      doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight, 'F');
+      
+      // Граница
+      doc.setLineWidth(1);
+      doc.setDrawColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+      doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight);
+
+      // Текст
+      doc.setFontSize(14);
+      doc.setTextColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text('⚠ НЕТ ВЫПОЛНЕННЫХ РАБОТ', pageWidth / 2, yPosition + 25, { align: 'center' });
+      
       doc.setFontSize(10);
+      doc.setTextColor(COLORS.secondary[0], COLORS.secondary[1], COLORS.secondary[2]);
       PdfService.ensureCyrillicSupport(doc);
-      doc.text('Выполненные этапы работ отсутствуют.', 20, yPosition);
+      doc.text('Завершите этапы работ для включения их в акт', pageWidth / 2, yPosition + 40, { align: 'center' });
     }
 
-    // Улучшенный подвал акта
-    const footerY = pageHeight - 60;
-    
-    // Разделительная линия перед подписью
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(120, 120, 120);
-    doc.line(20, footerY - 15, pageWidth - 20, footerY - 15);
-    
-    // Блок подписей с рамками
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    
-    // Исполнитель слева
-    const leftBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(20, leftBoxY, 80, 25);
-    
-    doc.text('ИСПОЛНИТЕЛЬ:', 25, leftBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', 25, leftBoxY + 16);
-    doc.text('(подпись)', 25, leftBoxY + 22);
-    doc.text('М.П.', 25, leftBoxY + 28);
-    
-    // Заказчик справа
-    const rightBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(pageWidth - 100, rightBoxY, 80, 25);
-    
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ЗАКАЗЧИК:', pageWidth - 95, rightBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', pageWidth - 95, rightBoxY + 16);
-    doc.text('(подпись)', pageWidth - 95, rightBoxY + 22);
+    // Профессиональный подвал с печатью
+    PdfService.createProfessionalFooter(doc, 'ИСПОЛНИТЕЛЬ', 'ЗАКАЗЧИК', true);
 
-    const fileName = `Акт_${actNumber}_${currentDate}.pdf`;
+    const fileName = `Акт_${actNumber}_${currentDate.replace(/\./g, '_')}.pdf`;
     doc.save(fileName);
     return Promise.resolve();
   }
 
 
   /**
-   * Генерирует PDF для графика работ
+   * Генерирует PDF для графика работ с профессиональным дизайном
    */
   static async generateWorkSchedulePDF(
     project: Project,
@@ -780,177 +871,170 @@ class PdfService {
     companyProfile: CompanyProfile
   ): Promise<void> {
     const doc = await PdfService.initializeDoc();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
-    // Профессиональная шапка документа
-    doc.setFontSize(18);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text(companyProfile.name, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
+    // Создаем профессиональную шапку
+    yPosition = PdfService.createProfessionalHeader(
+      doc,
+      'ГРАФИК ВЫПОЛНЕНИЯ РАБОТ',
+      `Проект: ${project.name}`,
+      companyProfile,
+      yPosition
+    );
 
-    if (companyProfile.details) {
-      doc.setFontSize(9);
-      PdfService.ensureCyrillicSupport(doc);
-      const detailsLines = companyProfile.details.split('\n');
-      detailsLines.forEach((line, index) => {
-        const trimmedLine = line.trim();
-        if (trimmedLine) {
-          try {
-            const wrappedLines = PdfService.wrapText(doc, trimmedLine, pageWidth - 40);
-            wrappedLines.forEach(wrappedLine => {
-              doc.text(wrappedLine, pageWidth / 2, yPosition, { align: 'center' });
-              yPosition += 6;
-            });
-          } catch (error) {
-            console.warn('Ошибка при переносе текста компании:', error);
-            doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
-            yPosition += 6;
-          }
-        }
-      });
-      yPosition += 10;
-    }
+    // Информационный блок о проекте
+    const projectInfo = [
+      { label: 'Проект', value: project.name },
+      { label: 'Заказчик', value: project.client },
+      { label: 'Адрес объекта', value: project.address },
+      { label: 'Дата составления', value: PdfService.formatDate(new Date().toISOString()) },
+      { label: 'Всего этапов', value: workStages.length.toString() }
+    ];
 
-    // Разделительная линия
-    doc.setLineWidth(0.5);
-    doc.line(20, yPosition, pageWidth - 20, yPosition);
-    yPosition += 15;
-
-    // Заголовок графика
-    doc.setFontSize(16);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ГРАФИК ВЫПОЛНЕНИЯ РАБОТ', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 10;
-
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`Проект: ${project.name}`, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 20;
-
-    // Информация о проекте в рамке
-    doc.setFontSize(12);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ИНФОРМАЦИЯ О ПРОЕКТЕ', 20, yPosition);
-    yPosition += 12;
-
-    // Рамка для информации о проекте
-    const infoBoxY = yPosition;
-    const infoBoxHeight = 35;
-    const infoBoxWidth = pageWidth - 40;
-    
-    // Тень рамки
-    doc.setFillColor(240, 240, 240);
-    doc.rect(22, infoBoxY + 2, infoBoxWidth, infoBoxHeight, 'F');
-    
-    // Основная рамка
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(100, 100, 100);
-    doc.rect(20, infoBoxY, infoBoxWidth, infoBoxHeight);
-
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text(`Проект: ${project.name}`, 25, yPosition + 8);
-    doc.text(`Заказчик: ${project.client}`, 25, yPosition + 18);
-    doc.text(`Адрес объекта: ${project.address}`, 25, yPosition + 28);
-
-    yPosition += infoBoxHeight + 20;
+    yPosition = PdfService.createInfoBlock(
+      doc,
+      'ИНФОРМАЦИЯ О ПРОЕКТЕ',
+      projectInfo,
+      yPosition,
+      COLORS.accent
+    );
 
     if (workStages.length > 0) {
-      const tableData = workStages.map((stage: WorkStage, index: number) => [
-        index + 1,
-        stage.title,
-        PdfService.formatDate(stage.startDate),
-        stage.endDate ? PdfService.formatDate(stage.endDate) : 'В процессе',
-        stage.status === 'completed' ? 'Завершен'
-          : stage.status === 'in_progress' ? 'В работе'
-          : 'Планируется',
-        `${Math.round(stage.progress ?? 0)}%`
-      ]);
+      // Статистика по этапам
+      const completedStages = workStages.filter(stage => stage.status === 'completed').length;
+      const inProgressStages = workStages.filter(stage => stage.status === 'in_progress').length;
+      const plannedStages = workStages.filter(stage => stage.status === 'planned').length;
 
-      autoTable(doc, {
-        head: [['№', 'Наименование этапа', 'Дата начала', 'Дата завершения', 'Статус', 'Прогресс']],
-        body: tableData,
-        startY: yPosition,
-        styles: {
-          fontSize: 8,
-          font: PdfService.FONT_NAME,
-          fontStyle: 'normal',
-          cellPadding: 4,
-          lineWidth: 0.2,
-          lineColor: [180, 180, 180],
-          halign: 'left',
-        },
-        headStyles: {
-          fillColor: [40, 40, 40],
-          textColor: 255,
-          fontStyle: 'bold',
-          fontSize: 9,
-          font: PdfService.FONT_NAME,
-          halign: 'center',
-          cellPadding: 5,
-        },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 12, font: PdfService.FONT_NAME },
-          1: { cellWidth: 65, font: PdfService.FONT_NAME },
-          2: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
-          3: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
-          4: { halign: 'center', cellWidth: 25, font: PdfService.FONT_NAME },
-          5: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
-        },
-        alternateRowStyles: {
-          fillColor: [250, 250, 250],
-        },
-        margin: { left: 20, right: 20 },
-        tableLineColor: [200, 200, 200],
-        tableLineWidth: 0.3,
+      const statsInfo = [
+        { label: '✓ Завершено', value: `${completedStages} этапов` },
+        { label: '⚠ В работе', value: `${inProgressStages} этапов` },
+        { label: '○ Планируется', value: `${plannedStages} этапов` }
+      ];
+
+      yPosition = PdfService.createInfoBlock(
+        doc,
+        'СТАТИСТИКА ВЫПОЛНЕНИЯ',
+        statsInfo,
+        yPosition,
+        COLORS.success
+      );
+
+      // Заголовок таблицы этапов
+      doc.setFontSize(12);
+      doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text('ДЕТАЛЬНЫЙ ГРАФИК РАБОТ', 20, yPosition);
+      yPosition += 15;
+
+      // Таблица этапов с улучшенным отображением статусов
+      const tableData = workStages.map((stage: WorkStage, index: number) => {
+        let statusText = '';
+        let statusColor = COLORS.secondary;
+
+        switch (stage.status) {
+          case 'completed':
+            statusText = '✓ Завершен';
+            statusColor = COLORS.success;
+            break;
+          case 'in_progress':
+            statusText = '⚠ В работе';
+            statusColor = COLORS.warning;
+            break;
+          default:
+            statusText = '○ Планируется';
+            statusColor = COLORS.secondary;
+        }
+
+        return [
+          index + 1,
+          stage.title,
+          PdfService.formatDate(stage.startDate),
+          stage.endDate ? PdfService.formatDate(stage.endDate) : 'Не определена',
+          statusText,
+          `${Math.round(stage.progress ?? 0)}%`
+        ];
       });
+
+      const columnStyles = {
+        0: { halign: 'center', cellWidth: 12, font: PdfService.FONT_NAME },
+        1: { cellWidth: 65, font: PdfService.FONT_NAME },
+        2: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
+        3: { halign: 'center', cellWidth: 30, font: PdfService.FONT_NAME },
+        4: { halign: 'center', cellWidth: 25, font: PdfService.FONT_NAME },
+        5: { halign: 'center', cellWidth: 20, font: PdfService.FONT_NAME },
+      };
+
+      const finalY = PdfService.createProfessionalTable(
+        doc,
+        ['№', 'Наименование этапа', 'Дата начала', 'Дата завершения', 'Статус', 'Прогресс'],
+        tableData,
+        yPosition,
+        columnStyles
+      );
+
+      // Блок с общим прогрессом проекта
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const progressBlockY = finalY + 20;
+      const progressBlockWidth = 160;
+      const progressBlockHeight = 40;
+      const progressBlockX = pageWidth/2 - progressBlockWidth/2;
+
+      // Вычисляем общий прогресс
+      const totalProgress = workStages.reduce((sum, stage) => sum + (stage.progress || 0), 0) / workStages.length;
+
+      // Тень блока
+      doc.setFillColor(0, 0, 0, 0.15);
+      doc.rect(progressBlockX + 3, progressBlockY + 3, progressBlockWidth, progressBlockHeight, 'F');
+
+      // Основной блок
+      doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      doc.rect(progressBlockX, progressBlockY, progressBlockWidth, progressBlockHeight, 'F');
+
+      // Граница блока
+      doc.setLineWidth(1);
+      doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      doc.rect(progressBlockX, progressBlockY, progressBlockWidth, progressBlockHeight);
+
+      // Текст общего прогресса
+      doc.setFontSize(12);
+      doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text('ОБЩИЙ ПРОГРЕСС ПРОЕКТА', pageWidth / 2, progressBlockY + 15, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text(`${Math.round(totalProgress)}%`, pageWidth / 2, progressBlockY + 30, { align: 'center' });
+
     } else {
+      // Блок "Нет этапов работ"
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const emptyBlockHeight = 60;
+      const emptyBlockWidth = pageWidth - 40;
+      
+      // Фон блока
+      doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+      doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight, 'F');
+      
+      // Граница
+      doc.setLineWidth(1);
+      doc.setDrawColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+      doc.rect(20, yPosition, emptyBlockWidth, emptyBlockHeight);
+
+      // Текст
+      doc.setFontSize(14);
+      doc.setTextColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+      PdfService.ensureCyrillicSupport(doc, 'bold');
+      doc.text('⚠ НЕТ ЭТАПОВ РАБОТ', pageWidth / 2, yPosition + 25, { align: 'center' });
+      
       doc.setFontSize(10);
+      doc.setTextColor(COLORS.secondary[0], COLORS.secondary[1], COLORS.secondary[2]);
       PdfService.ensureCyrillicSupport(doc);
-      doc.text('Этапы работ не добавлены.', 20, yPosition);
+      doc.text('Добавьте этапы работ для создания графика', pageWidth / 2, yPosition + 40, { align: 'center' });
     }
 
-    // Улучшенный подвал графика
-    const footerY = pageHeight - 60;
-    
-    // Разделительная линия перед подписью
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(120, 120, 120);
-    doc.line(20, footerY - 15, pageWidth - 20, footerY - 15);
-    
-    // Блок подписей с рамками
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    
-    // Ответственный слева
-    const leftBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(20, leftBoxY, 80, 25);
-    
-    doc.text('ОТВЕТСТВЕННЫЙ:', 25, leftBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', 25, leftBoxY + 16);
-    doc.text('(подпись)', 25, leftBoxY + 22);
-    
-    // Заказчик справа
-    const rightBoxY = footerY - 5;
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(pageWidth - 100, rightBoxY, 80, 25);
-    
-    doc.setFontSize(10);
-    PdfService.ensureCyrillicSupport(doc, 'bold');
-    doc.text('ЗАКАЗЧИК:', pageWidth - 95, rightBoxY + 8);
-    doc.setFontSize(9);
-    PdfService.ensureCyrillicSupport(doc);
-    doc.text('_________________', pageWidth - 95, rightBoxY + 16);
-    doc.text('(подпись)', pageWidth - 95, rightBoxY + 22);
+    // Профессиональный подвал
+    PdfService.createProfessionalFooter(doc, 'ОТВЕТСТВЕННЫЙ', 'ЗАКАЗЧИК', false);
 
-    const fileName = `График_работ_${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_${PdfService.formatDate(new Date().toISOString())}.pdf`;
+    const fileName = `График_работ_${project.name.replace(/[^a-zA-Z0-9а-яё]/gi, '_')}_${PdfService.formatDate(new Date().toISOString()).replace(/\./g, '_')}.pdf`;
     doc.save(fileName);
     return Promise.resolve();
   }
