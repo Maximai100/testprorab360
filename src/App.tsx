@@ -759,7 +759,9 @@ const App: React.FC = () => {
 
     // Project handlers
     const handleOpenProjectModal = useCallback((project: Partial<Project> | null = null) => {
-        appState.openModal('newProject', project);
+        startTransition(() => {
+            appState.openModal('newProject', project);
+        });
     }, [appState]);
 
     // Supabase: create project
@@ -922,7 +924,9 @@ const App: React.FC = () => {
     }, [projectsHook, appState]);
 
     const handleViewPhoto = useCallback((photo: PhotoReport) => {
-        appState.openModal('photoViewer', photo);
+        startTransition(() => {
+            appState.openModal('photoViewer', photo);
+        });
     }, [appState]);
 
     // Document handlers
@@ -1244,7 +1248,7 @@ const App: React.FC = () => {
                         scratchpad={projectsHook.scratchpad}
                         globalDocuments={projectsHook.globalDocuments}
                         onScratchpadChange={projectsHook.setScratchpad}
-                        onOpenGlobalDocumentModal={() => appState.openModal('globalDocument')}
+                        onOpenGlobalDocumentModal={() => startTransition(() => appState.openModal('globalDocument'))}
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
                         notesHook={notesHook}
@@ -1264,10 +1268,10 @@ const App: React.FC = () => {
                         handleThemeChange={appState.handleThemeChange}
                         themeIcon={themeIcon}
                         themeMode={appState.themeMode}
-                        onOpenLibraryModal={() => appState.openModal('library')}
-                        onOpenEstimatesListModal={() => appState.openModal('estimatesList')}
-                        onOpenSettingsModal={() => appState.openModal('settings')}
-                        onOpenAISuggestModal={() => appState.openModal('aiSuggest')}
+                        onOpenLibraryModal={() => startTransition(() => appState.openModal('library'))}
+                        onOpenEstimatesListModal={() => startTransition(() => appState.openModal('estimatesList'))}
+                        onOpenSettingsModal={() => startTransition(() => appState.openModal('settings'))}
+                        onOpenAISuggestModal={() => startTransition(() => appState.openModal('aiSuggest'))}
                         estimateNumber={estimatesHook.estimateNumber}
                         setEstimateNumber={estimatesHook.setEstimateNumber}
                         estimateDate={estimatesHook.estimateDate}
@@ -1346,17 +1350,17 @@ const App: React.FC = () => {
                         handleLoadEstimate={handleLoadEstimate}
                         handleAddNewEstimateForProject={() => handleAddNewEstimateInProject(activeProject.id)}
                         handleDeleteProjectEstimate={handleDeleteEstimate}
-                        onOpenFinanceModal={() => appState.openModal('financeEntry')}
+                        onOpenFinanceModal={() => startTransition(() => appState.openModal('financeEntry'))}
                         onDeleteFinanceEntry={handleDeleteFinanceEntry}
-                        onOpenPhotoReportModal={() => appState.openModal('photoReport')}
+                        onOpenPhotoReportModal={() => startTransition(() => appState.openModal('photoReport'))}
                         onViewPhoto={handleViewPhoto}
-                        onOpenDocumentModal={() => appState.openModal('documentUpload')}
+                        onOpenDocumentModal={() => startTransition(() => appState.openModal('documentUpload'))}
                         onDeleteDocument={handleDeleteDocument}
-                        onOpenWorkStageModal={(stage) => appState.openModal('workStage', stage)}
+                        onOpenWorkStageModal={(stage) => startTransition(() => appState.openModal('workStage', stage))}
                         onDeleteWorkStage={handleDeleteWorkStage}
-                        onOpenNoteModal={(note) => appState.openModal('note', note)}
+                        onOpenNoteModal={(note) => startTransition(() => appState.openModal('note', note))}
                         onDeleteNote={handleDeleteNote}
-                        onOpenActModal={(total) => appState.openModal('actGeneration', total)}
+                        onOpenActModal={(total) => startTransition(() => appState.openModal('actGeneration', total))}
                         onNavigateToTasks={handleNavigateToTasks}
                         onProjectScratchpadChange={projectsHook.updateProjectScratchpad}
                         onExportWorkSchedulePDF={async (project, workStages) => {
@@ -1368,7 +1372,7 @@ const App: React.FC = () => {
                                 safeShowAlert('Ошибка при генерации PDF графика работ');
                             }
                         }}
-                        onOpenEstimatesListModal={() => appState.openModal('estimatesList')}
+                        onOpenEstimatesListModal={() => startTransition(() => appState.openModal('estimatesList'))}
                         notesHook={notesHook}
                         tasksHook={tasksHook}
                         appState={appState}
@@ -1385,14 +1389,16 @@ const App: React.FC = () => {
                         projects={projectsHook.projects}
                         consumables={inventoryHook.consumables}
                         onToolClick={(tool) => {
-                            appState.openModal('toolDetails', tool);
+                            startTransition(() => {
+                                appState.openModal('toolDetails', tool);
+                            });
                         }}
                         onUpdateTool={handleUpdateTool}
-                        onOpenAddToolModal={() => appState.openModal('addTool')}
+                        onOpenAddToolModal={() => startTransition(() => appState.openModal('addTool'))}
                         onAddConsumable={handleAddConsumable}
                         onUpdateConsumable={handleUpdateConsumable}
                         onDeleteConsumable={handleDeleteConsumable}
-                        onOpenToolDetailsModal={(tool) => appState.openModal('toolDetails', tool)}
+                        onOpenToolDetailsModal={(tool) => startTransition(() => appState.openModal('toolDetails', tool))}
                         toolsScratchpad={toolsScratchpad}
                         consumablesScratchpad={consumablesScratchpad}
                         onToolsScratchpadChange={setToolsScratchpad}
@@ -1532,7 +1538,7 @@ const App: React.FC = () => {
                         scratchpad={projectsHook.scratchpad}
                         globalDocuments={projectsHook.globalDocuments}
                         onScratchpadChange={projectsHook.setScratchpad}
-                        onOpenGlobalDocumentModal={() => appState.openModal('globalDocument')}
+                        onOpenGlobalDocumentModal={() => startTransition(() => appState.openModal('globalDocument'))}
                         onDeleteGlobalDocument={handleDeleteGlobalDocument}
                         onOpenScratchpad={handleOpenScratchpad}
                         notesHook={notesHook}
@@ -1636,16 +1642,16 @@ const App: React.FC = () => {
                     <button onClick={appState.handleThemeChange} className="header-btn" aria-label="Сменить тему">
                         {themeIcon()}
                     </button>
-                    <button onClick={() => appState.openModal('library')} className="header-btn" aria-label="Справочник">
+                    <button onClick={() => startTransition(() => appState.openModal('library'))} className="header-btn" aria-label="Справочник">
                         <IconBook />
                     </button>
-                    <button onClick={() => appState.openModal('estimatesList')} className="header-btn" aria-label="Список смет">
+                    <button onClick={() => startTransition(() => appState.openModal('estimatesList'))} className="header-btn" aria-label="Список смет">
                         <IconClipboard />
                     </button>
                     <button onClick={() => appState.navigateToView('reports')} className="header-btn" aria-label="Отчеты">
                         <IconTrendingUp />
                     </button>
-                    <button onClick={() => appState.openModal('settings')} className="header-btn" aria-label="Настройки">
+                    <button onClick={() => startTransition(() => appState.openModal('settings'))} className="header-btn" aria-label="Настройки">
                         <IconSettings />
                     </button>
                 </div>
