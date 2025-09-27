@@ -1525,141 +1525,141 @@ const App: React.FC = () => {
 
     return (
         <ProjectProvider>
-            <div className="app-container">
+            <div className="app-layout">
                 {/* Auth gate */}
                 {(!session) ? (
-                    <main>
+                    <main className="app-content">
                         <AuthScreen />
                     </main>
                 ) : (
                 <>
                 {/* Global Header */}
-            <header className="app-header">
-                <div className="app-header-left">
-                    <img
-                        src={(() => {
-                            const logoUrl = companyProfileHook.profile.logo;
+                <header className="app-header">
+                    <div className="app-header-left">
+                        <img
+                            src={(() => {
+                                const logoUrl = companyProfileHook.profile.logo;
 
-                            if (!logoUrl) {
+                                if (!logoUrl) {
 
-                                return '/logo.png';
-                            }
-                            
-                            // Проверяем, не содержит ли URL multipart/form-data
-                            if (logoUrl.includes('multipart') || logoUrl.includes('form-data')) {
-                                console.error('❌ Обнаружен неправильный URL с multipart/form-data в шапке:', logoUrl);
-                                console.error('❌ Используем fallback логотип');
-                                return '/logo.png';
-                            }
+                                    return '/logo.png';
+                                }
+                                
+                                // Проверяем, не содержит ли URL multipart/form-data
+                                if (logoUrl.includes('multipart') || logoUrl.includes('form-data')) {
+                                    console.error('❌ Обнаружен неправильный URL с multipart/form-data в шапке:', logoUrl);
+                                    console.error('❌ Используем fallback логотип');
+                                    return '/logo.png';
+                                }
 
-                            return logoUrl;
-                        })()}
-                        alt="Логотип"
-                        className="app-logo"
-                        onError={(e) => {
-                            const currentSrc = e.currentTarget.src;
-                            
-                            // Проверяем, не является ли это ложным срабатыванием
-                            if (currentSrc.includes('multipart') || currentSrc.includes('form-data')) {
+                                return logoUrl;
+                            })()}
+                            alt="Логотип"
+                            className="app-logo"
+                            onError={(e) => {
+                                const currentSrc = e.currentTarget.src;
+                                
+                                // Проверяем, не является ли это ложным срабатыванием
+                                if (currentSrc.includes('multipart') || currentSrc.includes('form-data')) {
+                                    (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                                    return;
+                                }
+                                
+                                // Проверяем, не является ли это уже fallback логотипом
+                                if (currentSrc.includes('/logo.png')) {
+                                    return;
+                                }
+                                
                                 (e.currentTarget as HTMLImageElement).src = '/logo.png';
-                                return;
-                            }
-                            
-                            // Проверяем, не является ли это уже fallback логотипом
-                            if (currentSrc.includes('/logo.png')) {
-                                return;
-                            }
-                            
-                            (e.currentTarget as HTMLImageElement).src = '/logo.png';
-                        }}
-                    />
-                    <h1>{(companyProfileHook.profile.name && companyProfileHook.profile.name.trim()) ? companyProfileHook.profile.name : 'Прораб'}</h1>
-                </div>
-                <div className="app-header-right">
-                    <button onClick={appState.handleThemeChange} className="header-btn" aria-label="Сменить тему">
-                        {themeIcon()}
+                            }}
+                        />
+                        <h1>{(companyProfileHook.profile.name && companyProfileHook.profile.name.trim()) ? companyProfileHook.profile.name : 'Прораб'}</h1>
+                    </div>
+                    <div className="app-header-right">
+                        <button onClick={appState.handleThemeChange} className="header-btn" aria-label="Сменить тему">
+                            {themeIcon()}
+                        </button>
+                        <button onClick={() => startTransition(() => appState.openModal('library'))} className="header-btn" aria-label="Справочник">
+                            <IconBook />
+                        </button>
+                        <button onClick={() => startTransition(() => appState.openModal('estimatesList'))} className="header-btn" aria-label="Список смет">
+                            <IconClipboard />
+                        </button>
+                        <button onClick={() => appState.navigateToView('reports')} className="header-btn" aria-label="Отчеты">
+                            <IconTrendingUp />
+                        </button>
+                        <button onClick={() => startTransition(() => appState.openModal('settings'))} className="header-btn" aria-label="Настройки">
+                            <IconSettings />
+                        </button>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="app-content">
+                    {renderView()}
+                </main>
+
+                {/* Bottom Navigation */}
+                <nav className="bottom-nav">
+                    <button 
+                        onClick={() => appState.navigateToView('workspace')} 
+                        className={appState.activeView === 'workspace' ? 'active' : ''}
+                    >
+                        <IconHome />
+                        <span>Главная</span>
                     </button>
-                    <button onClick={() => startTransition(() => appState.openModal('library'))} className="header-btn" aria-label="Справочник">
-                        <IconBook />
+                    <button 
+                        onClick={() => {
+                            // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
+                            if (appState.activeProjectId) {
+                                appState.navigateToView('projectDetail');
+                            } else {
+                                appState.navigateToView('projects');
+                            }
+                        }} 
+                        className={appState.activeView.startsWith('project') ? 'active' : ''}
+                    >
+                        <IconProject />
+                        <span>Проекты</span>
                     </button>
-                    <button onClick={() => startTransition(() => appState.openModal('estimatesList'))} className="header-btn" aria-label="Список смет">
+                    <button 
+                        onClick={() => {
+                            // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
+                            // Если уже есть активная смета, не создаем новую
+                            if (!estimatesHook.currentEstimate) {
+                                estimatesHook.createNewEstimate();
+                            }
+                            startTransition(() => {
+                                appState.setActiveView('estimate');
+                            });
+                        }} 
+                        className={appState.activeView === 'estimate' ? 'active' : ''}
+                    >
+                        <IconDocument />
+                        <span>Смета</span>
+                    </button>
+                    <button 
+                        onClick={() => appState.navigateToView('inventory')} 
+                        className={appState.activeView.startsWith('inventory') || appState.activeView === 'toolDetails' ? 'active' : ''}
+                    >
                         <IconClipboard />
+                        <span>Инвентарь</span>
                     </button>
-                    <button onClick={() => appState.navigateToView('reports')} className="header-btn" aria-label="Отчеты">
-                        <IconTrendingUp />
+                    <button 
+                        onClick={() => appState.navigateToView('allTasks')} 
+                        className={appState.activeView === 'allTasks' ? 'active' : ''}
+                    >
+                        <IconCheckSquare />
+                        <span>Задачи</span>
                     </button>
-                    <button onClick={() => startTransition(() => appState.openModal('settings'))} className="header-btn" aria-label="Настройки">
-                        <IconSettings />
+                    <button 
+                        onClick={() => appState.navigateToView('calculator')} 
+                        className={appState.activeView === 'calculator' ? 'active' : ''}
+                    >
+                        <IconSparkles />
+                        <span>Калькулятор</span>
                     </button>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main>
-                {renderView()}
-            </main>
-
-            {/* Bottom Navigation */}
-            <nav className="bottom-nav">
-                <button 
-                    onClick={() => appState.navigateToView('workspace')} 
-                    className={appState.activeView === 'workspace' ? 'active' : ''}
-                >
-                    <IconHome />
-                    <span>Главная</span>
-                </button>
-                <button 
-                    onClick={() => {
-                        // Если есть активный проект, возвращаемся к нему, иначе к списку проектов
-                        if (appState.activeProjectId) {
-                            appState.navigateToView('projectDetail');
-                        } else {
-                            appState.navigateToView('projects');
-                        }
-                    }} 
-                    className={appState.activeView.startsWith('project') ? 'active' : ''}
-                >
-                    <IconProject />
-                    <span>Проекты</span>
-                </button>
-                <button 
-                    onClick={() => {
-                        // НЕ сбрасываем activeProjectId, чтобы можно было вернуться к проекту
-                        // Если уже есть активная смета, не создаем новую
-                        if (!estimatesHook.currentEstimate) {
-                            estimatesHook.createNewEstimate();
-                        }
-                        startTransition(() => {
-                            appState.setActiveView('estimate');
-                        });
-                    }} 
-                    className={appState.activeView === 'estimate' ? 'active' : ''}
-                >
-                    <IconDocument />
-                    <span>Смета</span>
-                </button>
-                <button 
-                    onClick={() => appState.navigateToView('inventory')} 
-                    className={appState.activeView.startsWith('inventory') || appState.activeView === 'toolDetails' ? 'active' : ''}
-                >
-                    <IconClipboard />
-                    <span>Инвентарь</span>
-                </button>
-                <button 
-                    onClick={() => appState.navigateToView('allTasks')} 
-                    className={appState.activeView === 'allTasks' ? 'active' : ''}
-                >
-                    <IconCheckSquare />
-                    <span>Задачи</span>
-                </button>
-                <button 
-                    onClick={() => appState.navigateToView('calculator')} 
-                    className={appState.activeView === 'calculator' ? 'active' : ''}
-                >
-                    <IconSparkles />
-                    <span>Калькулятор</span>
-                </button>
-            </nav>
+                </nav>
 
             {/* Modals */}
             {appState.showSettingsModal && (
